@@ -24,40 +24,52 @@ public class CalendarioController : ControllerBase
         return await _calendarioService.ResolveUserIdBySigafiAsync(idReferencia);
     }
 
-    // ── GET /api/calendario/eventos?desde=2025-09-01&hasta=2025-09-30 ────────
-    [HttpGet("eventos")]
-    public async Task<IActionResult> GetEventos([FromQuery] DateOnly desde, [FromQuery] DateOnly hasta)
+    private string ResolvePrimaryRole()
     {
-        var idUsuario = await GetCurrentUserIdAsync();
-        if (idUsuario == null) return Unauthorized();
-
         var roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value)
             .Union(User.FindAll("roles").Select(c => c.Value))
             .Distinct().ToList();
 
-        var rol = roles.Contains("DOSIER_ADMIN") ? "DOSIER_ADMIN"
-                : roles.Contains("DOSIER_VICERRECTOR") ? "DOSIER_VICERRECTOR"
-                : roles.Contains("DOSIER_COORD_ACAD") ? "DOSIER_COORD_ACAD"
-                : roles.Contains("DOSIER_COORD_CARRERA") ? "DOSIER_COORD_CARRERA"
-                : "DOSIER_DOCENTE";
+        return roles.Contains("DOSIER_ADMIN") ? "DOSIER_ADMIN"
+             : roles.Contains("DOSIER_VICERRECTOR") ? "DOSIER_VICERRECTOR"
+             : roles.Contains("DOSIER_COORD_ACAD") ? "DOSIER_COORD_ACAD"
+             : roles.Contains("DOSIER_COORD_CARRERA") ? "DOSIER_COORD_CARRERA"
+             : "DOSIER_DOCENTE";
+    }
 
-        var eventos = await _calendarioService.GetEventosAsync(desde, hasta, rol, idUsuario.Value);
+    // ── GET /api/calendario/carreras ─────────────────────────────────────────
+    [HttpGet("carreras")]
+    public async Task<IActionResult> GetCarrerasUsuario()
+    {
+        var idUsuario = await GetCurrentUserIdAsync();
+        if (idUsuario == null) return Unauthorized();
+
+        var carreras = await _calendarioService.GetCarrerasUsuarioAsync(idUsuario.Value, ResolvePrimaryRole());
+        return Ok(carreras);
+    }
+
+    // ── GET /api/calendario/eventos?desde=2025-09-01&hasta=2025-09-30&idCarrera=1 ──
+    [HttpGet("eventos")]
+    public async Task<IActionResult> GetEventos([FromQuery] DateOnly desde, [FromQuery] DateOnly hasta, [FromQuery] int? idCarrera = null)
+    {
+        var idUsuario = await GetCurrentUserIdAsync();
+        if (idUsuario == null) return Unauthorized();
+
+        var eventos = await _calendarioService.GetEventosAsync(desde, hasta, ResolvePrimaryRole(), idUsuario.Value, idCarrera);
         return Ok(eventos);
     }
 
-    // ── CRUD Eventos de Usuario (Tareas y Eventos personales/compartidos) ──
-    
-    // Crear un evento personal de usuario
+    // ── CRUD Eventos de Usuario (Tareas y Eventos personales/carrera/instituto) ──
+
     [HttpPost("usuario/eventos")]
     public async Task<IActionResult> CreateUsuarioEvento([FromBody] EventoNormativoDto dto)
     {
         var idUsuario = await GetCurrentUserIdAsync();
         if (idUsuario == null) return Unauthorized();
 
-        // Forzar a que sea del usuario
-        var usuarioDto = dto with { EsPrivado = dto.EsPrivado }; 
+        var (uuid, forbidden) = await _calendarioService.CreateUsuarioEventoAsync(dto, idUsuario.Value, ResolvePrimaryRole());
+        if (forbidden || string.IsNullOrEmpty(uuid)) return Forbid();
 
-        var uuid = await _calendarioService.CreateNormativoAsync(usuarioDto, idUsuario.Value);
         return Created("", new { uuid });
     }
 
@@ -79,7 +91,7 @@ public class CalendarioController : ControllerBase
         var idUsuario = await GetCurrentUserIdAsync();
         if (idUsuario == null) return Unauthorized();
 
-        var result = await _calendarioService.UpdateUsuarioEventoAsync(uuid, dto, idUsuario.Value);
+        var result = await _calendarioService.UpdateUsuarioEventoAsync(uuid, dto, idUsuario.Value, ResolvePrimaryRole());
         if (result == null) return NotFound();
         if (result == false) return Forbid();
 
@@ -93,7 +105,7 @@ public class CalendarioController : ControllerBase
         var idUsuario = await GetCurrentUserIdAsync();
         if (idUsuario == null) return Unauthorized();
 
-        var result = await _calendarioService.DeleteUsuarioEventoAsync(uuid, idUsuario.Value);
+        var result = await _calendarioService.DeleteUsuarioEventoAsync(uuid, idUsuario.Value, ResolvePrimaryRole());
         if (result == null) return NotFound();
         if (result == false) return Forbid();
 

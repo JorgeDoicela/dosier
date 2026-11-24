@@ -51,8 +51,6 @@ export const CalendarioPage: React.FC = () => {
         currentDate,
         view,
         setView,
-        categoriasVisibles,
-        toggleCategoria,
         filteredEventos,
         proximosEventos,
         selectedEvent,
@@ -86,6 +84,14 @@ export const CalendarioPage: React.FC = () => {
         setFormEsNormativo,
         formRolesVisibles,
         setFormRolesVisibles,
+        formAlcance,
+        aplicarAlcanceDefaults,
+        formIdCarrera,
+        setFormIdCarrera,
+        carrerasUsuario,
+        selectedCarreraId,
+        setSelectedCarreraId,
+        canPublishInstituto,
         handleNewEventClick,
         handleSelectSlot,
         handleEditEventClick,
@@ -150,8 +156,6 @@ export const CalendarioPage: React.FC = () => {
             <div className="flex flex-1 gap-6 min-h-0 overflow-hidden">
                 <CalendarioSidebar
                     viewMode={viewMode}
-                    categoriasVisibles={categoriasVisibles}
-                    toggleCategoria={toggleCategoria}
                     stickyNotes={stickyNotes}
                     draggingUuid={draggingUuid}
                     draggingType={draggingType}
@@ -174,6 +178,10 @@ export const CalendarioPage: React.FC = () => {
                         handleNavigateClick={handleNavigateClick}
                         getLabelFecha={getLabelFecha}
                         handleNewEventClick={handleNewEventClick}
+                        carrerasUsuario={carrerasUsuario}
+                        selectedCarreraId={selectedCarreraId}
+                        setSelectedCarreraId={setSelectedCarreraId}
+                        canPublishInstituto={canPublishInstituto}
                     />
 
                     {viewMode === 'calendar' ? (
@@ -283,6 +291,12 @@ export const CalendarioPage: React.FC = () => {
                 setFormEsNormativo={setFormEsNormativo}
                 formRolesVisibles={formRolesVisibles}
                 setFormRolesVisibles={setFormRolesVisibles}
+                formAlcance={formAlcance}
+                aplicarAlcanceDefaults={aplicarAlcanceDefaults}
+                formIdCarrera={formIdCarrera}
+                setFormIdCarrera={setFormIdCarrera}
+                carrerasUsuario={carrerasUsuario}
+                canPublishInstituto={canPublishInstituto}
             />
 
             {/* Popover de Planificación */}

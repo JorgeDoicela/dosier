@@ -56,7 +56,7 @@ erDiagram
 | `profesores` | `idProfesor` (cédula), `nombres`, `apellidos`, `correo` | Registro oficial de la planta docente. Se utiliza para el JIT Provisioning en el sistema ID 6 y validación de autoría de firmas. |
 | `mallas` | `idMalla`, `idCarrera`, `descripcion`, `codigoResolucion` | Mallas curriculares aprobadas institucionalmente. |
 | `mallas_periodos` | `idMallaPeriodo`, `idMalla`, `idPeriodo` | Tabla pivote de resolución de cohorte curricular activa por período lectivo. |
-| `detallemallas` | `idDetalleMalla`, `idMalla`, `idAsignatura`, `horasDocencia`, `horasApe`, `horasAutonomo`, `creditos` | Regla matemática inalterable de distribución horaria oficial según proyecto de carrera del CES. |
+| `detallemallas` | `idDetalleMalla`, `idMalla`, `idAsignatura`, `horas`, `horasDocente`, `horasPracticoExperimental`, `creditos` | Regla matemática de distribución horaria oficial según proyecto de carrera del CES. El componente autónomo (TA) se obtiene por diferencia (`horas - horasDocente - horasPracticoExperimental`). Para entornos con copia de producción se provee el script `scripts/base_datos/extensiones/05_actualizacion_horas_detallemallas_sigafi.sql` (y en entornos demo/AWS queda integrado en `00_sigafi_esquema_y_datos_demo.sql`). |
 | `asignaturas` | `idAsignatura`, `asignatura`, `codigo` | Catálogo de asignaturas del plan de estudios. |
 | `asignaciones_profesores` | `idAsignacion`, `idProfesor`, `idPeriodo`, `idAsignatura`, `idCarrera`, `paralelo`, `numeroHoras`, `horasPracticoExperimental`, `extraCurricular` | Carga horaria docente asignada. Es el punto de partida para instanciar el PEA. Mapea horas semanales de distributivo y discrimina actividades curriculares de cargas institucionales de acompañamiento (`extraCurricular = 1`). |
 

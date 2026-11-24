@@ -1,48 +1,49 @@
-import { 
-    Activity, Settings2, BarChart3, Bell, ShieldCheck, Award
+import {
+    Activity, Settings2, BarChart3, Bell, ShieldCheck, Calendar,
+    Trash2, FolderKanban, MessageSquareWarning
 } from 'lucide-react';
 import type { HelpConfig, MockupProps } from '../types';
 
 export const DEFAULT_CONFIG: HelpConfig = {
-    icon: <Settings2 size={24} className="text-brand" />,
-    title: "Módulo General del Sistema",
-    summary: "Consola unificada de acceso y administración del sistema de investigación y desarrollo tecnológico DOSIER.",
-    description: "Este módulo sirve como marco operativo para interactuar de forma segura con todas las funciones de investigación. Centraliza el panel de navegación de la plataforma, el lanzador de comandos de acceso global y el conmutador de visualización visual adaptativa para los perfiles académicos de la institución.",
+    icon: <Settings2 size={20} className="text-[#0070f3]" />,
+    title: 'Módulo General del Sistema',
+    summary: 'Consola unificada de acceso y gestión curricular para el Programa de Estudio de la Asignatura (PEA) del ISTPET.',
+    description: 'Este espacio centraliza la navegación entre los módulos curriculares, la conmutación de roles institucionales, la búsqueda rápida de expedientes y la configuración de la cuenta.',
     steps: [
         {
-            title: "Navegación general y jerarquía lateral",
-            description: "Usa el panel de navegación principal situado a la izquierda para desplazarte entre los módulos disponibles. Las opciones del menú se cargan dinámicamente según tus permisos asignados (Docente Investigador, Coordinador de Carrera, Comisión Académica o Administrador). La barra puede contraerse mediante el control en la esquina superior para maximizar el área de trabajo en pantallas táctiles o portátiles.",
+            title: 'Navegación general y jerarquía lateral',
+            description: 'Usa el panel lateral izquierdo para desplazarte entre los módulos habilitados según tu rol institucional (Docente, Coordinación de Carrera, Coordinación Académica, Vicerrectorado o Administrador). Puedes contraer o expandir la barra lateral para ganar espacio de trabajo.',
             highlight: 'sidebar'
         },
         {
-            title: "Ayuda e información contextual en vivo",
-            description: "Puedes invocar la guía interactiva en cualquier momento del flujo de trabajo haciendo clic en el control de tres puntos de la barra superior. La guía analizará de manera transparente la ruta del sistema en la que te encuentras y ofrecerá explicaciones detalladas y específicas del módulo actual.",
+            title: 'Barra superior, rol activo y guía en vivo',
+            description: 'En la barra superior verificas tu rol curricular activo, accedes a tus notificaciones y puedes abrir esta guía contextual en cualquier pantalla. La guía detecta automáticamente la ruta actual y tu perfil.',
             highlight: 'topbar'
         }
     ],
-    compliance: "Este módulo cumple con los estándares mínimos de accesibilidad digital y seguridad de la información exigidos en los criterios generales de administración e infraestructura de los modelos de evaluación externa y acreditación del CACES.",
+    compliance: 'Cumple con los criterios de organización académica, accesibilidad y trazabilidad institucional exigidos por el CACES para la gestión curricular de los Programas de Estudio de la Asignatura (PEA).',
     tips: [
-        "Presiona 'Alt + K' en Windows/Linux o 'Option + K' en macOS en cualquier parte del sistema para desplegar la paleta de comandos de búsqueda profesional de archivos y acciones.",
-        "Ajusta el tamaño del menú de navegación lateral arrastrando el borde exterior hacia la derecha o hacia la izquierda según tu preferencia visual."
+        'Presiona Ctrl + K (o Cmd + K en macOS) en cualquier pantalla para abrir la paleta de comandos y saltar rápidamente entre módulos.',
+        'Si cuentas con múltiples atribuciones académicas, verifica tu rol activo antes de iniciar revisiones o elaborar un PEA.'
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <div className={`grid grid-cols-3 gap-1.5 shrink-0 transition-all duration-300 ${highlightTopClass}`}>
                 {[1, 2, 3].map((i) => (
-                    <div key={i} className="rounded-lg border p-1 flex flex-col gap-1">
-                        <div className="w-2/3 h-1.5 bg-text-dim/20 rounded" />
-                        <div className="w-1/2 h-3.5 bg-text-main/30 rounded" />
+                    <div key={i} className="rounded-lg border border-slate-200 dark:border-zinc-800 p-1.5 flex flex-col gap-1">
+                        <div className="w-2/3 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
+                        <div className="w-1/2 h-3 bg-slate-300 dark:bg-zinc-600 rounded" />
                     </div>
                 ))}
             </div>
-            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-1.5 transition-all duration-300 ${highlightBottomClass}`}>
-                <div className="flex items-center justify-between border-b border-border-thin/40 pb-1">
-                    <div className="w-1/3 h-2 bg-text-main/20 rounded" />
-                    <div className="w-1/6 h-2 bg-text-dim/15 rounded" />
+            <div className={`flex-1 rounded-lg border border-slate-200 dark:border-zinc-800 p-2 flex flex-col gap-1.5 transition-all duration-300 ${highlightBottomClass}`}>
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-1">
+                    <div className="w-1/3 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                    <div className="w-1/6 h-2 bg-slate-200 dark:bg-zinc-700 rounded" />
                 </div>
                 <div className="space-y-1 flex-1 py-1">
-                    <div className="w-full h-2 bg-text-dim/10 rounded-sm" />
-                    <div className="w-full h-2 bg-text-dim/5 rounded-sm" />
+                    <div className="w-full h-2 bg-slate-100 dark:bg-zinc-800 rounded-sm" />
+                    <div className="w-4/5 h-2 bg-slate-100 dark:bg-zinc-800 rounded-sm" />
                 </div>
             </div>
         </>
@@ -50,58 +51,97 @@ export const DEFAULT_CONFIG: HelpConfig = {
 };
 
 export const DASHBOARD_CONFIG: HelpConfig = {
-    icon: <Activity size={24} className="text-brand animate-pulse" />,
-    title: "Panel de Control de Investigación",
-    summary: "Tablero centralizado de mando ejecutivo con indicadores cuantitativos y accesos directos al perfil del investigador.",
-    description: "El panel principal centraliza el estado global de tus investigaciones académicas y del nivel de cumplimiento científico del instituto. Ofrece información instantánea sobre tu carga horaria dedicada a la investigación científica, presupuesto del departamento, estado de revisiones en curso y enlaces interactivos para iniciar tareas clave en pocos clics.",
+    icon: <Activity size={20} className="text-[#0070f3]" />,
+    title: 'Panel de Control Curricular',
+    summary: 'Tablero principal adaptado a tu rol institucional para gestionar y supervisar el ciclo de vida de los PEAs.',
+    description: 'Centraliza el estado de las asignaturas del período lectivo vigente sincronizadas con SIGAFI, los plazos normativos del calendario académico y las acciones inmediatas según tu responsabilidad curricular.',
+    roleOverrides: {
+        docente: {
+            title: 'Panel de Control Docente',
+            summary: 'Resumen operativo de tus asignaturas asignadas, horas distributivas y estado de tus PEAs.',
+            description: 'Visualiza tu carga horaria oficial (CD, APE, TA), el avance de elaboración de tus Programas de Estudio de la Asignatura y las observaciones pendientes de subsanación.'
+        },
+        coord_carrera: {
+            title: 'Panel de Coordinación de Carrera',
+            summary: 'Consola de seguimiento curricular de los PEAs pertenecientes a tu carrera.',
+            description: 'Supervisa el cumplimiento de entregas de los docentes de tu carrera, revisa instrumentos pendientes de aval y coordina el trabajo colegiado.'
+        },
+        coord_acad: {
+            title: 'Panel de Coordinación Académica',
+            summary: 'Control institucional transversal de la planificación microcurricular del ISTPET.',
+            description: 'Monitorea el avance global por carreras, valida la coherencia normativa de los PEAs avalados y administra el cumplimiento de plazos.'
+        },
+        vicerrector: {
+            title: 'Panel de Vicerrectorado Académico',
+            summary: 'Despacho de aprobación final y legalización institucional de instrumentos curriculares.',
+            description: 'Supervisa las métricas consolidadas de cumplimiento por carrera y ejecuta la revisión y firma final de los PEAs listos para legalización.'
+        },
+        admin: {
+            title: 'Panel de Administración Curricular',
+            summary: 'Vista ejecutiva integral del sistema DOSIER, períodos activos y estado operativo.',
+            description: 'Permite alternar entre vistas de rol institucional, supervisar la sincronización con SIGAFI y acceder a los módulos de gobernanza.'
+        }
+    },
     steps: [
         {
-            title: "Monitoreo en tiempo real de KPIs de investigación",
-            description: "Examina los contadores principales en la parte superior del tablero. Estas tarjetas informativas reflejan el número de proyectos aprobados, el estado de avance de los proyectos en el periodo actual, las horas asignadas en tu distributivo académico y el presupuesto financiero ejecutado. Se sincronizan directamente con las bases del SIGAFI.",
+            title: 'Selector de rol y contexto del período',
+            description: 'En la parte superior se muestra el período lectivo activo y, si tienes múltiples roles asignados, el selector para cambiar de perspectiva operativa sin cerrar sesión.',
             highlight: 'content-top'
         },
         {
-            title: "Accesos directos Bento y bandeja de actividades",
-            description: "Usa las tarjetas de acceso rápido para crear una nueva postulación, firmar informes de avance, revisar el historial de actividad o consultar documentos oficiales sin navegar manualmente por el menú.",
-            highlight: 'content-bottom'
+            title: 'Resumen de estado curricular y plazos',
+            description: 'Consulta las fichas clave-valor del período: asignaturas en borrador, en revisión colegiada, con observaciones o aprobadas, junto con las fechas límite vigentes.',
+            highlight: 'content-top'
         },
         {
-            title: "Identificación de rol institucional y sesión activa",
-            description: "Verifica tu cargo activo, departamento académico y el campus asignado (por ejemplo, Instituto Tecnológico Traversari) que se muestran de forma destacada en la cabecera. Es de suma importancia corroborar que tu rol (como Docente Investigador) sea el correcto para que se activen las reglas de negocio de tus convocatorias y el flujo de firmas digitales.",
-            highlight: 'topbar'
+            title: 'Acciones directas sobre asignaturas y bandejas',
+            description: 'Accede directamente a elaborar o corregir un PEA (como Docente) o a revisar y emitir dictámenes sobre instrumentos enviados (como Coordinación o Vicerrectorado).',
+            highlight: 'content-bottom'
         }
     ],
-    compliance: "Mapea directamente los indicadores de gestión académica del CACES, certificando el porcentaje de profesores asignados formalmente y la ejecución de horas docentes validadas.",
+    compliance: 'Respalda el seguimiento oportuno de la planificación microcurricular y la verificación de carga horaria docente conforme al Reglamento de Régimen Académico y estándares CACES.',
     tips: [
-        "Si observas que tus horas docentes asignadas no corresponden a tu distributivo, contacta al administrador del sistema para iniciar una resincronización con el área académica.",
-        "Utiliza el atajo del buscador rápido superior para localizar expedientes utilizando únicamente el código alfanumérico institucional."
+        {
+            text: 'Si alguna asignatura de tu distributivo no aparece en el panel, verifica que el período lectivo activo esté sincronizado con SIGAFI.',
+            roles: ['docente', 'admin']
+        },
+        {
+            text: 'Prioriza los PEAs marcados con observaciones para subsanarlos antes del cierre de entregas del período.',
+            roles: ['docente']
+        },
+        {
+            text: 'Usa el selector de rol superior para inspeccionar cómo visualiza el flujo cada perfil curricular cuando realizas soporte.',
+            roles: ['admin']
+        },
+        'Haz clic directamente en cualquier asignatura o expediente listado para abrir su flujo correspondiente.'
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            <div className="grid grid-cols-3 gap-1.5 shrink-0">
-                {[1, 2, 3].map((i) => (
-                    <div key={i} className={`rounded-lg border p-1.5 flex flex-col gap-1 transition-all duration-300 ${highlightTopClass}`}>
-                        <div className="w-2/3 h-1.5 bg-text-dim/20 rounded" />
-                        <div className="w-1/2 h-3.5 bg-text-main/30 rounded" />
-                    </div>
-                ))}
-            </div>
-            <div className="flex-1 flex gap-1.5 min-h-0">
-                <div className={`flex-[1.2] rounded-lg border p-2 flex flex-col justify-between transition-all duration-300 ${highlightBottomClass}`}>
-                    <div className="w-1/2 h-2 bg-text-main/20 rounded" />
-                    <div className="flex items-end gap-1 h-12 pt-2">
-                        <div className="w-1/4 h-3/5 bg-brand/40 rounded-sm" />
-                        <div className="w-1/4 h-4/5 bg-brand/60 rounded-sm animate-pulse" />
-                        <div className="w-1/4 h-2/5 bg-brand/30 rounded-sm" />
-                        <div className="w-1/4 h-full bg-brand rounded-sm" />
-                    </div>
+            <div className={`rounded-lg border p-1.5 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="space-y-0.5">
+                    <div className="w-20 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                    <div className="w-28 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
                 </div>
-                <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-1.5 transition-all duration-300 ${highlightBottomClass}`}>
-                    <div className="w-3/4 h-2 bg-text-main/15 rounded" />
-                    <div className="space-y-1 flex-1 py-1">
-                        <div className="w-full h-3.5 bg-text-dim/10 rounded-md border border-border-thin flex items-center justify-center text-[7px] text-text-dim">Crear</div>
-                        <div className="w-full h-3.5 bg-text-dim/10 rounded-md border border-border-thin flex items-center justify-center text-[7px] text-text-dim">Informe</div>
-                    </div>
+                <div className="flex gap-1">
+                    <div className="w-12 h-3.5 bg-[#0070f3]/15 border border-[#0070f3]/30 rounded" />
+                    <div className="w-10 h-3.5 bg-emerald-500/15 border border-emerald-500/30 rounded" />
+                </div>
+            </div>
+            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-1.5 transition-all duration-300 ${highlightBottomClass}`}>
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-1">
+                    <div className="w-24 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                    <div className="w-12 h-2 bg-[#0070f3] rounded" />
+                </div>
+                <div className="space-y-1.5 flex-1 py-0.5">
+                    {[1, 2, 3].map((row) => (
+                        <div key={row} className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-zinc-800/70">
+                            <div className="space-y-0.5">
+                                <div className="w-28 h-1.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+                                <div className="w-16 h-1 bg-slate-200 dark:bg-zinc-700 rounded" />
+                            </div>
+                            <div className="w-12 h-3 bg-[#0070f3] rounded" />
+                        </div>
+                    ))}
                 </div>
             </div>
         </>
@@ -109,163 +149,88 @@ export const DASHBOARD_CONFIG: HelpConfig = {
 };
 
 export const SETTINGS_CONFIG: HelpConfig = {
-    icon: <Settings2 size={24} className="text-brand" />,
-    title: "Mi Cuenta y Firma Electrónica",
-    summary: "Consola de configuración personal, credenciales académicas y gestión de firma electrónica.",
-    description: "Espacio individual para que el docente o usuario administre sus datos personales, perfiles de investigación (ORCID, Google Scholar) y configure la firma digital necesaria para la suscripción académica.",
+    icon: <Settings2 size={20} className="text-[#0070f3]" />,
+    title: 'Configuración y Firma Electrónica',
+    summary: 'Administración de perfil personal, certificado de firma electrónica PKCS#12 y parámetros del sistema.',
+    description: 'Espacio para gestionar tus datos de usuario, cargar y validar tu certificado de firma digital (.p12) para suscribir PEAs oficiales, y —para administradores— configurar períodos académicos y almacenamiento.',
     steps: [
         {
-            title: "Gestión de información de perfil y filiación",
-            description: "Actualiza tus datos de contacto, enlaces académicos externos como ORCID o Scopus ID, e información de tu departamento para asegurar que tus firmas de reportes y entregables se generen con metadatos correctos.",
+            title: 'Navegación por pestañas sobre riel',
+            description: 'Alterna entre las secciones disponibles en la parte superior: Mi Perfil y Firma Electrónica para todos los usuarios, y pestañas administrativas de Parámetros Normativos, Plantillas o Almacenamiento según tus permisos.',
             highlight: 'content-top'
         },
         {
-            title: "Seguridad y firma electrónica cifrada",
-            description: "Administra tu certificado de firma electrónica (token o archivo p12) y otorga el consentimiento de custodia para firmar actas e informes técnicos.",
+            title: 'Gestión de firma electrónica PKCS#12',
+            description: 'Carga tu certificado digital (.p12) emitido por una entidad certificadora autorizada (como FirmaEC) o verifica el estado de tu firma institucional interna (DFRM) para legalizar documentos.',
             highlight: 'content-bottom'
         }
     ],
-    compliance: "Alineado con el Criterio de Infraestructura y Transparencia del CACES para la gestión de claustro docente e investigadores autorizados.",
+    compliance: 'Alineado con la Ley de Comercio Electrónico, Firmas Electrónicas y Mensajes de Datos del Ecuador y el resguardo seguro de credenciales criptográficas.',
     tips: [
-        "Mantén vinculados y actualizados tus perfiles de ORCID y Google Scholar para permitir la sincronización automatizada de tu producción científica periódica.",
-        "Por seguridad, el certificado .p12 y su clave se cifran bajo AES-256 antes de guardarse en la base de datos."
+        'Tu archivo .p12 y su contraseña se protegen mediante cifrado antes de su almacenamiento.',
+        'Verifica la fecha de vigencia de tu certificado digital antes de los cierres de aprobación de PEAs.'
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between transition-all duration-300 shrink-0 ${highlightTopClass}`}>
-                <div className="w-1/3 h-3 bg-text-dim/15 rounded border border-border-thin" />
+            <div className={`border-b border-slate-200 dark:border-zinc-800 pb-1 flex gap-3 px-1 shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <span className="text-[7px] font-semibold text-[#0070f3] border-b-2 border-[#0070f3] pb-0.5">Mi Perfil y Firma</span>
+                <span className="text-[7px] text-slate-400 pb-0.5">Parámetros</span>
+                <span className="text-[7px] text-slate-400 pb-0.5">Plantillas</span>
             </div>
-            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-1.5 transition-all duration-300 ${highlightBottomClass}`}>
-                <div className="flex gap-2 items-center pb-1 border-b border-border-thin/20">
-                    <div className="w-6 h-6 rounded-full bg-brand/20 border border-brand/40 flex items-center justify-center text-[7px] text-brand">PD</div>
-                    <div className="space-y-0.5">
-                        <div className="w-12 h-2 bg-text-main/20 rounded" />
-                        <div className="w-8 h-1 bg-text-dim/10 rounded" />
+            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-2 transition-all duration-300 ${highlightBottomClass}`}>
+                <div className="flex items-center gap-2 pb-1.5 border-b border-slate-200 dark:border-zinc-800">
+                    <div className="w-6 h-6 rounded-full bg-[#0070f3]/15 border border-[#0070f3]/30 flex items-center justify-center text-[7px] font-bold text-[#0070f3]">ID</div>
+                    <div className="space-y-1">
+                        <div className="w-24 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                        <div className="w-16 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
                     </div>
                 </div>
-                <div className="space-y-1.5 py-1">
-                    <div className="w-full h-3 bg-text-dim/10 rounded-sm border border-border-thin" />
-                    <div className="w-3/4 h-3 bg-text-dim/10 rounded-sm border border-border-thin" />
+                <div className="space-y-1.5">
+                    <div className="w-full h-4 rounded border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900" />
+                    <div className="w-3/4 h-4 rounded border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900" />
                 </div>
-            </div>
-        </>
-    )
-};
-
-export const ARCO_CONFIG: HelpConfig = {
-    icon: <ShieldCheck size={24} className="text-brand" />,
-    title: "Derechos ARCO · Protección de Datos",
-    summary: "Portal del usuario para el ejercicio de sus derechos de protección de datos (ARCO).",
-    description: "DOSIER garantiza el ejercicio de sus derechos de Acceso, Rectificación, Cancelación y Oposición sobre sus datos personales conforme a la Ley Orgánica de Protección de Datos Personales (LOPDP) del Ecuador.",
-    steps: [
-        {
-            title: "Presentación de nueva solicitud",
-            description: "Seleccione el tipo de derecho que desea ejercer (Acceso, Rectificación, Eliminación, Oposición, Portabilidad o Limitación) y describa detalladamente su justificación en el formulario.",
-            highlight: 'content-top'
-        },
-        {
-            title: "Seguimiento e historial de resoluciones",
-            description: "Revise el historial de sus peticiones presentadas. Por ley, el instituto cuenta con un plazo de 15 días laborables para emitir una resolución formal y dictamen legal.",
-            highlight: 'content-bottom'
-        }
-    ],
-    compliance: "Alineado con el Título III de la LOPDP sobre los Derechos de los Titulares de Datos Personales en el Ecuador.",
-    tips: [
-        "Describa de la forma más clara posible los registros o datos específicos que desea modificar o eliminar para agilizar el análisis del departamento legal.",
-        "Las resoluciones emitidas por el administrador del sistema quedarán registradas de forma permanente en su historial."
-    ],
-    Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
-        <>
-            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between transition-all duration-300 shrink-0 ${highlightTopClass}`}>
-                <div className="w-1/3 h-3 bg-text-dim/15 rounded border border-border-thin" />
-                <div className="w-1/5 h-5 bg-brand text-white rounded flex items-center justify-center text-[6px] font-semibold">Enviar</div>
-            </div>
-            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-1.5 transition-all duration-300 ${highlightBottomClass}`}>
-                <div className="w-3/4 h-2 bg-text-main/20 rounded" />
-                <div className="w-full h-8 bg-text-dim/10 rounded border border-border-thin" />
-            </div>
-        </>
-    )
-};
-
-export const LOPDP_ADMIN_CONFIG: HelpConfig = {
-    icon: <ShieldCheck size={24} className="text-brand" />,
-    title: "Panel de Administración LOPDP",
-    summary: "Consola de gobernanza y auditoría de protección de datos personales para administradores.",
-    description: "Permite a los administradores del sistema responder legalmente a las peticiones de Derechos ARCO presentadas y auditar la bitácora completa de consentimientos otorgados y revocados.",
-    steps: [
-        {
-            title: "Resolución legal de peticiones ARCO",
-            description: "Revise la lista de peticiones pendientes y seleccione una para analizarla. Ingrese el dictamen legal formal y actualice su estado a Aprobado, Rechazado o En Análisis.",
-            highlight: 'content-top'
-        },
-        {
-            title: "Auditoría de consentimiento digital",
-            description: "Consulte la tabla de consentimientos para verificar la fecha, versión de la política aceptada, dirección IP y el user-agent del navegador del titular al otorgar o revocar su autorización.",
-            highlight: 'content-bottom'
-        }
-    ],
-    compliance: "Asegura el registro permanente y el cumplimiento de las obligaciones institucionales del Responsable de Tratamiento establecidas en la Ley Orgánica de Protección de Datos Personales (LOPDP).",
-    tips: [
-        "Es obligatorio incluir una justificación o dictamen legal debidamente fundamentado para cualquier resolución, especialmente al rechazar una solicitud.",
-        "Utilice los filtros y ordenamiento para priorizar aquellas peticiones que se encuentran próximas a vencer su plazo de SLA (15 días)."
-    ],
-    Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
-        <>
-            <div className={`h-8 rounded-lg border px-2 flex items-center gap-2 transition-all duration-300 shrink-0 ${highlightTopClass}`}>
-                <div className="w-16 h-3 bg-brand/10 border border-brand/20 rounded" />
-                <div className="w-16 h-3 bg-text-dim/10 rounded" />
-            </div>
-            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-1.5 transition-all duration-300 ${highlightBottomClass}`}>
-                <div className="w-full h-8 bg-text-dim/10 rounded border border-border-thin" />
-                <div className="w-full h-8 bg-text-dim/10 rounded border border-border-thin" />
             </div>
         </>
     )
 };
 
 export const ANALYTICS_CONFIG: HelpConfig = {
-    icon: <BarChart3 size={24} className="text-brand" />,
-    title: "Analíticas de Investigación y Acreditación",
-    summary: "Tablero predictivo y de Business Intelligence para el monitoreo de indicadores de calidad institucional.",
-    description: "Consola gerencial de analíticas diseñada para evaluar el desempeño de la producción científica y tecnológica de la institución. Permite a las autoridades analizar gráficos interactivos de avance, proyectar el cumplimiento de metas y exportar reportes ejecutivos consolidados para la toma de decisiones estratégicas ante el comité directivo.",
+    icon: <BarChart3 size={20} className="text-[#0070f3]" />,
+    title: 'Analíticas Curriculares',
+    summary: 'Tablero de seguimiento cuantitativo sobre cobertura de PEAs, avance por carrera y tiempos de revisión.',
+    description: 'Consola gerencial para autoridades y coordinadores que permite evaluar el estado global de elaboración, revisión y aprobación de los Programas de Estudio de la Asignatura por período académico y carrera.',
     steps: [
         {
-            title: "Filtros multidimensionales y segmentación de datos",
-            description: "Utiliza las herramientas superiores para segmentar la información estadística de la plataforma. Puedes filtrar los indicadores generales por periodo académico, instituto, facultades, carreras docentes específicas, líneas de investigación o estados de proyectos, actualizando los gráficos al instante.",
+            title: 'Filtros por período y carrera',
+            description: 'Segmenta los indicadores utilizando los controles superiores para enfocar el análisis en un período lectivo específico o en una carrera determinada.',
             highlight: 'content-top'
         },
         {
-            title: "Análisis comparativo de indicadores CACES",
-            description: "Monitorea la sección de cumplimiento donde se grafican en tiempo real tus métricas versus las metas nacionales. El sistema despliega alertas visuales en semáforo (Rojo: Alerta Crítica, Amarillo: Cerca de la Meta, Verde: Cumplimiento Aprobado) analizando indicadores de publicaciones por docente y presupuestos ejecutados.",
+            title: 'Distribución de estados y cumplimiento',
+            description: 'Analiza los gráficos y tablas comparativas de PEAs en Borrador, En Revisión, Con Observaciones y Aprobados, identificando cuellos de botella en el circuito colegiado.',
             highlight: 'content-bottom'
-        },
-        {
-            title: "Exportación de informes ejecutivos en PDF",
-            description: "Usa el botón 'Exportar PDF' para generar y descargar un informe ejecutivo completo con todos los gráficos, tablas comparativas de rendimiento, listados de publicaciones indexadas activas y dictámenes cuantitativos del periodo, optimizado para impresión y presentación formal.",
-            highlight: 'content-top'
         }
     ],
-    compliance: "Módulo principal de justificación cuantitativa y análisis predictivo en las fases de evaluación interna y externa del CACES, certificando las métricas de efectividad de las políticas de fomento a la investigación institucional.",
+    compliance: 'Proporciona evidencia cuantitativa verificable sobre cobertura microcurricular y cumplimiento de plazos académicos para auditorías internas y procesos CACES.',
     tips: [
-        "Haz clic sobre los segmentos del gráfico de donut de estados de proyectos para abrir la lista filtrada de las propuestas específicas vinculadas a esa métrica.",
-        "Usa el botón de actualización forzada de datos para recalcular las proyecciones en caso de que existan actas o informes firmados recientemente."
+        'Revisa periódicamente las carreras con mayor porcentaje de borradores pendientes para emitir recordatorios oportunos.',
+        'Combina esta vista con la bandeja de Supervisión Curricular para gestionar devoluciones específicas.'
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between transition-all duration-300 shrink-0 ${highlightTopClass}`}>
-                <div className="w-1/3 h-3 bg-text-dim/15 rounded border border-border-thin" />
-                <div className="w-1/5 h-5 bg-brand/10 border border-brand/20 rounded flex items-center justify-center text-[6px] text-brand font-semibold">PDF</div>
+            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="w-1/3 h-2.5 bg-slate-200 dark:bg-zinc-700 rounded" />
+                <div className="w-14 h-4 bg-[#0070f3] rounded" />
             </div>
-            <div className={`flex-1 rounded-lg border p-2 flex gap-1.5 transition-all duration-300 ${highlightBottomClass}`}>
-                <div className="flex-1 flex flex-col items-center justify-center gap-1 border border-border-thin/40 rounded p-1 bg-surface-hover/30">
-                    <div className="w-7 h-7 rounded-full border-4 border-brand border-r-transparent" />
-                    <div className="w-10 h-1 bg-text-dim/20 rounded" />
+            <div className={`flex-1 rounded-lg border p-2 flex gap-2 transition-all duration-300 ${highlightBottomClass}`}>
+                <div className="flex-1 flex flex-col items-center justify-center gap-1 border border-slate-200 dark:border-zinc-800 rounded p-1">
+                    <div className="w-8 h-8 rounded-full border-4 border-[#0070f3] border-r-emerald-500" />
+                    <div className="w-12 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
                 </div>
-                <div className="flex-1 flex items-end gap-1 border border-border-thin/40 rounded p-1.5 justify-center">
-                    <div className="w-2.5 h-1/3 bg-success/60 rounded-t-sm" />
-                    <div className="w-2.5 h-2/3 bg-brand/60 rounded-t-sm" />
-                    <div className="w-2.5 h-full bg-brand/80 rounded-t-sm animate-pulse" />
+                <div className="flex-1 flex items-end gap-1.5 border border-slate-200 dark:border-zinc-800 rounded p-2 justify-center">
+                    <div className="w-3 h-1/3 bg-amber-500/70 rounded-t-sm" />
+                    <div className="w-3 h-2/3 bg-[#0070f3]/80 rounded-t-sm" />
+                    <div className="w-3 h-full bg-emerald-500/80 rounded-t-sm" />
                 </div>
             </div>
         </>
@@ -273,135 +238,302 @@ export const ANALYTICS_CONFIG: HelpConfig = {
 };
 
 export const NOTIFICATIONS_CONFIG: HelpConfig = {
-    icon: <Bell size={24} className="text-brand" />,
-    title: "Bandeja y Centro de Notificaciones",
-    summary: "Canal formal de notificaciones del sistema, alertas del flujo de trabajo académico y firmas pendientes.",
-    description: "Bandeja centralizada que agrupa todas las comunicaciones automáticas y alertas del sistema. Te notifica sobre asignaciones de proyectos para revisión, comentarios de revisión institucional, plazos de entregables a vencer y solicitudes de firma digital de actas y contratos oficiales.",
+    icon: <Bell size={20} className="text-[#0070f3]" />,
+    title: 'Centro de Notificaciones',
+    summary: 'Bandeja unificada de alertas del flujo curricular, observaciones de revisión y firmas pendientes.',
+    description: 'Agrupa todas las comunicaciones automáticas del sistema DOSIER: asignaciones de cátedra, devoluciones con observaciones, aprobaciones de coordinación y alertas de vencimiento del calendario.',
     steps: [
         {
-            title: "Filtros temáticos y pestañas de bandeja",
-            description: "Organiza tu flujo de trabajo navegando entre las pestañas del buzón: 'Sin leer' (alertas nuevas prioritarias), 'Urgente' (solicitudes de firmas o hitos vencidos), 'Investigaciones' (cambios en el estado de tus propuestas) y 'Sistema' (mensajes de mantenimiento general o actualizaciones de la cuenta).",
+            title: 'Filtros y lectura masiva',
+            description: 'Filtra las notificaciones por estado (No leídas, Todas) y marca alertas como leídas de forma individual o masiva desde la barra superior.',
             highlight: 'content-top'
         },
         {
-            title: "Acciones masivas y limpieza del Inbox",
-            description: "Mantén ordenado tu buzón de alertas utilizando la opción de 'Marcar como leídas' en bloque. Esto desactivará los contadores numéricos y los globos de notificación en la barra superior, pero conservará los mensajes en el archivo histórico para futuras referencias.",
-            highlight: 'content-top'
-        },
-        {
-            title: "Enlaces contextuales y navegación al origen",
-            description: "Haz clic sobre el cuerpo de cualquier notificación para ir directamente al módulo de origen del mensaje. El sistema abrirá automáticamente el contrato específico que debes firmar, el entregable rechazado por el revisor o la bitácora de observaciones que debes subsanar.",
+            title: 'Navegación directa al documento',
+            description: 'Haz clic sobre cualquier notificación del folio para abrir directamente el PEA, monitoreo o revisión técnica relacionada.',
             highlight: 'content-bottom'
         }
     ],
-    compliance: "Cumple con las directrices de comunicación formal y debido proceso exigidas en los reglamentos de régimen académico de la institución, asegurando el registro de la entrega de dictámenes y requerimientos oficiales.",
+    compliance: 'Mantiene registro trazable de las comunicaciones oficiales emitidas dentro del circuito de aprobación curricular.',
     tips: [
-        "Las notificaciones de la categoría 'Urgente' contienen plazos de validez para firmas electrónicas que expiran automáticamente en la fecha indicada.",
-        "Puedes configurar alertas secundarias a tu correo electrónico institucional desde tu panel de perfil en la barra lateral."
+        'Las notificaciones no leídas se identifican con un punto azul discreto a la izquierda.',
+        'Atiende con prioridad las alertas de observaciones para no retrasar la aprobación del PEA.'
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            <div className={`h-7 rounded-lg border px-1.5 flex items-center gap-1 transition-all duration-300 shrink-0 ${highlightTopClass}`}>
-                <div className="w-8 h-3.5 rounded bg-brand/10 border border-brand/20 text-[6px] text-brand flex items-center justify-center font-semibold">Inbox</div>
-                <div className="w-8 h-3.5 rounded bg-text-dim/5 text-[6px] text-text-dim flex items-center justify-center">Leídas</div>
+            <div className={`h-7 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="flex gap-2">
+                    <span className="text-[7px] font-semibold text-[#0070f3]">Todas</span>
+                    <span className="text-[7px] text-slate-400">No leídas</span>
+                </div>
+                <div className="w-14 h-3 bg-slate-200 dark:bg-zinc-700 rounded" />
             </div>
-            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-1 transition-all duration-300 ${highlightBottomClass}`}>
-                <div className="flex items-center gap-2 py-0.5 border-b border-border-thin/20">
-                    <div className="w-2 h-2 rounded-full bg-error shrink-0" />
-                    <div className="w-2/3 h-1.5 bg-text-main/20 rounded" />
-                </div>
-                <div className="flex items-center gap-2 py-0.5 border-b border-border-thin/20">
-                    <div className="w-2 h-2 rounded-full bg-success shrink-0" />
-                    <div className="w-3/4 h-1.5 bg-text-main/20 rounded" />
-                </div>
+            <div className={`flex-1 rounded-lg border divide-y divide-slate-100 dark:divide-zinc-800 p-1.5 flex flex-col justify-center transition-all duration-300 ${highlightBottomClass}`}>
+                {[true, false, false].map((unread, idx) => (
+                    <div key={idx} className="flex items-center justify-between py-1.5 px-1">
+                        <div className="flex items-center gap-1.5">
+                            <span className={`w-1.5 h-1.5 rounded-full ${unread ? 'bg-[#0070f3]' : 'bg-slate-300 dark:bg-zinc-700'}`} />
+                            <div className="w-28 h-1.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+                        </div>
+                        <div className="w-8 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
+                    </div>
+                ))}
             </div>
         </>
     )
 };
 
 export const VERIFY_CONFIG: HelpConfig = {
-    icon: <ShieldCheck size={24} className="text-brand" />,
-    title: "Verificación de Certificados y Autenticidad",
-    summary: "Portal público para verificar la autenticidad de reportes y actas electrónicas del sistema.",
-    description: "Herramienta pública para verificar la autenticidad de documentos formales, actas o certificados generados por DOSIER. Al ingresar el código del documento o escanear el QR, el sistema comprueba en la base de datos si el archivo es válido y no ha sido alterado.",
+    icon: <ShieldCheck size={20} className="text-[#0070f3]" />,
+    title: 'Verificación de Autenticidad y Firmas',
+    summary: 'Portal de validación pública para comprobar la integridad y vigencia de documentos PEA emitidos por DOSIER.',
+    description: 'Permite verificar documentos oficiales generados por el sistema ingresando su código alfanumérico de verificación o escaneando el código QR estampado en el PDF.',
     steps: [
         {
-            title: "Validación por código institucional",
-            description: "Ingresa el identificador alfanumérico único impreso en el pie de página del certificado físico en el campo de búsqueda. Haz clic en 'Validar' para consultar el estado del registro, devolviendo la fecha exacta de emisión y los nombres de los firmantes autorizados.",
+            title: 'Búsqueda por código institucional',
+            description: 'Ingresa el código único impreso en el pie de página o sello del PDF y presiona Validar para consultar el registro forense en tiempo real.',
             highlight: 'content-top'
         },
         {
-            title: "Escaneo rápido mediante código QR",
-            description: "Utiliza tu cámara web o lector sobre el código QR del documento para acceder al enlace de validación directa. Este método evita errores de transcripción alfanumérica y procesa la autenticación de manera automática e instantánea.",
-            highlight: 'content-top'
-        },
-        {
-            title: "Dictamen de autenticidad y firmas digitales",
-            description: "Inspecciona el bloque de resultados del validador. Mostrará el estado del documento ('VIGENTE' o 'ANULADO'), el firmante del comité y si el archivo es auténtico según el código de verificación del sistema.",
+            title: 'Dictamen de integridad y firmantes',
+            description: 'Inspecciona el resultado devuelto: vigencia del documento, hash de integridad SHA-256, fecha de emisión y cadena de autoridades firmantes.',
             highlight: 'content-bottom'
         }
     ],
-    compliance: "Alineado con las directrices de la Ley de Comercio Electrónico, Firmas Electrónicas y Mensajes de Datos del Ecuador, asegurando la validez legal de las actas de investigación ante visitas de acreditación del CACES.",
+    compliance: 'Garantiza la autenticidad, integridad y no repudio de los Programas de Estudio de la Asignatura legalizados ante auditorías académicas del CACES y CES.',
     tips: [
-        "Este portal público de validación no requiere inicio de sesión, facilitando que entidades externas de educación superior o auditores del CES verifiquen la autenticidad del documento de manera autónoma.",
-        "Si un documento fue alterado, el sistema alertará de inmediato que el código de verificación no coincide, detectando posibles falsificaciones."
+        'El enlace del código QR apunta directamente a esta vista con el código precargado.',
+        'Esta verificación está disponible tanto dentro de la sesión como para consulta pública externa.'
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between transition-all duration-300 shrink-0 ${highlightTopClass}`}>
-                <div className="w-2/3 h-3 bg-text-dim/15 rounded border border-border-thin" />
-                <div className="w-1/5 h-5 bg-brand text-white rounded flex items-center justify-center text-[7px] font-semibold">Validar</div>
+            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="w-2/3 h-3.5 bg-slate-100 dark:bg-zinc-900 rounded border border-slate-200 dark:border-zinc-800" />
+                <div className="w-12 h-4 bg-[#0070f3] text-white rounded flex items-center justify-center text-[6px] font-semibold">Validar</div>
             </div>
             <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-2 justify-center items-center transition-all duration-300 ${highlightBottomClass}`}>
-                <div className="w-12 h-12 border-2 border-brand/50 border-dashed rounded-lg flex items-center justify-center relative bg-brand/5">
-                    <div className="absolute inset-x-2 h-[1px] bg-brand animate-bounce" />
-                    <div className="w-8 h-8 bg-text-dim/10 rounded-sm" />
+                <div className="w-10 h-10 border-2 border-[#0070f3]/60 border-dashed rounded-lg flex items-center justify-center">
+                    <div className="w-6 h-6 bg-slate-200 dark:bg-zinc-700 rounded-sm" />
                 </div>
-                <div className="w-20 h-2 bg-success/20 border border-success/30 rounded text-[6px] text-success text-center">Documento Auténtico</div>
+                <div className="flex items-center gap-1 text-[6.5px] font-semibold text-emerald-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>Documento Auténtico</span>
+                </div>
             </div>
         </>
     )
 };
 
-export const CONVOCATORIAS_CONFIG: HelpConfig = {
-    icon: <Award size={24} className="text-brand" />,
-    title: "Administración de Convocatorias Científicas",
-    summary: "Consola de visualización, exploración y administración de ciclos de financiamiento y postulación científica.",
-    description: "Módulo enfocado en la visualización de las oportunidades de postulación a fondos internos y externos de investigación. Permite a los docentes explorar las bases y cronogramas de participación, y a los directores del departamento crear nuevos periodos de postulación, definir presupuestos máximos y vincular las rúbricas de evaluación oficiales.",
+export const CALENDARIO_CONFIG: HelpConfig = {
+    icon: <Calendar size={20} className="text-[#0070f3]" />,
+    title: 'Calendario de Actividades e Hitos PEA',
+    summary: 'Cronograma normativo del período académico con fechas límite de elaboración, revisión y aprobación de PEAs.',
+    description: 'Visualiza los hitos oficiales programados por la institución para el ciclo lectivo vigente. Permite consultar vencimientos en vista de calendario o tablero según tu perfil.',
     steps: [
         {
-            title: "Consulta de bases y límites límites financieros",
-            description: "Explora la ficha técnica de la convocatoria activa. Revisa la descripción, la población objetivo (por ejemplo: Docentes investigadores a tiempo completo), las fechas límite improrrogables de postulación, el financiamiento máximo asignable por propuesta y descarga las guías oficiales en PDF.",
-            highlight: 'content-bottom'
-        },
-        {
-            title: "Postulación y precarga de parámetros de la convocatoria",
-            description: "Al hacer clic en 'Postular Ahora' en una convocatoria abierta, el sistema abrirá el asistente de postulación de proyectos precargando automáticamente las reglas presupuestarias correspondientes. Esto evitará que ingreses rubros de gastos no permitidos o superes el presupuesto máximo.",
-            highlight: 'content-bottom'
-        },
-        {
-            title: "Creación y configuración de convocatorias (Administrador)",
-            description: "Crea y configura nuevos ciclos de revisión curricular definiendo las fechas de entrega, periodos lectivos y la rúbrica de evaluación CACES obligatoria que utilizarán las comisiones de revisión curricular.",
+            title: 'Controles de período y filtros de vista',
+            description: 'Navega entre meses o cambia de perspectiva en la barra superior para localizar entregas de PEAs, ventanas de revisión colegiada y cierres de período.',
             highlight: 'content-top'
+        },
+        {
+            title: 'Detalle de hitos y plazos normativos',
+            description: 'Selecciona cualquier evento del calendario para consultar su descripción, rango de fechas, estado y responsables asignados.',
+            highlight: 'content-bottom'
         }
     ],
-    compliance: "Garantiza la distribución equitativa, transparente y por concurso de méritos de los presupuestos asignados a la investigación científica en las instituciones de educación superior, un indicador clave del Modelo de Evaluación del CACES.",
+    compliance: 'Asegura el cumplimiento del cronograma académico oficial aprobado por el Órgano Colegiado Superior y su trazabilidad documental.',
     tips: [
-        "El sistema bloquea automáticamente la postulación a las 23:59:59 del día de cierre indicado en la convocatoria. No se podrán realizar excepciones porque los plazos quedan registrados de forma permanente.",
-        "Asegúrate de que la línea de investigación seleccionada en tu propuesta esté habilitada en los términos específicos de la convocatoria para evitar descalificaciones automáticas."
+        'Consulta las fechas de corte antes de enviar tu PEA a revisión para evitar bloqueos por cierre de ventana.',
+        'Los administradores pueden gestionar los hitos institucionales desde Configuración > Parámetros.'
     ],
-    Mockup: ({ highlightBottomClass }: MockupProps) => (
+    Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            <div className={`flex-1 grid grid-cols-2 gap-1.5 transition-all duration-300 ${highlightBottomClass}`}>
-                {[1, 2].map((i) => (
-                    <div key={i} className="rounded-lg border p-1.5 flex flex-col justify-between bg-surface border-border-thin">
-                        <div className="space-y-1">
-                            <div className="w-4/5 h-2 bg-text-main/20 rounded" />
-                            <div className="w-full h-1 bg-text-dim/10 rounded" />
-                        </div>
-                        <div className="w-full h-3.5 bg-brand text-white rounded flex items-center justify-center text-[5px] font-semibold mt-2">Postular</div>
+            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="w-24 h-2.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+                <div className="flex gap-1">
+                    <div className="w-8 h-3.5 bg-slate-200 dark:bg-zinc-700 rounded" />
+                    <div className="w-8 h-3.5 bg-[#0070f3] rounded" />
+                </div>
+            </div>
+            <div className={`flex-1 rounded-lg border p-2 grid grid-cols-7 gap-1 transition-all duration-300 ${highlightBottomClass}`}>
+                {Array.from({ length: 14 }).map((_, i) => (
+                    <div key={i} className={`rounded border border-slate-200 dark:border-zinc-800 p-0.5 flex flex-col justify-between ${i === 4 || i === 10 ? 'bg-[#0070f3]/10 border-[#0070f3]/40' : ''}`}>
+                        <span className="text-[5px] font-mono text-slate-400">{i + 1}</span>
+                        {(i === 4 || i === 10) && <div className="w-full h-1 bg-[#0070f3] rounded-full" />}
                     </div>
                 ))}
+            </div>
+        </>
+    )
+};
+
+export const PAPELERA_CONFIG: HelpConfig = {
+    icon: <Trash2 size={20} className="text-[#0070f3]" />,
+    title: 'Papelera de Reciclaje',
+    summary: 'Resguardo temporal de instrumentos y registros eliminados con opción de restauración o borrado definitivo.',
+    description: 'Centraliza los elementos eliminados lógicamente dentro de DOSIER para prevenir pérdidas accidentales de información curricular.',
+    steps: [
+        {
+            title: 'Búsqueda y filtrado de elementos eliminados',
+            description: 'Localiza el registro eliminado revisando su tipo, título y fecha de envío a la papelera en la cabecera de la lista.',
+            highlight: 'content-top'
+        },
+        {
+            title: 'Restauración o eliminación permanente',
+            description: 'Usa la acción Restaurar para devolver el elemento a su módulo original, o Eliminar permanentemente cuando confirmes que ya no es requerido.',
+            highlight: 'content-bottom'
+        }
+    ],
+    compliance: 'Previene la pérdida accidental de evidencia académica manteniendo control sobre la retención y eliminación de registros.',
+    tips: [
+        'La eliminación permanente es irreversible; verifica siempre el código de la asignatura antes de confirmar.',
+        'Los documentos aprobados y firmados cuentan con protección normativa contra borrado accidental.'
+    ],
+    Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
+        <>
+            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="w-28 h-2.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+                <div className="w-16 h-3.5 bg-slate-200 dark:bg-zinc-700 rounded" />
+            </div>
+            <div className={`flex-1 rounded-lg border divide-y divide-slate-100 dark:divide-zinc-800 p-2 flex flex-col gap-1 transition-all duration-300 ${highlightBottomClass}`}>
+                {[1, 2].map((i) => (
+                    <div key={i} className="flex items-center justify-between py-1.5">
+                        <div className="space-y-1">
+                            <div className="w-28 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                            <div className="w-16 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
+                        </div>
+                        <div className="flex gap-1">
+                            <div className="w-10 h-3.5 border border-slate-300 dark:border-zinc-700 rounded" />
+                            <div className="w-10 h-3.5 bg-rose-500/20 border border-rose-500/40 rounded" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </>
+    )
+};
+
+export const SOLICITUDES_CONFIG: HelpConfig = {
+    icon: <FolderKanban size={20} className="text-[#0070f3]" />,
+    title: 'Solicitudes y Trámites Curriculares',
+    summary: 'Catálogo centralizado de canales operativos y trámites académicos disponibles según tu rol.',
+    description: 'Reúne accesos directos a los distintos trámites curriculares del ISTPET habilitados para tu perfil, redirigiendo al flujo correspondiente.',
+    steps: [
+        {
+            title: 'Identificación de trámites disponibles',
+            description: 'Explora las tarjetas del catálogo filtradas automáticamente según tus roles asignados en DOSIER.',
+            highlight: 'content-bottom'
+        },
+        {
+            title: 'Ejecución directa del trámite',
+            description: 'Haz clic en la acción de cualquier tarjeta para ir al módulo operativo donde se procesa la solicitud o gestión.',
+            highlight: 'content-bottom'
+        }
+    ],
+    compliance: 'Estandariza los canales de atención y tramitación curricular institucional.',
+    tips: [
+        'Si no visualizas un trámite específico, verifica tu rol activo en la barra superior o consulta con Administración.'
+    ],
+    Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
+        <>
+            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="w-32 h-2.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+            </div>
+            <div className={`flex-1 rounded-lg border p-2 grid grid-cols-2 gap-2 transition-all duration-300 ${highlightBottomClass}`}>
+                {[1, 2].map((i) => (
+                    <div key={i} className="rounded-lg border border-slate-200 dark:border-zinc-800 p-2 flex flex-col justify-between">
+                        <div className="space-y-1">
+                            <div className="w-4/5 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                            <div className="w-full h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
+                        </div>
+                        <div className="w-14 h-3.5 bg-[#0070f3] rounded mt-2" />
+                    </div>
+                ))}
+            </div>
+        </>
+    )
+};
+
+export const INCIDENCIAS_CONFIG: HelpConfig = {
+    icon: <MessageSquareWarning size={20} className="text-[#0070f3]" />,
+    title: 'Buzón de Incidencias y Soporte',
+    summary: 'Canal directo para reportar novedades técnicas, inconsistencias de datos SIGAFI o sugerencias de mejora.',
+    description: 'Permite a los usuarios registrar reportes con seguimiento en hilo de conversación y a los administradores gestionar, responder y resolver cada caso.',
+    roleOverrides: {
+        admin: {
+            title: 'Bandeja de Incidencias (Administración)',
+            summary: 'Consola de atención, respuesta y cierre de reportes enviados por docentes y coordinadores.',
+            description: 'Centraliza todos los tickets reportados en la plataforma, permitiendo abrir conversaciones, actualizar estados y dar solución oportuna.'
+        }
+    },
+    steps: [
+        {
+            title: 'Registro o filtrado de incidencias',
+            description: 'Crea un nuevo reporte describiendo el módulo afectado y el detalle observado, o filtra la bandeja por estado de atención.',
+            highlight: 'content-top'
+        },
+        {
+            title: 'Seguimiento y conversación en hilo',
+            description: 'Abre cualquier incidencia para revisar las respuestas de soporte, adjuntar aclaraciones y confirmar la resolución.',
+            highlight: 'content-bottom'
+        }
+    ],
+    compliance: 'Documenta la atención de incidentes operativos y solicitudes de soporte técnico dentro de la plataforma institucional.',
+    tips: [
+        'Indica el código de la asignatura o la ruta exacta de la pantalla donde ocurrió la novedad para agilizar la atención.',
+        'Los mensajes nuevos sin leer se destacan en la lista para seguimiento inmediato.'
+    ],
+    Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
+        <>
+            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="w-28 h-2.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+                <div className="w-16 h-4 bg-[#0070f3] rounded" />
+            </div>
+            <div className={`flex-1 rounded-lg border divide-y divide-slate-100 dark:divide-zinc-800 p-2 flex flex-col gap-1 transition-all duration-300 ${highlightBottomClass}`}>
+                {[1, 2].map((i) => (
+                    <div key={i} className="flex items-center justify-between py-1.5">
+                        <div className="space-y-1">
+                            <div className="w-32 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                            <div className="w-20 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
+                        </div>
+                        <div className="w-10 h-3 bg-emerald-500/20 border border-emerald-500/40 rounded" />
+                    </div>
+                ))}
+            </div>
+        </>
+    )
+};
+
+export const LOPDP_ADMIN_CONFIG: HelpConfig = {
+    icon: <ShieldCheck size={20} className="text-[#0070f3]" />,
+    title: 'Panel de Administración LOPDP',
+    summary: 'Consola de gobernanza y auditoría de consentimientos de protección de datos personales.',
+    description: 'Permite a los administradores auditar la bitácora completa de consentimientos otorgados por los usuarios conforme a la Ley Orgánica de Protección de Datos Personales (LOPDP) del Ecuador.',
+    steps: [
+        {
+            title: 'Filtros de búsqueda y versión de política',
+            description: 'Filtra los registros por usuario, estado de aceptación o versión de la política institucional vigente.',
+            highlight: 'content-top'
+        },
+        {
+            title: 'Auditoría de consentimiento digital',
+            description: 'Consulta fecha, versión aceptada, dirección IP y agente de usuario registrados al momento de la aceptación.',
+            highlight: 'content-bottom'
+        }
+    ],
+    compliance: 'Asegura el registro permanente y verificable exigido al Responsable de Tratamiento por la Ley Orgánica de Protección de Datos Personales (LOPDP).',
+    tips: [
+        'Los usuarios que aún no aceptan la política vigente son redirigidos automáticamente al flujo de consentimiento antes de operar.'
+    ],
+    Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
+        <>
+            <div className={`h-8 rounded-lg border px-2 flex items-center gap-2 shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="w-16 h-3 bg-[#0070f3]/15 border border-[#0070f3]/30 rounded" />
+                <div className="w-16 h-3 bg-slate-200 dark:bg-zinc-700 rounded" />
+            </div>
+            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-1.5 transition-all duration-300 ${highlightBottomClass}`}>
+                <div className="w-full h-7 bg-slate-100 dark:bg-zinc-900 rounded border border-slate-200 dark:border-zinc-800" />
+                <div className="w-full h-7 bg-slate-100 dark:bg-zinc-900 rounded border border-slate-200 dark:border-zinc-800" />
             </div>
         </>
     )

@@ -27,15 +27,19 @@ public class CalendarioService : ICalendarioService
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // ─────────────────────────────────────────────────────────────────────────
-    // EVENTOS — Agregación Fuertemente Tipada con EF Core (PEA y Normativos)
-    // ─────────────────────────────────────────────────────────────────────────
-    public async Task<IEnumerable<CalendarioEventoDto>> GetEventosAsync(
-        DateOnly desde, DateOnly hasta, string rolUsuario, int idUsuario)
-    {
-        var resultado = new List<CalendarioEventoDto>();
+    private sealed record UserCalendarScope(
+        User? User,
+        List<string> Roles,
+        bool IsAdmin,
+        bool IsVicerrector,
+        bool IsCoordAcad,
+        bool IsCoordCarrera,
+        List<int> CarrerasCoordinadas,
+        HashSet<int> CarreraIds
+    );
 
-        // 0. RESOLUCIÓN DE IDENTIDAD Y ROLES ACTIVOS
+    private async Task<UserCalendarScope> ResolveUserScopeAsync(int idUsuario, string rolUsuario)
+    {
         var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdUsuario == idUsuario);
         var userRoles = await _context.UserRoles.AsNoTracking()
             .Where(ur => ur.IdUsuario == idUsuario && (ur.EsActivo ?? true) && ur.Role != null)
@@ -43,51 +47,144 @@ public class CalendarioService : ICalendarioService
             .ToListAsync();
 
         if (!string.IsNullOrEmpty(rolUsuario) && !userRoles.Contains(rolUsuario))
-        {
             userRoles.Add(rolUsuario);
-        }
 
         bool isAdmin = (user != null && user.Administrador) || userRoles.Contains("DOSIER_ADMIN");
         bool isVicerrector = userRoles.Contains("DOSIER_VICERRECTOR");
         bool isCoordAcad = userRoles.Contains("DOSIER_COORD_ACAD");
         bool isCoordCarrera = userRoles.Contains("DOSIER_COORD_CARRERA");
 
-        // 1. INSTRUMENTOS CURRICULARES (PEA) Y SUS HITOS DE CICLO DE VIDA
-        var peasQuery = _context.DocPeas.AsNoTracking().Where(p => p.Activo);
-        bool esDocenteExclusivo = !isAdmin && !isVicerrector && !isCoordAcad && !isCoordCarrera;
+        var carrerasCoordinadas = new List<int>();
+        var carreraIds = new HashSet<int>();
 
-        if (esDocenteExclusivo)
+        if (isAdmin || isVicerrector || isCoordAcad)
         {
-            // Docente exclusivo: solo ve sus PEAs pendientes de acción (Borrador, Observado, NoIniciado)
-            if (user != null && !string.IsNullOrEmpty(user.IdSigafi))
+            var todasInstituto = await _context.Carreras.AsNoTracking()
+                .Where(c => c.EsInstituto == 1)
+                .Select(c => c.IdCarrera)
+                .ToListAsync();
+            foreach (var id in todasInstituto) carreraIds.Add(id);
+        }
+        else if (user != null && !string.IsNullOrEmpty(user.IdSigafi))
+        {
+            if (isCoordCarrera)
             {
+                carrerasCoordinadas = await _context.DocAutoridadesCurriculares.AsNoTracking()
+                    .Where(a => a.IdSigafi == user.IdSigafi && a.EsActivo && a.CargoCurricular == "COORD_CARRERA" && a.IdCarrera != null)
+                    .Select(a => a.IdCarrera!.Value)
+                    .ToListAsync();
+                foreach (var id in carrerasCoordinadas) carreraIds.Add(id);
+            }
+
+            // Carreras donde el docente tiene carga asignada en SIGAFI (solo lectura)
+            var carrerasProfPeriodo = await _context.ProfesoresCarrerasPeriodos.AsNoTracking()
+                .Where(pc => pc.IdProfesor == user.IdSigafi && pc.IdCarrera != null)
+                .Select(pc => pc.IdCarrera!.Value)
+                .Distinct()
+                .ToListAsync();
+            foreach (var id in carrerasProfPeriodo) carreraIds.Add(id);
+
+            var nivelIds = await _context.AsignacionesProfesores.AsNoTracking()
+                .Where(am => am.IdProfesor == user.IdSigafi && am.Activo == 1)
+                .Select(am => am.IdNivel)
+                .Distinct()
+                .ToListAsync();
+
+            if (nivelIds.Any())
+            {
+                var carrerasAsignadas = await _context.Cursos.AsNoTracking()
+                    .Where(c => nivelIds.Contains(c.IdNivel))
+                    .Select(c => c.IdCarrera)
+                    .Distinct()
+                    .ToListAsync();
+                foreach (var id in carrerasAsignadas) carreraIds.Add(id);
+            }
+
+            // Carreras donde tiene PEAs elaborados
+            var carrerasPeas = await _context.DocPeas.AsNoTracking()
+                .Where(p => p.Activo && p.IdDocenteElaborador == user.IdSigafi)
+                .Select(p => p.IdCarrera)
+                .Distinct()
+                .ToListAsync();
+            foreach (var id in carrerasPeas) carreraIds.Add(id);
+
+            // Filtrar solo carreras pertenecientes al instituto (esInstituto == 1)
+            if (carreraIds.Any())
+            {
+                var validas = await _context.Carreras.AsNoTracking()
+                    .Where(c => carreraIds.Contains(c.IdCarrera) && c.EsInstituto == 1)
+                    .Select(c => c.IdCarrera)
+                    .ToListAsync();
+                carreraIds = validas.ToHashSet();
+            }
+        }
+
+        return new UserCalendarScope(user, userRoles, isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, carrerasCoordinadas, carreraIds);
+    }
+
+    public async Task<IEnumerable<CalendarioCarreraDto>> GetCarrerasUsuarioAsync(int idUsuario, string rolUsuario)
+    {
+        var scope = await ResolveUserScopeAsync(idUsuario, rolUsuario);
+        if (!scope.CarreraIds.Any()) return Enumerable.Empty<CalendarioCarreraDto>();
+
+        var carreras = await _context.Carreras.AsNoTracking()
+            .Where(c => scope.CarreraIds.Contains(c.IdCarrera) && c.EsInstituto == 1)
+            .Select(c => new { c.IdCarrera, c.Carrera1 })
+            .ToListAsync();
+
+        return carreras
+            .GroupBy(c => c.IdCarrera)
+            .Select(g => new CalendarioCarreraDto(g.Key, g.First().Carrera1 ?? $"Carrera #{g.Key}"))
+            .OrderBy(c => c.Nombre)
+            .ToList();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // EVENTOS — Agregación Fuertemente Tipada con EF Core (PEA y Normativos)
+    // ─────────────────────────────────────────────────────────────────────────
+    public async Task<IEnumerable<CalendarioEventoDto>> GetEventosAsync(
+        DateOnly desde, DateOnly hasta, string rolUsuario, int idUsuario, int? idCarreraFiltro = null)
+    {
+        var resultado = new List<CalendarioEventoDto>();
+
+        // 0. RESOLUCIÓN DE IDENTIDAD, ROLES Y CARRERAS DEL USUARIO
+        var scope = await ResolveUserScopeAsync(idUsuario, rolUsuario);
+        var user = scope.User;
+        var userRoles = scope.Roles;
+        bool isAdmin = scope.IsAdmin;
+        bool isVicerrector = scope.IsVicerrector;
+        bool isCoordAcad = scope.IsCoordAcad;
+        bool isCoordCarrera = scope.IsCoordCarrera;
+        bool isAutoridadSuperior = isAdmin || isVicerrector || isCoordAcad;
+
+        // 1. INSTRUMENTOS CURRICULARES (PEA) — Unificado por carrera para que toda la carrera vea el mismo cronograma
+        var peasQuery = _context.DocPeas.AsNoTracking().Where(p => p.Activo);
+
+        if (idCarreraFiltro.HasValue)
+        {
+            if (!isAutoridadSuperior && !scope.CarreraIds.Contains(idCarreraFiltro.Value))
+            {
+                peasQuery = peasQuery.Where(_ => false);
+            }
+            else
+            {
+                peasQuery = peasQuery.Where(p => p.IdCarrera == idCarreraFiltro.Value);
+            }
+        }
+        else if (!isAutoridadSuperior)
+        {
+            if (scope.CarreraIds.Any() || (user != null && !string.IsNullOrEmpty(user.IdSigafi)))
+            {
+                var idSigafi = user?.IdSigafi ?? "";
                 peasQuery = peasQuery.Where(p =>
-                    p.IdDocenteElaborador == user.IdSigafi &&
-                    (p.Estado == "Borrador" || p.Estado == "Observado" || p.Estado == "NoIniciado" || string.IsNullOrEmpty(p.Estado)));
+                    scope.CarreraIds.Contains(p.IdCarrera) ||
+                    (!string.IsNullOrEmpty(idSigafi) && p.IdDocenteElaborador == idSigafi));
             }
             else
             {
                 peasQuery = peasQuery.Where(_ => false);
             }
         }
-        else if (isCoordCarrera && !isAdmin && !isVicerrector && !isCoordAcad && user != null && !string.IsNullOrEmpty(user.IdSigafi))
-        {
-            // Coordinador de carrera: supervisa las carreras que coordina o sus materias formuladas
-            var carrerasCoordinadas = await _context.DocAutoridadesCurriculares.AsNoTracking()
-                .Where(a => a.IdSigafi == user.IdSigafi && a.EsActivo && a.CargoCurricular == "COORD_CARRERA" && a.IdCarrera != null)
-                .Select(a => a.IdCarrera!.Value)
-                .ToListAsync();
-
-            if (carrerasCoordinadas.Any())
-            {
-                peasQuery = peasQuery.Where(p => carrerasCoordinadas.Contains(p.IdCarrera) || p.IdDocenteElaborador == user.IdSigafi);
-            }
-            else
-            {
-                peasQuery = peasQuery.Where(p => p.IdDocenteElaborador == user.IdSigafi);
-            }
-        }
-        // Admin, Vicerrector y CoordAcad supervisan todos los PEAs institucionales
 
         var rawPeas = await peasQuery
             .Select(p => new
@@ -352,7 +449,10 @@ public class CalendarioService : ICalendarioService
                         estadoKanban,
                         null,
                         null,
-                        false
+                        false,
+                        p.IdCarrera,
+                        nombreCarrera,
+                        nombreDocente
                     ));
                 }
             }
@@ -369,7 +469,7 @@ public class CalendarioService : ICalendarioService
             {
                 resultado.Add(new CalendarioEventoDto(
                     $"PER-INI-{per.IdPeriodo}",
-                    Guid.NewGuid().ToString(),
+                    $"00000000-0000-0000-0001-{per.IdPeriodo:D12}",
                     $"Inicio Período Académico: {per.Detalle}",
                     $"Apertura del período lectivo institucional {per.Detalle}.",
                     "Normativo",
@@ -396,7 +496,7 @@ public class CalendarioService : ICalendarioService
             {
                 resultado.Add(new CalendarioEventoDto(
                     $"PER-FIN-{per.IdPeriodo}",
-                    Guid.NewGuid().ToString(),
+                    $"00000000-0000-0000-0002-{per.IdPeriodo:D12}",
                     $"Cierre Período Académico: {per.Detalle}",
                     $"Finalización del ciclo lectivo y cierre de actas institucionales.",
                     "Normativo",
@@ -420,11 +520,26 @@ public class CalendarioService : ICalendarioService
             }
         }
 
-        // 3. HITOS NORMATIVOS Y PERSONALES (doc_calendario_eventos_normativos)
+        // 3. HITOS NORMATIVOS, DE CARRERA Y PERSONALES (doc_calendario_eventos_normativos)
         var normativos = await _context.Set<DocCalendarioEventoNormativo>()
             .AsNoTracking()
             .Where(e => e.Activo)
             .ToListAsync();
+
+        var normCarreraIds = normativos
+            .Where(n => n.IdCarrera.HasValue)
+            .Select(n => n.IdCarrera!.Value)
+            .Distinct()
+            .ToList();
+
+        var normCarrerasMap = normCarreraIds.Any()
+            ? (await _context.Carreras.AsNoTracking()
+                .Where(c => normCarreraIds.Contains(c.IdCarrera))
+                .Select(c => new { c.IdCarrera, c.Carrera1 })
+                .ToListAsync())
+                .GroupBy(c => c.IdCarrera)
+                .ToDictionary(g => g.Key, g => g.First().Carrera1 ?? $"Carrera #{g.Key}")
+            : new Dictionary<int, string>();
 
         foreach (var norm in normativos)
         {
@@ -444,8 +559,23 @@ public class CalendarioService : ICalendarioService
                 }
             }
 
-            // Filtro de privacidad
-            if (norm.EsPrivado && norm.CreadoPor != idUsuario) continue;
+            // Filtro de privacidad y alcance por carrera
+            if (norm.EsPrivado)
+            {
+                if (norm.CreadoPor != idUsuario) continue;
+                if (idCarreraFiltro.HasValue && norm.IdCarrera.HasValue && norm.IdCarrera.Value != idCarreraFiltro.Value) continue;
+            }
+            else if (norm.IdCarrera.HasValue)
+            {
+                // Evento compartido de carrera
+                if (!isAutoridadSuperior && !scope.CarreraIds.Contains(norm.IdCarrera.Value)) continue;
+                if (idCarreraFiltro.HasValue && norm.IdCarrera.Value != idCarreraFiltro.Value) continue;
+            }
+            // Si !norm.EsPrivado && !norm.IdCarrera.HasValue -> Evento institucional visible para todos
+
+            var nombreCarreraNorm = norm.IdCarrera.HasValue && normCarrerasMap.TryGetValue(norm.IdCarrera.Value, out var nc)
+                ? nc
+                : null;
 
             if (norm.RecurrenciaAnual)
             {
@@ -468,7 +598,8 @@ public class CalendarioService : ICalendarioService
                         norm.IdEvento, norm.Uuid, "CALENDARIO_NORMATIVO",
                         norm.UrlAccion, norm.RolesVisibles,
                         norm.EsPrivado, norm.Prioridad, norm.Estado, norm.CreadoPor,
-                        norm.AlertaDias, norm.RecurrenciaAnual
+                        norm.AlertaDias, norm.RecurrenciaAnual,
+                        norm.IdCarrera, nombreCarreraNorm
                     ));
                 }
             }
@@ -487,7 +618,8 @@ public class CalendarioService : ICalendarioService
                         norm.IdEvento, norm.Uuid, "CALENDARIO_NORMATIVO",
                         norm.UrlAccion, norm.RolesVisibles,
                         norm.EsPrivado, norm.Prioridad, norm.Estado, norm.CreadoPor,
-                        norm.AlertaDias, norm.RecurrenciaAnual
+                        norm.AlertaDias, norm.RecurrenciaAnual,
+                        norm.IdCarrera, nombreCarreraNorm
                     ));
                 }
             }
@@ -522,6 +654,7 @@ public class CalendarioService : ICalendarioService
             RecurrenciaAnual = dto.RecurrenciaAnual,
             RecurrenciaHasta = dto.RecurrenciaHasta,
             RolesVisibles = dto.RolesVisibles,
+            IdCarrera = dto.IdCarrera,
             ModuloOrigen = dto.ModuloOrigen,
             UrlAccion = dto.UrlAccion,
             ColorHex = dto.ColorHex ?? "#6B7280",
@@ -554,6 +687,7 @@ public class CalendarioService : ICalendarioService
         entity.RecurrenciaAnual = dto.RecurrenciaAnual;
         entity.RecurrenciaHasta = dto.RecurrenciaHasta;
         entity.RolesVisibles = dto.RolesVisibles;
+        entity.IdCarrera = dto.IdCarrera;
         entity.ModuloOrigen = dto.ModuloOrigen;
         entity.UrlAccion = dto.UrlAccion;
         entity.ColorHex = dto.ColorHex ?? "#6B7280";
@@ -615,6 +749,13 @@ public class CalendarioService : ICalendarioService
                     if (!evento.EsPrivado &&
                         !string.IsNullOrEmpty(evento.RolesVisibles) &&
                         !evento.RolesVisibles.Split(',').Select(r => r.Trim()).Contains(rol)) continue;
+
+                    if (!evento.EsPrivado && evento.IdCarrera.HasValue)
+                    {
+                        var userScope = await ResolveUserScopeAsync(usuario.IdUsuario, rol);
+                        if (!userScope.IsAdmin && !userScope.IsVicerrector && !userScope.IsCoordAcad && !userScope.CarreraIds.Contains(evento.IdCarrera.Value))
+                            continue;
+                    }
 
                     DateOnly fechaInicioOcurrencia = evento.FechaInicio.Value;
                     if (evento.RecurrenciaAnual)
@@ -732,20 +873,57 @@ public class CalendarioService : ICalendarioService
         return user?.IdUsuario;
     }
 
-    public async Task<bool?> UpdateUsuarioEventoAsync(string uuid, EventoNormativoDto dto, int idUsuario)
+    public async Task<(string? Uuid, bool Forbidden)> CreateUsuarioEventoAsync(EventoNormativoDto dto, int idUsuario, string rolUsuario)
+    {
+        if (!dto.EsPrivado)
+        {
+            var scope = await ResolveUserScopeAsync(idUsuario, rolUsuario);
+            bool isAutoridadSuperior = scope.IsAdmin || scope.IsVicerrector || scope.IsCoordAcad;
+
+            if (!dto.IdCarrera.HasValue)
+            {
+                // Evento para todo el instituto: solo autoridades superiores / admin
+                if (!isAutoridadSuperior) return (null, true);
+            }
+            else
+            {
+                // Evento para toda la carrera: docentes y coordinadores dentro de sus carreras asignadas, o autoridades superiores
+                if (!isAutoridadSuperior && !scope.CarreraIds.Contains(dto.IdCarrera.Value))
+                    return (null, true);
+            }
+        }
+
+        var uuid = await CreateNormativoAsync(dto, idUsuario);
+        return (uuid, false);
+    }
+
+    private async Task<bool> CanManageEventoAsync(DocCalendarioEventoNormativo existing, int idUsuario, string rolUsuario)
+    {
+        if (existing.CreadoPor == idUsuario) return true;
+        if (existing.EsPrivado) return false;
+
+        var scope = await ResolveUserScopeAsync(idUsuario, rolUsuario);
+        if (scope.IsAdmin || scope.IsVicerrector || scope.IsCoordAcad) return true;
+        if (scope.IsCoordCarrera && existing.IdCarrera.HasValue && scope.CarrerasCoordinadas.Contains(existing.IdCarrera.Value))
+            return true;
+
+        return false;
+    }
+
+    public async Task<bool?> UpdateUsuarioEventoAsync(string uuid, EventoNormativoDto dto, int idUsuario, string rolUsuario = "")
     {
         var existing = await _context.Set<DocCalendarioEventoNormativo>().FirstOrDefaultAsync(e => e.Uuid == uuid);
         if (existing == null) return null;
-        if (existing.CreadoPor != idUsuario) return false;
+        if (!await CanManageEventoAsync(existing, idUsuario, rolUsuario)) return false;
 
         return await UpdateNormativoAsync(uuid, dto);
     }
 
-    public async Task<bool?> DeleteUsuarioEventoAsync(string uuid, int idUsuario)
+    public async Task<bool?> DeleteUsuarioEventoAsync(string uuid, int idUsuario, string rolUsuario = "")
     {
         var existing = await _context.Set<DocCalendarioEventoNormativo>().FirstOrDefaultAsync(e => e.Uuid == uuid);
         if (existing == null) return null;
-        if (existing.CreadoPor != idUsuario) return false;
+        if (!await CanManageEventoAsync(existing, idUsuario, rolUsuario)) return false;
 
         return await DeleteNormativoAsync(uuid);
     }
@@ -760,6 +938,6 @@ public class CalendarioService : ICalendarioService
         e.RolesVisibles, e.ModuloOrigen, e.UrlAccion,
         e.ColorHex, e.AlertaDias, e.Activo,
         e.EsPrivado, e.Prioridad, e.Estado,
-        e.NotaDetalle, e.OrdenBandeja
+        e.NotaDetalle, e.OrdenBandeja, e.IdCarrera
     );
 }

@@ -75,7 +75,18 @@ namespace dosier_infrastructure.Curriculum
             // 1. Extraer texto estructurado digital (.pdf o .docx) rechazando estrictamente imágenes
             string extractedDocumentText = ExtractDigitalDocumentText(request.FileName, request.ContentType, request.FileBytes);
 
-            // 2. Resolver API Key, Proveedor, Modelo y BaseUrl
+            // 2. Resolver contexto académico SIGAFI para cuadrar horas e ignorar encabezados antiguos
+            var contextReq = new GeneratePeaDraftRequestDto
+            {
+                TargetSection = "all",
+                CurrentHorasCD = request.CurrentHorasCD,
+                CurrentHorasAPE = request.CurrentHorasAPE,
+                CurrentHorasTA = request.CurrentHorasTA,
+                CurrentTotalHoras = request.CurrentTotalHoras
+            };
+            var contextData = await ResolveAcademicContextAsync(peaUuid, contextReq, ct);
+
+            // 3. Resolver API Key, Proveedor, Modelo y BaseUrl
             var (userKey, userProvider, userModel, userBaseUrl) = await GetUserConfigAsync(idUsuario, ct);
             var (globalKey, globalProvider, globalModel, globalBaseUrl) = await GetGlobalConfigAsync(ct);
             string? envKey = _configuration["AiAssistant:ApiKey"]
@@ -92,9 +103,12 @@ namespace dosier_infrastructure.Curriculum
                 (!string.IsNullOrWhiteSpace(userProvider) ? userProvider :
                 (!string.IsNullOrWhiteSpace(globalProvider) ? globalProvider : (_configuration["AiAssistant:Provider"] ?? "deepseek"))));
 
+            // Si no existe API Key configurada (y no se usa Ollama local), operar en modo determinista offline sin IA
             if (string.IsNullOrWhiteSpace(apiKey) && !provider.Equals("ollama", StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("No existe una API Key configurada para el motor de extracción y estructuración. Configure su API Key antes de importar un documento.");
+                _logger.LogInformation("[DOSIER EXTRACTOR] Sin API Key configurada. Ejecutando parser determinista offline para PEA {PeaUuid}.", peaUuid);
+                var deterministicDraft = DeterministicPeaDocumentParser.Parse(extractedDocumentText);
+                return FinalizeAndNormalizeDraft(deterministicDraft, contextData, "deterministic-parser", "regex-heuristic-v1");
             }
 
             string defaultModel = GetDefaultModelForProvider(provider);
@@ -111,38 +125,46 @@ namespace dosier_infrastructure.Curriculum
 
             string baseUrl = ResolveEffectiveBaseUrl(provider, candidateBaseUrl, defaultBaseUrl);
 
-            // 3. Resolver contexto académico SIGAFI para cuadrar horas e ignorar encabezados antiguos
-            var contextReq = new GeneratePeaDraftRequestDto
-            {
-                TargetSection = "all",
-                CurrentHorasCD = request.CurrentHorasCD,
-                CurrentHorasAPE = request.CurrentHorasAPE,
-                CurrentHorasTA = request.CurrentHorasTA,
-                CurrentTotalHoras = request.CurrentTotalHoras
-            };
-            var contextData = await ResolveAcademicContextAsync(peaUuid, contextReq, ct);
-
-            // 4. Construir Prompts especializados para estructuración de documento importado
+            // 4. Construir Prompts especializados para estructuración de documento importado (protegiendo ventana de contexto del LLM a 45,000 chars)
+            string llmText = extractedDocumentText.Length > 45000
+                ? extractedDocumentText.Substring(0, 45000)
+                : extractedDocumentText;
             string systemPrompt = BuildExtractionSystemPrompt(contextData);
-            string userPrompt = BuildDocumentImportUserPrompt(contextData, request.FileName, extractedDocumentText, request.CustomInstructions);
+            string userPrompt = BuildDocumentImportUserPrompt(contextData, request.FileName, llmText, request.CustomInstructions);
 
-            // 5. Invocar al motor LLM para transformar la extracción en el esquema JSON normativo
-            string rawJson;
-            if (provider == "gemini" && string.IsNullOrWhiteSpace(request.BaseUrlOverride))
+            // 5. Invocar al motor LLM para transformar la extracción en el esquema JSON normativo, con fallback determinista ante fallos de red/cuota
+            try
             {
-                rawJson = await CallGeminiAsync(apiKey ?? string.Empty, model, systemPrompt, userPrompt, ct);
-            }
-            else if (provider == "anthropic" && (string.IsNullOrWhiteSpace(baseUrl) || baseUrl.Contains("api.anthropic.com/v1/messages", StringComparison.OrdinalIgnoreCase)))
-            {
-                rawJson = await CallAnthropicAsync(apiKey ?? string.Empty, model, baseUrl, systemPrompt, userPrompt, ct);
-            }
-            else
-            {
-                rawJson = await CallOpenAiCompatibleAsync(provider, apiKey ?? string.Empty, model, baseUrl, systemPrompt, userPrompt, ct);
-            }
+                string rawJson;
+                if (provider == "gemini" && string.IsNullOrWhiteSpace(request.BaseUrlOverride))
+                {
+                    rawJson = await CallGeminiAsync(apiKey ?? string.Empty, model, systemPrompt, userPrompt, ct);
+                }
+                else if (provider == "anthropic" && (string.IsNullOrWhiteSpace(baseUrl) || baseUrl.Contains("api.anthropic.com/v1/messages", StringComparison.OrdinalIgnoreCase)))
+                {
+                    rawJson = await CallAnthropicAsync(apiKey ?? string.Empty, model, baseUrl, systemPrompt, userPrompt, ct);
+                }
+                else
+                {
+                    rawJson = await CallOpenAiCompatibleAsync(provider, apiKey ?? string.Empty, model, baseUrl, systemPrompt, userPrompt, ct);
+                }
 
-            // 6. Parsear, normalizar y reconciliar horas contra SIGAFI
-            return ParseAndNormalizeDraft(rawJson, contextData, provider, model);
+                // 6. Parsear, normalizar y reconciliar horas contra SIGAFI
+                return ParseAndNormalizeDraft(rawJson, contextData, provider, model);
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[DOSIER EXTRACTOR] Fallo en proveedor {Provider} ({Model}); aplicando fallback determinista para PEA {PeaUuid}.", provider, model, peaUuid);
+                var fallbackDraft = DeterministicPeaDocumentParser.Parse(extractedDocumentText);
+                var finalized = FinalizeAndNormalizeDraft(fallbackDraft, contextData, "deterministic-parser", "regex-heuristic-v1");
+                finalized.ValidationSummary.ComplianceNotes.Add(
+                    $"El proveedor IA ({provider.ToUpperInvariant()}) no estuvo disponible; la extracción se completó en modo determinista estándar.");
+                return finalized;
+            }
         }
 
         public static string ExtractDigitalDocumentText(string fileName, string contentType, byte[] fileBytes)
@@ -161,6 +183,16 @@ namespace dosier_infrastructure.Curriculum
                 throw new InvalidOperationException("Formato de archivo no soportado. Solo se admiten documentos digitales PDF (.pdf) o Word (.docx).");
             }
 
+            if (ext == ".docx" && HasOle2LegacySignature(fileBytes))
+            {
+                throw new InvalidOperationException("El archivo tiene formato binario de Word antiguo (.doc). Guárdelo como .docx o .pdf antes de importarlo.");
+            }
+
+            if (ext == ".pdf" && !HasPdfSignature(fileBytes))
+            {
+                throw new InvalidOperationException("El archivo no tiene una cabecera PDF válida. Verifique que no esté dañado o renombrado desde otro formato.");
+            }
+
             string extracted = ext == ".pdf"
                 ? ExtractTextFromDigitalPdf(fileBytes)
                 : ExtractTextFromWordDocx(fileBytes);
@@ -174,13 +206,40 @@ namespace dosier_infrastructure.Curriculum
                         : "El documento Word (.docx) no contiene suficiente contenido textual curricular para procesar.");
             }
 
-            // Limitar a 45,000 caracteres para proteger la ventana de contexto del modelo
-            if (extracted.Length > 45000)
+            // Límite máximo seguro de memoria para el pipeline completo
+            if (extracted.Length > 500000)
             {
-                extracted = extracted.Substring(0, 45000);
+                extracted = extracted.Substring(0, 500000);
             }
 
             return extracted;
+        }
+
+        private static bool HasPdfSignature(byte[] bytes)
+        {
+            if (bytes.Length < 5) return false;
+            int limit = Math.Min(bytes.Length - 4, 1024);
+            for (int i = 0; i <= limit; i++)
+            {
+                if (bytes[i] == (byte)'%' &&
+                    bytes[i + 1] == (byte)'P' &&
+                    bytes[i + 2] == (byte)'D' &&
+                    bytes[i + 3] == (byte)'F' &&
+                    bytes[i + 4] == (byte)'-')
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static bool HasOle2LegacySignature(byte[] bytes)
+        {
+            return bytes.Length >= 8 &&
+                   bytes[0] == 0xD0 && bytes[1] == 0xCF &&
+                   bytes[2] == 0x11 && bytes[3] == 0xE0 &&
+                   bytes[4] == 0xA1 && bytes[5] == 0xB1 &&
+                   bytes[6] == 0x1A && bytes[7] == 0xE1;
         }
 
         public static string ExtractTextFromDigitalPdf(byte[] pdfBytes)
@@ -883,26 +942,6 @@ namespace dosier_infrastructure.Curriculum
                 }
             }
 
-            // Reconciliación matemática determinista de horas con SIGAFI o con datos generales del documento
-            if (result.Unidades.Count > 0)
-            {
-                decimal totalAsig = ctx.TotalHoras > 0 ? ctx.TotalHoras : result.TotalHorasAsignatura;
-                decimal targetCd = ctx.HorasCD > 0 ? ctx.HorasCD : result.HorasContactoDocente;
-                decimal targetApe = ctx.HorasAPE > 0 ? ctx.HorasAPE : result.HorasPracticoExperimental;
-                decimal targetTa = ctx.HorasTA > 0 ? ctx.HorasTA : result.HorasAutonomo;
-
-                ReconcileUnitHoursWithSigafi(result.Unidades, targetCd, targetApe, targetTa, totalAsig);
-
-                // Sincronizar los totales generales del DTO con la suma real de las unidades
-                decimal sumCd = result.Unidades.Sum(u => u.HorasCD);
-                decimal sumApe = result.Unidades.Sum(u => u.HorasAPE);
-                decimal sumTa = result.Unidades.Sum(u => u.HorasTA);
-                result.HorasContactoDocente = (int)sumCd;
-                result.HorasPracticoExperimental = (int)sumApe;
-                result.HorasAutonomo = (int)sumTa;
-                result.TotalHorasAsignatura = (int)(sumCd + sumApe + sumTa);
-            }
-
             // Actividades Prácticas
             if (TryGetArray(root, out var practicasArr, "actividades_practicas", "ActividadesPracticas"))
             {
@@ -1014,6 +1053,36 @@ namespace dosier_infrastructure.Curriculum
                 }
             }
 
+            // Reconciliación matemática determinista de horas, bibliografías y resumen de validación
+            return FinalizeAndNormalizeDraft(result, ctx, provider, model);
+        }
+
+        internal static PeaStructuredDraftDto FinalizeAndNormalizeDraft(
+            PeaStructuredDraftDto result,
+            AcademicPromptContext ctx,
+            string provider,
+            string model)
+        {
+            // Reconciliación matemática determinista de horas con SIGAFI o con datos generales del documento
+            if (result.Unidades.Count > 0)
+            {
+                decimal totalAsig = ctx.TotalHoras > 0 ? ctx.TotalHoras : result.TotalHorasAsignatura;
+                decimal targetCd = ctx.HorasCD > 0 ? ctx.HorasCD : result.HorasContactoDocente;
+                decimal targetApe = ctx.HorasAPE > 0 ? ctx.HorasAPE : result.HorasPracticoExperimental;
+                decimal targetTa = ctx.HorasTA > 0 ? ctx.HorasTA : result.HorasAutonomo;
+
+                ReconcileUnitHoursWithSigafi(result.Unidades, targetCd, targetApe, targetTa, totalAsig);
+
+                // Sincronizar los totales generales del DTO con la suma real de las unidades
+                decimal sumCd = result.Unidades.Sum(u => u.HorasCD);
+                decimal sumApe = result.Unidades.Sum(u => u.HorasAPE);
+                decimal sumTa = result.Unidades.Sum(u => u.HorasTA);
+                result.HorasContactoDocente = (int)sumCd;
+                result.HorasPracticoExperimental = (int)sumApe;
+                result.HorasAutonomo = (int)sumTa;
+                result.TotalHorasAsignatura = (int)(sumCd + sumApe + sumTa);
+            }
+
             // Sincronizar campos HTML BibliografiaBasica y BibliografiaConsulta
             if (string.IsNullOrWhiteSpace(result.BibliografiaBasica) && result.Bibliografias.Any(b => b.TipoBibliografia == "Basica"))
             {
@@ -1095,7 +1164,7 @@ namespace dosier_infrastructure.Curriculum
             return cleaned;
         }
 
-        private static string CleanContenidosOrphanNumbers(string? contenidos)
+        internal static string CleanContenidosOrphanNumbers(string? contenidos)
         {
             if (string.IsNullOrWhiteSpace(contenidos)) return string.Empty;
             var lines = contenidos.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
@@ -1112,7 +1181,7 @@ namespace dosier_infrastructure.Curriculum
             return string.Join("\n", cleanLines).Trim();
         }
 
-        private static string CompleteTruncatedUnitTitle(string title, string contenidos, int unitNum)
+        internal static string CompleteTruncatedUnitTitle(string title, string contenidos, int unitNum)
         {
             if (string.IsNullOrWhiteSpace(title)) return $"Unidad Temática {unitNum}";
             var trimmed = title.Trim();
@@ -1217,7 +1286,7 @@ namespace dosier_infrastructure.Curriculum
             return string.Join("", paragraphs);
         }
 
-        private static string EscapeBasicHtml(string text)
+        internal static string EscapeBasicHtml(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return string.Empty;
             return text.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
@@ -1575,7 +1644,7 @@ namespace dosier_infrastructure.Curriculum
             return false;
         }
 
-        private sealed class AcademicPromptContext
+        internal sealed class AcademicPromptContext
         {
             public string PeaUuid { get; set; } = string.Empty;
             public string NombreAsignatura { get; set; } = string.Empty;

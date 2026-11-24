@@ -13,6 +13,7 @@ public partial class DocCalendarioEventoNormativo
     public bool RecurrenciaAnual { get; set; } = false;
     public DateOnly? RecurrenciaHasta { get; set; }
     public string? RolesVisibles { get; set; }
+    public int? IdCarrera { get; set; }
     public string? ModuloOrigen { get; set; }
     public string? UrlAccion { get; set; }
     public string? ColorHex { get; set; } = "#6B7280";

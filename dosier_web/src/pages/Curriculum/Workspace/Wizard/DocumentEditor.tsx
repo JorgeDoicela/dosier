@@ -159,6 +159,45 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
             }
         }
 
+        // Si el borrador guardado tenía el reparto antiguo en tercios iguales (ej. 48/48/48) o ceros,
+        // prevalecen las horas oficiales reales de detallemallas provenientes en initialData
+        const initTotal = Number(initialData?.TotalHorasAsignatura ?? initialData?.total_horas_asignatura ?? 0);
+        const initCd = Number(initialData?.HorasContactoDocente ?? initialData?.horas_contacto_docente ?? 0);
+        const initApe = Number(initialData?.HorasPracticoExperimental ?? initialData?.horas_practico_experimental ?? 0);
+        const initTa = Number(initialData?.HorasAutonomo ?? initialData?.horas_autonomo ?? 0);
+        const initCred = Number(initialData?.Creditos ?? initialData?.creditos ?? 0);
+
+        if (initTotal > 0 && (initCd > 0 || initApe > 0)) {
+            const curCd = Number(merged.HorasContactoDocente ?? merged.horas_contacto_docente ?? 0);
+            const curApe = Number(merged.HorasPracticoExperimental ?? merged.horas_practico_experimental ?? 0);
+            const curTa = Number(merged.HorasAutonomo ?? merged.horas_autonomo ?? 0);
+            const curTotal = Number(merged.TotalHorasAsignatura ?? merged.total_horas_asignatura ?? 0);
+            const isCurZero = curTotal <= 0 || (curCd <= 0 && curApe <= 0 && curTa <= 0);
+            const isCurUniformThirds = curCd > 0 && curCd === curApe && curApe === curTa;
+            const differsFromOfficial = curCd !== initCd || curApe !== initApe || curTa !== initTa || curTotal !== initTotal;
+
+            if (differsFromOfficial && (isCurZero || isCurUniformThirds || curTotal !== initTotal)) {
+                merged.TotalHorasAsignatura = initTotal;
+                merged.total_horas_asignatura = initTotal;
+                if (initCred > 0) {
+                    merged.Creditos = initCred;
+                    merged.creditos = initCred;
+                }
+                merged.HorasContactoDocente = initCd;
+                merged.horas_contacto_docente = initCd;
+                merged.HorasPracticoExperimental = initApe;
+                merged.horas_practico_experimental = initApe;
+                merged.HorasAutonomo = initTa;
+                merged.horas_autonomo = initTa;
+            }
+        }
+
+        const initUnidadOrg = initialData?.UnidadOrganizacion ?? initialData?.unidad_organizacion;
+        if (typeof initUnidadOrg === 'string' && initUnidadOrg.trim() !== '') {
+            merged.UnidadOrganizacion = initUnidadOrg;
+            merged.unidad_organizacion = initUnidadOrg;
+        }
+
         // Resolución defensiva de Código de Carrera institucional (ej. GAS para Gastronomía)
         if (!merged.CodigoCarrera || merged.CodigoCarrera === '' || merged.CodigoCarrera === '---' || String(merged.CodigoCarrera).includes('-')) {
             const carreraNombre = String(merged.Carrera || merged.carrera || initialData?.Carrera || initialData?.carrera || '').toUpperCase();

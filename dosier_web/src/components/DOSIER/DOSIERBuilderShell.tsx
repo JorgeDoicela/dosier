@@ -110,7 +110,7 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
 
     const handleTriggerDocExtraction = useCallback(async (file: File) => {
         if (!resolvedPeaUuid) {
-            alert('Guarde primero el documento para habilitar la extracción.');
+            addToast('Identificador requerido', 'Guarde primero el documento para habilitar la extracción.', 'warning');
             return;
         }
         try {
@@ -131,9 +131,10 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
             setImportDocModalOpen(true);
         } catch (err: any) {
             const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'No se pudo procesar el documento.';
-            alert(typeof msg === 'string' ? msg : 'Error al extraer el documento.');
+            addToast('Error en extracción de documento', typeof msg === 'string' ? msg : 'Verifique el archivo subido.', 'error');
+            throw err;
         }
-    }, [resolvedPeaUuid, formData]);
+    }, [resolvedPeaUuid, formData, addToast]);
 
     const handleTriggerAiGeneration = useCallback(async (
         targetSec: string | string[] = 'all',

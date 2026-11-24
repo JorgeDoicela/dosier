@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Bell, RotateCcw } from 'lucide-react';
-import { useAuth } from '../../../api/AuthContext';
-import { COLORES_OPCIONES } from '../../../services/calendarioService';
+import { X, Bell, RotateCcw, ChevronDown } from 'lucide-react';
+import { COLORES_OPCIONES, type CalendarioCarrera } from '../../../services/calendarioService';
+import type { EventoAlcance } from '../hooks/useCalendarioEvents';
 import './EventoDrawers.css';
 
 interface EventoFormDrawerProps {
@@ -36,6 +36,12 @@ interface EventoFormDrawerProps {
     setFormEsNormativo?: (v: boolean) => void;
     formRolesVisibles?: string;
     setFormRolesVisibles?: (v: string) => void;
+    formAlcance: EventoAlcance;
+    aplicarAlcanceDefaults: (alcance: EventoAlcance) => void;
+    formIdCarrera: number | null;
+    setFormIdCarrera: (id: number | null) => void;
+    carrerasUsuario: CalendarioCarrera[];
+    canPublishInstituto: boolean;
 }
 
 export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
@@ -63,15 +69,29 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
     setFormAlertaDias,
     formRecurrenciaAnual,
     setFormRecurrenciaAnual,
-    formEsPrivado,
-    setFormEsPrivado,
-    formEsNormativo = false,
-    setFormEsNormativo,
-    formRolesVisibles = '',
-    setFormRolesVisibles,
+    formAlcance,
+    aplicarAlcanceDefaults,
+    formIdCarrera,
+    setFormIdCarrera,
+    carrerasUsuario,
+    canPublishInstituto,
 }) => {
-    const { isAdmin } = useAuth();
+    const [showOpciones, setShowOpciones] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            setShowOpciones(isEditing);
+        }
+    }, [isOpen, isEditing]);
+
     if (!isOpen) return null;
+
+    const subtituloAlcance =
+        formAlcance === 'instituto'
+            ? 'Visible para todo el instituto'
+            : formAlcance === 'carrera'
+                ? 'Visible para todos los docentes y coordinación de la carrera'
+                : 'Visible únicamente en tu agenda personal';
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200">
@@ -87,15 +107,11 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
                 <div className="flex items-center justify-between px-8 py-6 border-b border-slate-200/90 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
                     <div>
                         <h2 className="text-xl font-bold tracking-tight text-text-main font-sans">
-                            {isEditing
-                                ? (formEsNormativo ? 'Editar Hito Institucional' : 'Editar Tarea o Evento')
-                                : (formEsNormativo ? 'Nuevo Hito Normativo Institucional' : 'Nueva Tarea / Evento de Agenda')}
+                            {isEditing ? 'Editar evento' : 'Nuevo evento'}
                         </h2>
-                        {formEsNormativo && (
-                            <p className="text-xs text-[#0070f3] dark:text-blue-400 font-medium mt-0.5">
-                                Publicación oficial para seguimiento y acreditación CACES
-                            </p>
-                        )}
+                        <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                            {subtituloAlcance}
+                        </p>
                     </div>
                     <button
                         type="button"
@@ -106,71 +122,81 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-white dark:bg-zinc-950">
-                    {/* Selector de Ámbito para Administradores */}
-                    {isAdmin && setFormEsNormativo && (
-                        <div className="border border-slate-200 dark:border-zinc-800 rounded-lg p-3 bg-zinc-50 dark:bg-zinc-900">
-                            <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-2">
-                                Ámbito de Publicación
-                            </label>
-                            <div className="grid grid-cols-2 gap-2">
+                <div className="flex-1 overflow-y-auto p-8 space-y-5 bg-white dark:bg-zinc-950">
+                    {/* Alcance de Visibilidad */}
+                    <div className="border border-slate-200 dark:border-zinc-800 rounded-lg p-3 bg-zinc-50 dark:bg-zinc-900 space-y-3">
+                        <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block">
+                            Quién puede ver este evento
+                        </label>
+                        <div className={`grid gap-2 ${canPublishInstituto ? 'grid-cols-3' : carrerasUsuario.length > 0 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                            <button
+                                type="button"
+                                onClick={() => aplicarAlcanceDefaults('personal')}
+                                className={`py-2 px-3 text-xs font-medium rounded-md transition-colors cursor-pointer border ${
+                                    formAlcance === 'personal'
+                                        ? 'bg-white dark:bg-zinc-950 text-amber-600 dark:text-amber-400 border-slate-300 dark:border-zinc-700 font-semibold shadow-2xs'
+                                        : 'bg-transparent text-slate-600 dark:text-zinc-400 border-transparent hover:bg-slate-100 dark:hover:bg-zinc-800'
+                                }`}
+                            >
+                                Personal
+                            </button>
+
+                            {carrerasUsuario.length > 0 && (
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setFormEsNormativo(false);
-                                        setFormEsPrivado(true);
-                                        if (formTipo === 'Normativo') setFormTipo('Personal');
-                                    }}
+                                    onClick={() => aplicarAlcanceDefaults('carrera')}
                                     className={`py-2 px-3 text-xs font-medium rounded-md transition-colors cursor-pointer border ${
-                                        !formEsNormativo
-                                            ? 'bg-white dark:bg-zinc-950 text-[#0070f3] dark:text-blue-400 border-slate-300 dark:border-zinc-700 font-semibold shadow-2xs'
-                                            : 'bg-transparent text-slate-600 dark:text-zinc-400 border-transparent hover:bg-slate-100 dark:hover:bg-zinc-800'
-                                    }`}
-                                >
-                                    Personal (Mi Agenda)
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setFormEsNormativo(true);
-                                        setFormEsPrivado(false);
-                                        setFormTipo('Normativo');
-                                    }}
-                                    className={`py-2 px-3 text-xs font-medium rounded-md transition-colors cursor-pointer border ${
-                                        formEsNormativo
+                                        formAlcance === 'carrera'
                                             ? 'bg-[#0070f3] text-white border-[#0070f3] font-semibold shadow-2xs'
                                             : 'bg-transparent text-slate-600 dark:text-zinc-400 border-transparent hover:bg-slate-100 dark:hover:bg-zinc-800'
                                     }`}
                                 >
-                                    Institucional / Normativo (CACES)
+                                    Toda la carrera
                                 </button>
-                            </div>
+                            )}
 
-                            {formEsNormativo && setFormRolesVisibles && (
-                                <div className="mt-3 pt-3 border-t border-slate-200 dark:border-zinc-800 space-y-1.5">
-                                    <label className="text-xs font-medium text-slate-600 dark:text-zinc-400 block">
-                                        Roles Destinatarios Visibles
-                                    </label>
-                                    <select
-                                        value={formRolesVisibles || 'TODOS'}
-                                        onChange={(e) => setFormRolesVisibles(e.target.value === 'TODOS' ? '' : e.target.value)}
-                                        className="input-vercel text-xs"
-                                    >
-                                        <option value="TODOS">Todos los Roles Institucionales</option>
-                                        <option value="DOSIER_DOCENTE">Solo Docentes (DOSIER_DOCENTE)</option>
-                                        <option value="DOSIER_COORD_CARRERA">Coordinadores de Carrera (DOSIER_COORD_CARRERA)</option>
-                                        <option value="DOSIER_COORD_ACAD">Coordinación Académica (DOSIER_COORD_ACAD)</option>
-                                        <option value="DOSIER_VICERRECTOR">Vicerrectorado Académico (DOSIER_VICERRECTOR)</option>
-                                        <option value="DOSIER_DOCENTE,DOSIER_COORD_CARRERA">Docentes y Coordinadores de Carrera</option>
-                                        <option value="DOSIER_COORD_CARRERA,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR">Equipo Colegiado / Autoridades</option>
-                                    </select>
-                                    <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                                        Este hito se publicará en el calendario institucional de los roles seleccionados.
-                                    </p>
-                                </div>
+                            {canPublishInstituto && (
+                                <button
+                                    type="button"
+                                    onClick={() => aplicarAlcanceDefaults('instituto')}
+                                    className={`py-2 px-3 text-xs font-medium rounded-md transition-colors cursor-pointer border ${
+                                        formAlcance === 'instituto'
+                                            ? 'bg-emerald-600 text-white border-emerald-600 font-semibold shadow-2xs'
+                                            : 'bg-transparent text-slate-600 dark:text-zinc-400 border-transparent hover:bg-slate-100 dark:hover:bg-zinc-800'
+                                    }`}
+                                >
+                                    Todo el instituto
+                                </button>
                             )}
                         </div>
-                    )}
+
+                        {formAlcance === 'carrera' && carrerasUsuario.length > 1 && (
+                            <div className="pt-2 border-t border-slate-200 dark:border-zinc-800">
+                                <label className="text-xs font-medium text-slate-600 dark:text-zinc-400 block mb-1">
+                                    Carrera
+                                </label>
+                                <select
+                                    value={formIdCarrera ?? ''}
+                                    onChange={(e) => setFormIdCarrera(e.target.value ? Number(e.target.value) : null)}
+                                    required
+                                    className="input-vercel text-xs bg-white dark:bg-zinc-950"
+                                >
+                                    <option value="">Selecciona una carrera...</option>
+                                    {carrerasUsuario.map((c) => (
+                                        <option key={c.id_carrera} value={c.id_carrera}>
+                                            {c.nombre}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
+                        {formAlcance === 'carrera' && carrerasUsuario.length === 1 && (
+                            <p className="text-xs text-slate-600 dark:text-zinc-400 pt-1 border-t border-slate-200 dark:border-zinc-800">
+                                Carrera: <strong className="text-slate-900 dark:text-zinc-100">{carrerasUsuario[0].nombre}</strong>
+                            </p>
+                        )}
+                    </div>
 
                     {/* Título */}
                     <div className="space-y-1">
@@ -178,7 +204,13 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
                         <input
                             type="text"
                             required
-                            placeholder={formEsNormativo ? "Ej: Plazo de Cierre CACES / Legalización de PEAs" : "Ej: Entrega de PEA - Programación Web"}
+                            placeholder={
+                                formAlcance === 'instituto'
+                                    ? 'Ej: Plazo de Cierre CACES / Legalización de PEAs'
+                                    : formAlcance === 'carrera'
+                                        ? 'Ej: Reunión de Coordinación / Entrega de PEAs de Carrera'
+                                        : 'Ej: Revisar unidades del PEA - Programación Web'
+                            }
                             value={formTitulo}
                             onChange={(e) => setFormTitulo(e.target.value)}
                             className="input-vercel text-sm"
@@ -198,35 +230,6 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        {/* Tipo */}
-                        <div className="space-y-1">
-                            <label className="section-label mb-1.5 block">Categoría / Tipo</label>
-                            <select
-                                value={formTipo}
-                                onChange={(e) => setFormTipo(e.target.value)}
-                                className="input-vercel text-sm"
-                            >
-                                <option value="Personal">Personal / Nota Rápida</option>
-                                <option value="Tarea">Tarea Curricular / PEA</option>
-                                <option value="Reunion">Reunión de Área / Asignatura</option>
-                                <option value="Hito">Fecha Límite / Entrega</option>
-                            </select>
-                        </div>
-
-                        {/* Color */}
-                        <div className="space-y-1">
-                            <label className="section-label mb-1.5 block">Etiqueta Visual (Color)</label>
-                            <select
-                                value={formColorHex}
-                                onChange={(e) => setFormColorHex(e.target.value)}
-                                className="input-vercel text-sm"
-                            >
-                                {COLORES_OPCIONES.map(({ value, label }) => (
-                                    <option key={value} value={value}>{label}</option>
-                                ))}
-                            </select>
-                        </div>
-
                         {/* Fecha Inicio */}
                         <div className="space-y-1">
                             <label className="section-label mb-1.5 block">Fecha de Inicio *</label>
@@ -241,7 +244,7 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
 
                         {/* Fecha Fin */}
                         <div className="space-y-1">
-                            <label className="section-label mb-1.5 block">Fecha de Fin</label>
+                            <label className="section-label mb-1.5 block">Fecha de Fin (opcional)</label>
                             <input
                                 type="date"
                                 value={formFechaFin || ''}
@@ -249,89 +252,116 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
                                 className="input-vercel text-sm"
                             />
                         </div>
-
-                        {/* Prioridad */}
-                        <div className="space-y-1">
-                            <label className="section-label mb-1.5 block">Prioridad</label>
-                            <select
-                                value={formPrioridad}
-                                onChange={(e) => setFormPrioridad(e.target.value)}
-                                className="input-vercel text-sm"
-                            >
-                                <option value="Baja">Baja</option>
-                                <option value="Media">Media</option>
-                                <option value="Alta">Alta</option>
-                            </select>
-                        </div>
-
-                        {/* Estado */}
-                        <div className="space-y-1">
-                            <label className="section-label mb-1.5 block">Estado</label>
-                            <select
-                                value={formEstado}
-                                onChange={(e) => setFormEstado(e.target.value)}
-                                className="input-vercel text-sm"
-                            >
-                                <option value="Pendiente">Pendiente</option>
-                                <option value="EnProgreso">En Progreso</option>
-                                <option value="Completado">Completado</option>
-                                <option value="Cancelado">Cancelado</option>
-                            </select>
-                        </div>
-
-                        {/* Alerta días */}
-                        <div className="space-y-1">
-                            <label className="section-label mb-1.5 block flex items-center gap-1.5">
-                                <Bell size={10} /> Recordatorio (días antes)
-                            </label>
-                            <input
-                                type="number"
-                                min={0}
-                                max={90}
-                                placeholder="Ej: 3 (dejar vacío para no recordar)"
-                                value={formAlertaDias}
-                                onChange={(e) => setFormAlertaDias(e.target.value === '' ? '' : Number(e.target.value))}
-                                className="input-vercel text-sm"
-                            />
-                        </div>
-
-                        {/* Recurrencia anual */}
-                        <div className="space-y-1 flex flex-col justify-end">
-                            <label className="section-label mb-1.5 block flex items-center gap-1.5">
-                                <RotateCcw size={10} /> Repetición
-                            </label>
-                            <div className="flex items-center gap-3 px-4 py-2.5 bg-surface border border-border-thin rounded-lg">
-                                <input
-                                    type="checkbox"
-                                    id="recurrencia_anual"
-                                    checked={formRecurrenciaAnual}
-                                    onChange={(e) => setFormRecurrenciaAnual(e.target.checked)}
-                                    className="w-4 h-4 accent-brand cursor-pointer"
-                                />
-                                <label htmlFor="recurrencia_anual" className="text-sm text-text-main cursor-pointer select-none">
-                                    Se repite cada año
-                                </label>
-                            </div>
-                        </div>
                     </div>
 
-                    {/* Es Privado */}
-                    <div className="flex items-center gap-3 p-4 bg-surface border border-border-thin rounded-lg">
-                        <input
-                            type="checkbox"
-                            id="es_privado"
-                            checked={formEsPrivado}
-                            onChange={(e) => setFormEsPrivado(e.target.checked)}
-                            className="w-5 h-5 border border-border rounded accent-brand cursor-pointer"
-                        />
-                        <div className="flex flex-col">
-                            <label htmlFor="es_privado" className="text-sm font-bold text-text-main cursor-pointer select-none">
-                                Evento Privado / Personal
-                            </label>
-                            <span className="text-[11px] text-text-dim leading-snug">
-                                Si está marcado, solo tú podrás ver este evento.
-                            </span>
-                        </div>
+                    {/* Opciones adicionales colapsables para mantener el flujo simple */}
+                    <div className="border-t border-slate-200 dark:border-zinc-800 pt-3">
+                        <button
+                            type="button"
+                            onClick={() => setShowOpciones((prev) => !prev)}
+                            className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer"
+                        >
+                            <ChevronDown size={14} className={`transition-transform ${showOpciones ? 'rotate-180' : ''}`} />
+                            <span>Opciones adicionales (categoría, color, recordatorio)</span>
+                        </button>
+
+                        {showOpciones && (
+                            <div className="grid grid-cols-2 gap-4 mt-4">
+                                {/* Tipo */}
+                                <div className="space-y-1">
+                                    <label className="section-label mb-1.5 block">Categoría / Tipo</label>
+                                    <select
+                                        value={formTipo}
+                                        onChange={(e) => setFormTipo(e.target.value)}
+                                        className="input-vercel text-sm"
+                                    >
+                                        <option value="Personal">Personal / Nota Rápida</option>
+                                        <option value="Tarea">Tarea Curricular / PEA</option>
+                                        <option value="Reunion">Reunión de Área / Carrera</option>
+                                        <option value="Hito">Fecha Límite / Entrega</option>
+                                        {canPublishInstituto && <option value="Normativo">Normativo / Institucional</option>}
+                                    </select>
+                                </div>
+
+                                {/* Color */}
+                                <div className="space-y-1">
+                                    <label className="section-label mb-1.5 block">Etiqueta Visual (Color)</label>
+                                    <select
+                                        value={formColorHex}
+                                        onChange={(e) => setFormColorHex(e.target.value)}
+                                        className="input-vercel text-sm"
+                                    >
+                                        {COLORES_OPCIONES.map(({ value, label }) => (
+                                            <option key={value} value={value}>{label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Prioridad */}
+                                <div className="space-y-1">
+                                    <label className="section-label mb-1.5 block">Prioridad</label>
+                                    <select
+                                        value={formPrioridad}
+                                        onChange={(e) => setFormPrioridad(e.target.value)}
+                                        className="input-vercel text-sm"
+                                    >
+                                        <option value="Baja">Baja</option>
+                                        <option value="Media">Media</option>
+                                        <option value="Alta">Alta</option>
+                                    </select>
+                                </div>
+
+                                {/* Estado */}
+                                <div className="space-y-1">
+                                    <label className="section-label mb-1.5 block">Estado</label>
+                                    <select
+                                        value={formEstado}
+                                        onChange={(e) => setFormEstado(e.target.value)}
+                                        className="input-vercel text-sm"
+                                    >
+                                        <option value="Pendiente">Pendiente</option>
+                                        <option value="EnProgreso">En Progreso</option>
+                                        <option value="Completado">Completado</option>
+                                        <option value="Cancelado">Cancelado</option>
+                                    </select>
+                                </div>
+
+                                {/* Alerta días */}
+                                <div className="space-y-1">
+                                    <label className="section-label mb-1.5 block flex items-center gap-1.5">
+                                        <Bell size={10} /> Recordatorio (días antes)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        max={90}
+                                        placeholder="Ej: 3 (vacío = sin alerta)"
+                                        value={formAlertaDias}
+                                        onChange={(e) => setFormAlertaDias(e.target.value === '' ? '' : Number(e.target.value))}
+                                        className="input-vercel text-sm"
+                                    />
+                                </div>
+
+                                {/* Recurrencia anual */}
+                                <div className="space-y-1 flex flex-col justify-end">
+                                    <label className="section-label mb-1.5 block flex items-center gap-1.5">
+                                        <RotateCcw size={10} /> Repetición
+                                    </label>
+                                    <div className="flex items-center gap-3 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg">
+                                        <input
+                                            type="checkbox"
+                                            id="recurrencia_anual"
+                                            checked={formRecurrenciaAnual}
+                                            onChange={(e) => setFormRecurrenciaAnual(e.target.checked)}
+                                            className="w-4 h-4 accent-[#0070f3] cursor-pointer"
+                                        />
+                                        <label htmlFor="recurrencia_anual" className="text-sm text-text-main cursor-pointer select-none">
+                                            Se repite cada año
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 

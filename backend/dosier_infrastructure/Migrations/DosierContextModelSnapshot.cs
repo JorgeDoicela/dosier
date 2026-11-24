@@ -2179,6 +2179,10 @@ namespace dosier_infrastructure.Migrations
                         .HasColumnName("fechaRegistro")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<int?>("IdCarrera")
+                        .HasColumnType("int")
+                        .HasColumnName("idCarrera");
+
                     b.Property<string>("ModuloOrigen")
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)")

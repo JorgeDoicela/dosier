@@ -9,6 +9,7 @@ import { useNotifications } from '../../../api/NotificationsContext';
 import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import {
     getEventos,
+    getCarrerasUsuario,
     createEvento,
     createNormativo,
     updateEvento,
@@ -18,31 +19,21 @@ import {
     buildPayload,
     resolveEventUrl,
     CATEGORIAS_CONFIG,
+    type CalendarioCarrera,
 } from '../../../services/calendarioService';
 import type { CalendarEventExtended, Evento } from '../types/calendarioTypes';
 
+export type EventoAlcance = 'personal' | 'carrera' | 'instituto';
+
 export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
-    const { isAdmin } = useAuth();
+    const { isAdmin, isVicerrector, isCoordAcad } = useAuth();
+    const canPublishInstituto = isAdmin || isVicerrector || isCoordAcad;
     const [loading, setLoading] = useState(true);
     const [eventos, setEventos] = useState<CalendarEventExtended[]>([]);
+    const [carrerasUsuario, setCarrerasUsuario] = useState<CalendarioCarrera[]>([]);
+    const [selectedCarreraId, setSelectedCarreraId] = useState<number | null>(null);
     const [currentDate, setCurrentDate] = useState<Date>(new Date());
     const [view, setView] = useState<View>('month');
-
-    // Filtros de Categorías
-    const [categoriasVisibles, setCategoriasVisibles] = useState<Record<string, boolean>>({
-        'Normativo': true,
-        'Curricular': true,
-        'EntregaPea': true,
-        'Revision': true,
-        'Firmas': true,
-        'Reunion': true,
-        'Personal': true,
-        // Compatibilidad retroactiva
-        'Convocatoria': true,
-        'Proyecto': true,
-        'Monitoreo': true,
-        'PeerReview': true,
-    });
 
     const [selectedEvent, setSelectedEvent] = useState<Evento | null>(null);
     const navigate = useNavigate();
@@ -68,42 +59,70 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
     const [formRecurrenciaAnual, setFormRecurrenciaAnual] = useState(false);
     const [formEsNormativo, setFormEsNormativo] = useState(false);
     const [formRolesVisibles, setFormRolesVisibles] = useState<string>('');
+    const [formAlcance, setFormAlcance] = useState<EventoAlcance>('personal');
+    const [formIdCarrera, setFormIdCarrera] = useState<number | null>(null);
 
-    const resetForm = () => {
+    const aplicarAlcanceDefaults = (alcance: EventoAlcance, carreraIdOverride?: number | null) => {
+        setFormAlcance(alcance);
+        if (alcance === 'instituto') {
+            setFormEsPrivado(false);
+            setFormEsNormativo(true);
+            setFormIdCarrera(null);
+            setFormTipo('Normativo');
+            setFormColorHex('#1E3A8A');
+            setFormAlertaDias(7);
+        } else if (alcance === 'carrera') {
+            setFormEsPrivado(false);
+            setFormEsNormativo(false);
+            const fallbackCarrera = carreraIdOverride ?? selectedCarreraId ?? carrerasUsuario[0]?.id_carrera ?? null;
+            setFormIdCarrera(fallbackCarrera);
+            setFormTipo('Reunion');
+            setFormColorHex('#3B82F6');
+            setFormAlertaDias(3);
+        } else {
+            setFormEsPrivado(true);
+            setFormEsNormativo(false);
+            setFormIdCarrera(null);
+            setFormTipo('Personal');
+            setFormColorHex('#F59E0B');
+            setFormAlertaDias('');
+        }
+    };
+
+    const resetForm = (alcanceInicial: EventoAlcance = 'personal') => {
         setFormTitulo('');
         setFormDescripcion('');
-        setFormTipo('Personal');
         setFormFechaInicio(format(new Date(), 'yyyy-MM-dd'));
         setFormFechaFin(format(new Date(), 'yyyy-MM-dd'));
         setFormEsTodoElDia(true);
-        setFormColorHex('#F59E0B');
-        setFormEsPrivado(true);
         setFormPrioridad('Media');
         setFormEstado('Pendiente');
-        setFormAlertaDias('');
         setFormRecurrenciaAnual(false);
-        setFormEsNormativo(false);
         setFormRolesVisibles('');
         setIsEditing(false);
         setEditingUuid(null);
+        aplicarAlcanceDefaults(alcanceInicial);
     };
 
-    const handleNewEventClick = () => {
-        resetForm();
+    const handleNewEventClick = (alcanceInicial: EventoAlcance = 'personal') => {
+        resetForm(alcanceInicial);
         setIsFormOpen(true);
     };
 
     const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
-        resetForm();
+        resetForm('personal');
         const inicio = format(slotInfo.start, 'yyyy-MM-dd');
         const fin = format(slotInfo.end instanceof Date ? addDays(slotInfo.end, -1) : slotInfo.start, 'yyyy-MM-dd');
         setFormFechaInicio(inicio);
         setFormFechaFin(fin < inicio ? inicio : fin);
         setIsFormOpen(true);
-    }, []);
+    }, [carrerasUsuario, selectedCarreraId]);
 
     const handleEditEventClick = (ev: Evento) => {
-        const isNorm = ev.categoria_global === 'Normativo';
+        const isNorm = ev.categoria_global === 'Normativo' && !ev.id_carrera;
+        const alcanceActual: EventoAlcance = ev.es_privado
+            ? 'personal'
+            : (ev.id_carrera ? 'carrera' : 'instituto');
         setFormTitulo(ev.titulo);
         setFormDescripcion(ev.descripcion || '');
         setFormTipo(ev.subcategoria || (isNorm ? 'Normativo' : 'Personal'));
@@ -111,12 +130,14 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         setFormFechaFin(ev.fecha_fin || ev.fecha_inicio || '');
         setFormEsTodoElDia(ev.es_todo_el_dia);
         setFormColorHex(ev.color_hex || (isNorm ? '#1E3A8A' : '#F59E0B'));
-        setFormEsPrivado(isNorm ? false : ev.es_privado);
+        setFormEsPrivado(ev.es_privado);
         setFormPrioridad(ev.prioridad || 'Media');
         setFormEstado(ev.estado || 'Pendiente');
         setFormAlertaDias(ev.alerta_dias ?? '');
         setFormRecurrenciaAnual(ev.recurrencia_anual ?? false);
-        setFormEsNormativo(isNorm);
+        setFormEsNormativo(alcanceActual === 'instituto');
+        setFormAlcance(alcanceActual);
+        setFormIdCarrera(ev.id_carrera ?? null);
         setFormRolesVisibles(ev.roles_visibles || '');
         setEditingUuid(ev.uuid);
         setIsEditing(true);
@@ -132,20 +153,29 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         fechaFin: formFechaFin,
         esTodoElDia: formEsTodoElDia,
         colorHex: formColorHex,
-        esPrivado: formEsNormativo ? false : formEsPrivado,
+        esPrivado: formAlcance === 'personal',
         prioridad: formPrioridad,
         estado: formEstado,
         alertaDias: formAlertaDias,
         recurrenciaAnual: formRecurrenciaAnual,
-        rolesVisibles: formRolesVisibles,
+        rolesVisibles: formRolesVisibles || null,
+        idCarrera: formAlcance === 'carrera' ? formIdCarrera : null,
     });
 
     const handleSaveEvent = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formTitulo.trim()) return;
+        if (formAlcance === 'carrera' && !formIdCarrera) {
+            showToast({
+                title: 'Selecciona una carrera',
+                body: 'Debes indicar a qué carrera pertenece este evento.',
+                type: 'warning',
+            });
+            return;
+        }
         try {
             setLoading(true);
-            if (isAdmin && formEsNormativo) {
+            if (canPublishInstituto && formAlcance === 'instituto') {
                 if (isEditing && editingUuid) {
                     await updateNormativo(editingUuid, getFormPayload());
                 } else {
@@ -159,9 +189,14 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
                 }
             }
             setIsFormOpen(false);
-            fetchEventos(currentDate);
+            fetchEventos(currentDate, selectedCarreraId);
         } catch (error) {
             console.error('Error al guardar evento:', error);
+            showToast({
+                title: 'No se pudo guardar el evento',
+                body: 'Verifica tus permisos o la conexión con el servidor.',
+                type: 'error',
+            });
         } finally {
             setLoading(false);
         }
@@ -308,10 +343,16 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         }
     }, [currentDate]);
 
-    const fetchEventos = useCallback(async (date: Date) => {
+    useEffect(() => {
+        getCarrerasUsuario()
+            .then(data => setCarrerasUsuario(data || []))
+            .catch(() => setCarrerasUsuario([]));
+    }, []);
+
+    const fetchEventos = useCallback(async (date: Date, carreraId: number | null = selectedCarreraId) => {
         try {
             setLoading(true);
-            const raw = await getEventos(date);
+            const raw = await getEventos(date, carreraId);
             const parsed: CalendarEventExtended[] = raw
                 .filter(ev => Boolean(ev.fecha_inicio || (ev as any).fechaInicio))
                 .map((ev) => {
@@ -348,14 +389,14 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [selectedCarreraId]);
 
     useEffect(() => {
-        fetchEventos(currentDate);
-    }, [currentDate, fetchEventos]);
+        fetchEventos(currentDate, selectedCarreraId);
+    }, [currentDate, selectedCarreraId, fetchEventos]);
 
     useRealtimeSync({
-        onSync: () => fetchEventos(currentDate),
+        onSync: () => fetchEventos(currentDate, selectedCarreraId),
         events: ['dosier-projects-changed'],
         intervalMs: 0,
     });
@@ -399,7 +440,7 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
             style: {
                 backgroundColor: isCompleted ? 'transparent' : color,
                 borderRadius: isSpacious ? '8px' : '6px',
-                opacity: categoriasVisibles[ev.categoria_global] !== false ? 1 : 0.15,
+                opacity: 1,
                 color: isCompleted ? color : '#ffffff',
                 border: isCompleted ? `1.5px solid ${color}` : '0px',
                 display: 'block',
@@ -414,17 +455,7 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         };
     };
 
-    const toggleCategoria = (cat: string) => {
-        setCategoriasVisibles(prev => ({ ...prev, [cat]: !prev[cat] }));
-    };
-
-    const isCategoriaVisible = (ev: Evento) => {
-        const catOk = categoriasVisibles[ev.categoria_global] !== false;
-        const subOk = !ev.subcategoria || !(ev.subcategoria in categoriasVisibles) || categoriasVisibles[ev.subcategoria] !== false;
-        return catOk && subOk;
-    };
-
-    const filteredEventos = eventos.filter(ev => isCategoriaVisible(ev.resource));
+    const filteredEventos = eventos;
 
     const hoy = startOfDay(new Date());
     const proximosEventos = [...eventos]
@@ -479,8 +510,6 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         setCurrentDate,
         view,
         setView,
-        categoriasVisibles,
-        toggleCategoria,
         filteredEventos,
         proximosEventos,
         selectedEvent,
@@ -517,6 +546,15 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         setFormEsNormativo,
         formRolesVisibles,
         setFormRolesVisibles,
+        formAlcance,
+        setFormAlcance,
+        aplicarAlcanceDefaults,
+        formIdCarrera,
+        setFormIdCarrera,
+        carrerasUsuario,
+        selectedCarreraId,
+        setSelectedCarreraId,
+        canPublishInstituto,
         resetForm,
         handleNewEventClick,
         handleSelectSlot,

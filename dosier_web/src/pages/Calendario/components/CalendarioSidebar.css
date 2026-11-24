@@ -233,52 +233,6 @@
     color: #60a5fa;
 }
 
-/* Filtros de Agenda */
-.filtros-lista {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.filtro-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    color: var(--text-dim);
-    cursor: pointer;
-    user-select: none;
-    padding: 6px 10px;
-    border-radius: 8px;
-    transition: background-color 0.2s, color 0.2s;
-}
-
-.filtro-item:hover {
-    background: var(--surface-hover);
-    color: var(--fg);
-}
-
-.filtro-item input[type="checkbox"] {
-    width: 15px;
-    height: 15px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    cursor: pointer;
-    accent-color: var(--brand);
-    flex-shrink: 0;
-}
-
-.color-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: var(--color, var(--text-dim));
-    display: inline-block;
-    flex-shrink: 0;
-    box-shadow: 0 0 0 2px var(--surface);
-}
-
 /* Panel Próximos Eventos */
 .proximos-section {
     flex-shrink: 0;

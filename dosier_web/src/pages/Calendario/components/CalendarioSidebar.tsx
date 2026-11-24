@@ -7,7 +7,6 @@ import { format, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
     type EventoCalendario,
-    CATEGORIAS_CONFIG
 } from '../../../services/calendarioService';
 import type { Event as BigCalendarEvent } from 'react-big-calendar';
 import './CalendarioSidebar.css';
@@ -20,8 +19,6 @@ export interface CalendarEventExtended extends BigCalendarEvent {
 
 interface CalendarioSidebarProps {
     viewMode?: CalendarViewMode;
-    categoriasVisibles: Record<string, boolean>;
-    toggleCategoria: (key: string) => void;
     stickyNotes: EventoCalendario[];
     draggingUuid: string | null;
     draggingType?: 'note' | 'kanban' | null;
@@ -37,8 +34,6 @@ interface CalendarioSidebarProps {
 
 export const CalendarioSidebar: React.FC<CalendarioSidebarProps> = ({
     viewMode = 'calendar',
-    categoriasVisibles,
-    toggleCategoria,
     stickyNotes,
     draggingUuid,
     draggingType,
@@ -192,25 +187,6 @@ export const CalendarioSidebar: React.FC<CalendarioSidebarProps> = ({
                 </div>
             )}
 
-            {/* Filtros de Agenda: Solo en vista Calendario */}
-            {viewMode === 'calendar' && (
-                <div className="sidebar-section">
-                    <h3>Filtros de Agenda</h3>
-                    <div className="filtros-lista">
-                        {Object.entries(CATEGORIAS_CONFIG).map(([key, { label, color }]) => (
-                            <label key={key} className="filtro-item" style={{ '--color': color } as React.CSSProperties}>
-                                <input
-                                    type="checkbox"
-                                    checked={categoriasVisibles[key]}
-                                    onChange={() => toggleCategoria(key)}
-                                />
-                                <span className="color-dot" />
-                                <span>{label}</span>
-                            </label>
-                        ))}
-                    </div>
-                </div>
-            )}
         </aside>
     );
 };

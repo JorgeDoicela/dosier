@@ -28,11 +28,13 @@ export const EventoDetailDrawer: React.FC<EventoDetailDrawerProps> = ({
     handleGoToEventAction,
     handleDevolverAInbox,
 }) => {
-    const { isAdmin } = useAuth();
+    const { isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, user } = useAuth();
     if (!selectedEvent) return null;
     const hasAction = !!resolveEventUrl(selectedEvent, isAdmin);
     const isNormativo = selectedEvent.tipo_entidad_origen === 'CALENDARIO_NORMATIVO';
-    const canManageNormativo = isAdmin && isNormativo;
+    const isAutoridadSuperior = isAdmin || isVicerrector || isCoordAcad;
+    const isOwner = Boolean(user?.id_usuario && selectedEvent.creado_por === user.id_usuario);
+    const canManageNormativo = isNormativo && (isOwner || isAutoridadSuperior || (isCoordCarrera && Boolean(selectedEvent.id_carrera)));
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200">
@@ -133,6 +135,32 @@ export const EventoDetailDrawer: React.FC<EventoDetailDrawerProps> = ({
                                 {ESTADO_LABELS[selectedEvent.estado] ?? selectedEvent.estado}
                             </span>
                         </div>
+
+                        {/* Contexto de Carrera y Docente */}
+                        {(selectedEvent.nombre_carrera || selectedEvent.nombre_docente) && (
+                            <div className="p-4 rounded-lg border border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 col-span-2 grid grid-cols-2 gap-4">
+                                {selectedEvent.nombre_carrera && (
+                                    <div>
+                                        <div className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                                            Carrera
+                                        </div>
+                                        <div className="text-sm font-semibold text-slate-900 dark:text-zinc-100 mt-0.5">
+                                            {selectedEvent.nombre_carrera}
+                                        </div>
+                                    </div>
+                                )}
+                                {selectedEvent.nombre_docente && (
+                                    <div>
+                                        <div className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                                            Docente responsable
+                                        </div>
+                                        <div className="text-sm font-semibold text-slate-900 dark:text-zinc-100 mt-0.5">
+                                            {selectedEvent.nombre_docente}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Contexto de Origen */}
                         {(() => {

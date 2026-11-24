@@ -375,10 +375,10 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                 {/* Cuerpo del Modal */}
                 <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-5 bg-white dark:bg-zinc-950">
                     {configStatus && !configStatus.isReady && (
-                        <div className="p-3.5 rounded-xl border border-amber-200 dark:border-amber-900/80 bg-amber-50 dark:bg-[#1a1610] flex items-center justify-between gap-3">
+                        <div className="p-3.5 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-[#0f172a] flex items-center justify-between gap-3">
                             <div className="flex items-center gap-2.5 text-xs text-slate-800 dark:text-zinc-200">
-                                <AlertCircle size={15} className="text-amber-600 shrink-0" />
-                                <span>El mapeo inteligente de documentos requiere una API Key activa configurada en el sistema.</span>
+                                <AlertCircle size={15} className="text-[#0070f3] dark:text-blue-400 shrink-0" />
+                                <span>Sin API Key configurada: la extracción se ejecutará automáticamente en modo determinista estándar basado en la estructura del documento.</span>
                             </div>
                         </div>
                     )}
@@ -522,7 +522,17 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                             </div>
 
                             <div className="rounded-xl border border-slate-200 dark:border-zinc-800 divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-950">
-                                {extractedDraft.validationSummary.generatedSections.map(secId => {
+                                {extractedDraft.validationSummary.generatedSections.length === 0 ? (
+                                    <div className="p-6 text-center space-y-1.5">
+                                        <p className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
+                                            No se identificaron secciones curriculares reconocibles
+                                        </p>
+                                        <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                                            Verifique que el archivo contenga encabezados estándar del PEA (Objetivo, Contenidos, Metodología, Actividades Prácticas o Bibliografía) o configure una API Key para análisis semántico libre.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    extractedDraft.validationSummary.generatedSections.map(secId => {
                                     const isChecked = selectedSections.includes(secId);
                                     const label = SECTION_LABELS[secId] || secId;
 
@@ -778,7 +788,8 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                                             </div>
                                         </label>
                                     );
-                                })}
+                                })
+                                )}
                             </div>
                         </div>
                     )}

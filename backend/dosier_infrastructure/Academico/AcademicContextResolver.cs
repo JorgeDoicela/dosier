@@ -252,7 +252,7 @@ public class AcademicContextResolver : IAcademicContextResolver
             Creditos = credits,
             HorasSemanales = assignment.NumeroHoras,
             EsExtracurricular = (subject.ExtraCurricular == 1) || (assignment.ExtraCurricular == 1),
-            UnidadOrganizacionCurricular = NormalizarUnidadOrganizacion(subjectType?.TipoAsignatura1),
+            UnidadOrganizacionCurricular = NormalizarUnidadOrganizacion(subjectType?.TipoAsignatura1, detail.Tipo),
             ModalidadAutorizada = modalityAuthorized,
             FuenteMalla = source,
             Prerrequisitos = prerequisites,
@@ -260,15 +260,26 @@ public class AcademicContextResolver : IAcademicContextResolver
         };
     }
 
-    public static string NormalizarUnidadOrganizacion(string? tipoAsignatura)
+    public static string NormalizarUnidadOrganizacion(string? tipoAsignatura, string? tipoCortoDetalle = null)
     {
+        if (!string.IsNullOrWhiteSpace(tipoCortoDetalle))
+        {
+            var shortUpper = tipoCortoDetalle.Trim().ToUpperInvariant();
+            if (shortUpper is "U" or "INTEGRACION" or "INTEGRACIÓN" or "TITULACION" or "TITULACIÓN")
+                return "Unidad de Integración Curricular";
+            if (shortUpper is "P" or "PROFESIONAL")
+                return "Unidad Profesional";
+            if (shortUpper is "B" or "BASICA" or "BÁSICA")
+                return "Unidad Básica";
+        }
+
         if (string.IsNullOrWhiteSpace(tipoAsignatura)) return "Unidad Profesional";
         var upper = tipoAsignatura.Trim().ToUpperInvariant();
         return upper switch
         {
-            "BASICA" or "BÁSICA" or "UNIDAD BASICA" or "UNIDAD BÁSICA" => "Unidad Básica",
-            "PROFESIONAL" or "UNIDAD PROFESIONAL" => "Unidad Profesional",
-            "TITULACION" or "TITULACIÓN" or "INTEGRACION" or "INTEGRACIÓN" or "UNIDAD DE INTEGRACION CURRICULAR" or "UNIDAD DE INTEGRACIÓN CURRICULAR" => "Unidad de Integración Curricular",
+            "B" or "BASICA" or "BÁSICA" or "UNIDAD BASICA" or "UNIDAD BÁSICA" => "Unidad Básica",
+            "P" or "PROFESIONAL" or "UNIDAD PROFESIONAL" => "Unidad Profesional",
+            "U" or "TITULACION" or "TITULACIÓN" or "INTEGRACION" or "INTEGRACIÓN" or "INTEGRACION CURRICULAR" or "INTEGRACIÓN CURRICULAR" or "UNIDAD DE INTEGRACION CURRICULAR" or "UNIDAD DE INTEGRACIÓN CURRICULAR" => "Unidad de Integración Curricular",
             "TRONCO COMUN" or "TRONCO COMÚN" => "Unidad Básica",
             _ => tipoAsignatura
         };

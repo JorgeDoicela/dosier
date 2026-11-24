@@ -355,7 +355,7 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
                 Creditos = creditos,
                 HorasSemanales = asig.NumeroHoras,
                 EsExtracurricular = (asignatura.ExtraCurricular == 1) || (asig.ExtraCurricular == 1),
-                UnidadOrganizacionCurricular = AcademicContextResolver.NormalizarUnidadOrganizacion(tipoAsignatura?.TipoAsignatura1),
+                UnidadOrganizacionCurricular = AcademicContextResolver.NormalizarUnidadOrganizacion(tipoAsignatura?.TipoAsignatura1, detalle.Tipo),
 
                 Prerrequisitos = prereqList,
                 AdvertenciasContexto = warnings,
@@ -452,7 +452,7 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
             HorasPracticoExperimental = horasApe,
             HorasAutonomo = horasAutonomo,
             Creditos = detalle?.Creditos ?? 0,
-            UnidadOrganizacionCurricular = AcademicContextResolver.NormalizarUnidadOrganizacion(tipoAsig?.TipoAsignatura1),
+            UnidadOrganizacionCurricular = AcademicContextResolver.NormalizarUnidadOrganizacion(tipoAsig?.TipoAsignatura1, detalle.Tipo),
             DescripcionMalla = mallaActiva?.Descripcion,
 
             Prerrequisitos = prerequisitosItems

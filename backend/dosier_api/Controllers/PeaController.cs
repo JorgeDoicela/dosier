@@ -578,7 +578,7 @@ namespace dosier_api.Controllers
         [HttpPost("uuid/{uuid}/ai/importar-archivo")]
         [HttpPost("{uuid}/ai/importar-archivo")]
         [Consumes("multipart/form-data")]
-        [RequestSizeLimit(15 * 1024 * 1024)]
+        [RequestSizeLimit(20 * 1024 * 1024)]
         public async Task<IActionResult> ImportarDocumentoPea(
             string uuid,
             IFormFile? file,

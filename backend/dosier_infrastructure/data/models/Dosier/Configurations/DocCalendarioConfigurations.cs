@@ -21,6 +21,7 @@ public class DocCalendarioEventoNormativoConfiguration : IEntityTypeConfiguratio
         entity.Property(e => e.RecurrenciaAnual).HasColumnName("recurrenciaAnual").HasDefaultValue(false);
         entity.Property(e => e.RecurrenciaHasta).HasColumnName("recurrenciaHasta");
         entity.Property(e => e.RolesVisibles).HasColumnName("rolesVisibles").HasMaxLength(255);
+        entity.Property(e => e.IdCarrera).HasColumnName("idCarrera");
         entity.Property(e => e.EsPrivado).HasColumnName("esPrivado").HasDefaultValue(true);
         entity.Property(e => e.Prioridad).HasColumnName("prioridad").HasMaxLength(15).HasDefaultValue("Media");
         entity.Property(e => e.Estado).HasColumnName("estado").HasMaxLength(20).HasDefaultValue("Pendiente");

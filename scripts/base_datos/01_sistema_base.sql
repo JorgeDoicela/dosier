@@ -560,6 +560,7 @@ CREATE TABLE doc_calendario_eventos_normativos (
     recurrenciaHasta  DATE          NULL     COMMENT 'Año hasta el que se repite (NULL = indefinidamente)',
     -- Visibilidad y Privacidad (Organización Profesional)
     rolesVisibles     VARCHAR(255)  NULL      COMMENT 'Roles que pueden ver este evento. NULL = todos.',
+    idCarrera         INT(11)       NULL      COMMENT 'NULL = institucional/personal, valor = compartido para toda esa carrera',
     esPrivado         TINYINT(1)    NOT NULL DEFAULT 1  COMMENT '1 = privado del creador, 0 = visible/compartido para otros',
     prioridad         VARCHAR(15)   NOT NULL DEFAULT 'Media' COMMENT 'Baja, Media, Alta',
     estado            VARCHAR(20)   NOT NULL DEFAULT 'Pendiente' COMMENT 'Pendiente, EnProgreso, Completado, Cancelado',
@@ -625,6 +626,7 @@ SELECT
     'CALENDARIO_NORMATIVO'                  AS tipoEntidadOrigen,
     urlAccion,
     rolesVisibles,
+    idCarrera,
     activo,
     esPrivado,
     prioridad,
@@ -676,6 +678,7 @@ VALUES
 -- Índices para rendimiento del módulo de calendario
 CREATE INDEX idx_cal_norm_fechas ON doc_calendario_eventos_normativos(fechaInicio, fechaFin);
 CREATE INDEX idx_cal_norm_tipo   ON doc_calendario_eventos_normativos(tipoEvento, activo);
+CREATE INDEX idx_cal_norm_carrera ON doc_calendario_eventos_normativos(idCarrera, activo);
 CREATE INDEX idx_cal_nota_bandeja ON doc_calendario_eventos_normativos(creadoPor, fechaInicio, ordenBandeja);
 
 -- =============================================================================

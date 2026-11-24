@@ -31,12 +31,14 @@ graph TD
    CREATE DATABASE IF NOT EXISTS sigafi_es CHARACTER SET latin1 COLLATE latin1_swedish_ci;
    ```
 3. Ejecute en orden estricto los **5 scripts SQL oficiales** ubicados en el directorio `scripts/base_datos/`:
-   * **`00_sigafi_esquema_y_datos_demo.sql`:** (Requerido para entornos aislados o producción) Crea el esquema maestro de SIGAFI (`carreras` con `esInstituto = 1`, `periodos`, `mallas_periodos`, `detallemallas`, `profesores` y `asignacion_materias`) con datos sintéticos representativos del ISTPET cumpliendo con la LOPDP.
+   * **`00_sigafi_esquema_y_datos_demo.sql`:** (Requerido para entornos aislados o demo/AWS) Crea el esquema maestro de SIGAFI (`carreras` con `esInstituto = 1`, `periodos`, `mallas_periodos`, `detallemallas`, `profesores` y `asignacion_materias`) con datos sintéticos representativos del ISTPET cumpliendo con la LOPDP, e incluye las horas oficiales desglosadas (CD y CPAE) de las 338 asignaturas correspondientes a las 13 mallas 2023.
    * **`01_sistema_base.sql`:** Crea la infraestructura base de plantillas, instancias documentales, firmas electrónicas, bitácora forense de auditoría, tablas de co-redacción concurrente CoWork y tablas LOPDP.
    * **`02_gobernanza_y_antecedentes_curriculares.sql`:** Despliega el repositorio de normativas de nivel superior (CES, CACES, SENESCYT), modelos educativos institucionales del ISTPET, proyectos de carrera aprobados y matriz de antecedentes epistemológicos de asignaturas.
    * **`03_curriculum_pea_oficial.sql`:** Crea la tabla maestra `doc_pea`, las 10 tablas específicas para las secciones oficiales A a la K del PEA institucional, colaboradores y versiones.
    * **`04_seguridad_rbac_roles_curriculares.sql`:** Registra a DOSIER como sistema oficial (ID 6: `"Gestión Curricular y Acreditación ISTPET"`), formaliza los 4 módulos curriculares, da de alta los 5 roles curriculares (`DOSIER_ADMIN`, `DOSIER_DOCENTE`, `DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`), asocia permisos y sincroniza usuarios.
-   * *(Nota: El script `scripts/base_datos/extensiones/99_extension_futura_curriculum_silabo_guias.sql` queda reservado para futuras extensiones de sílabos y guías APE).*
+   * *(Extensiones en `scripts/base_datos/extensiones/`):*
+     * **`05_actualizacion_horas_detallemallas_sigafi.sql`:** Script idempotente para actualizar `creditos`, `horas`, `horasDocente` (CD) y `horasPracticoExperimental` (CPAE) de las mallas 2023 directamente sobre una copia real de `sigafi_es` de producción (cuando no se utiliza `00_sigafi_esquema_y_datos_demo.sql`).
+     * **`99_extension_futura_curriculum_silabo_guias.sql`:** Reservado para futuras extensiones de sílabos y guías APE.
 
 ### Paso 2: Configuración y Ejecución del Backend (.NET 8.0)
 

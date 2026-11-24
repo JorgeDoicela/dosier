@@ -1,325 +1,185 @@
-import { 
-    Shield, History, Settings2, Mail, Award, Download
+import {
+    Shield, History, Mail, LayoutTemplate, HardDrive
 } from 'lucide-react';
 import type { HelpConfig, MockupProps } from '../types';
 
 export const USUARIOS_CONFIG: HelpConfig = {
-    icon: <Shield size={24} className="text-brand" />,
-    title: "Consola de Gestión de Usuarios y Roles",
-    summary: "Control administrativo de identidades, perfiles académicos y asignación de capacidades del claustro.",
-    description: "Sección para gestionar accesos y permisos de usuarios en DOSIER. Permite asignar roles curriculares oficiales, habilitar firmas digitales PKCS#12 y consultar el personal docente y administrativo institucional sincronizado con SIGAFI.",
+    icon: <Shield size={20} className="text-[#0070f3]" />,
+    title: 'Gestión de Usuarios y Roles Curriculares',
+    summary: 'Control administrativo de identidades, sincronización con SIGAFI y asignación de los 5 roles institucionales.',
+    description: 'Consola para administrar accesos y capacidades en DOSIER. Permite asignar los roles oficiales (Administrador, Vicerrector, Coordinador Académico, Coordinador de Carrera y Docente) y verificar el estado de firma electrónica PKCS#12.',
     steps: [
         {
-            title: "Asignación dinámica de roles y capacidades",
-            description: "Administra los accesos activando o desactivando permisos específicos directamente en la lista de usuarios. Puedes otorgar roles institucionales (por ejemplo: Docente, Coordinador de Carrera, Coordinador Académico o Vicerrector), lo que adaptará de inmediato las vistas y facultades operativas del usuario.",
-            highlight: 'content-bottom'
-        },
-        {
-            title: "Gestión del Claustro y Personal Administrativo",
-            description: "Filtra la lista de usuarios entre Docentes y Administrativos para auditar la vinculación institucional registrada en SIGAFI, verificando departamentos académicos, asignación horaria y estado de acreditación de credenciales.",
+            title: 'Filtros por categoría de personal y estado',
+            description: 'Filtra la nómina entre Docentes, Administrativos o Con carga docente usando los controles superiores y el buscador por nombre o cédula.',
             highlight: 'content-top'
         },
         {
-            title: "Auditoría de firmas y perfiles digitales académicos",
-            description: "Haz clic en cualquier usuario de la tabla para abrir el panel lateral de detalles de metadatos. Aquí se almacena la información complementaria de la hoja de vida académica, el estado de validación de su firma electrónica (PKCS#12), su historial de accesos recientes e IP de conexión para fines de control de seguridad.",
+            title: 'Asignación dinámica de roles y revisión de perfiles',
+            description: 'Activa o ajusta los roles curriculares directamente en la tabla y abre el panel de detalles de cualquier usuario para auditar su firma PKCS#12 y vinculación con SIGAFI.',
             highlight: 'content-bottom'
         }
     ],
-    compliance: "Respalda la trazabilidad y rigor institucional exigidos por el CACES para la firma digital de instrumentos curriculares (PEA), asegurando el debido proceso y la idoneidad técnica en las responsabilidades académicas.",
+    compliance: 'Respalda el control de acceso basado en roles (RBAC) y la idoneidad de los firmantes exigida por el CACES para documentos académicos oficiales.',
     tips: [
-        "Las cuentas se sincronizan directamente con el sistema académico SIGAFI; las credenciales iniciales coinciden con el usuario institucional.",
-        "Utiliza el filtro de roles para listar únicamente a los usuarios con permisos de coordinación o vicerrectorado para agilizar revisiones curriculares."
+        'Las cuentas docentes y carreras se sincronizan desde la frontera de solo lectura de SIGAFI.',
+        'Un usuario puede tener múltiples roles (por ejemplo Docente y Coordinador de Carrera) y alternar entre ellos desde su panel.'
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            {/* Header & Controls Area */}
-            <div className={`rounded-lg border p-1.5 flex flex-col gap-1 transition-all duration-300 shrink-0 ${highlightTopClass}`}>
-                <div className="flex justify-between items-center">
-                    <div className="flex flex-col">
-                        <span className="text-[4px] text-text-dim uppercase font-mono tracking-wider font-semibold">Control de Accesos</span>
-                        <span className="text-[7px] text-text-main font-bold">Gestión de Usuarios</span>
-                    </div>
-                </div>
-                {/* Segmented Tab Switcher */}
-                <div className="flex gap-1.5 border-b border-border-thin pb-0.5 text-[5px] font-medium">
-                    <span className="text-brand font-semibold border-b border-brand pb-0.5">Todos</span>
-                    <span className="text-text-dim pb-0.5">Docentes</span>
-                    <span className="text-text-dim pb-0.5">Administrativos</span>
-                    <div className="ml-auto flex items-center gap-1">
-                        <span className="text-[4px] text-text-dim font-mono">Solo Activos</span>
-                        <div className="w-4 h-2.5 rounded-full bg-brand p-[1px] flex justify-end items-center"><div className="w-1.8 h-1.8 rounded-full bg-white"/></div>
-                    </div>
+            <div className={`rounded-lg border p-1.5 flex flex-col gap-1 shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="flex gap-3 border-b border-slate-200 dark:border-zinc-800 pb-0.5 text-[6px]">
+                    <span className="font-semibold text-[#0070f3] border-b border-[#0070f3] pb-0.5">Docentes</span>
+                    <span className="text-slate-400">Administrativos</span>
+                    <span className="text-slate-400">Con carga docente</span>
                 </div>
             </div>
-
-            {/* Table Area */}
-            <div className={`flex-1 rounded-lg border p-1.5 flex flex-col gap-1 transition-all duration-300 min-h-0 overflow-hidden ${highlightBottomClass}`}>
-                <table className="w-full text-left border-collapse text-[4.5px]">
-                    <thead>
-                        <tr className="border-b border-border-thin/60 text-[3.5px] font-mono text-text-dim uppercase tracking-wider">
-                            <th className="pb-1 font-bold">Usuario</th>
-                            <th className="pb-1 font-bold">Filiación / Departamento</th>
-                            <th className="pb-1 font-bold">Roles</th>
-                            <th className="pb-1 font-bold">Firma</th>
-                            <th className="pb-1 font-bold text-right">Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-thin/30">
-                        <tr className="hover:bg-surface/30">
-                            <td className="py-1">
-                                <span className="text-text-main font-semibold block leading-tight">Ing. Carlos Mendoza</span>
-                                <span className="text-[3.5px] font-mono text-text-dim">c.mendoza@istpet.edu.ec</span>
-                            </td>
-                            <td className="py-1">
-                                <span className="text-text-main block leading-tight">Dpto. Sistemas</span>
-                                <span className="text-[3.5px] font-mono text-brand font-semibold">Desarrollo de Software</span>
-                            </td>
-                            <td className="py-1">
-                                <div className="flex flex-wrap gap-0.5">
-                                    <span className="px-0.5 py-0.2 bg-brand/10 border border-brand/20 text-brand rounded-[2px] text-[3.5px]">Docente</span>
-                                    <span className="px-0.5 py-0.2 bg-success/10 border border-success/20 text-success rounded-[2px] text-[3.5px]">Coord. Carrera</span>
-                                </div>
-                            </td>
-                            <td className="py-1">
-                                <span className="px-1 py-0.2 bg-success/15 border border-success/35 text-success rounded-[2px] text-[3.5px] font-semibold">
-                                    ✓ PKCS#12
-                                </span>
-                            </td>
-                            <td className="py-1 text-right">
-                                <span className="text-success font-semibold">● Activo</span>
-                            </td>
-                        </tr>
-                        <tr className="hover:bg-surface/30">
-                            <td className="py-1">
-                                <span className="text-text-main font-semibold block leading-tight">Lic. Elena Morales</span>
-                                <span className="text-[3.5px] font-mono text-text-dim">e.morales@istpet.edu.ec</span>
-                            </td>
-                            <td className="py-1">
-                                <span className="text-text-main block leading-tight">Coordinación Académica</span>
-                                <span className="text-[3.5px] font-mono text-brand font-semibold">Gestión Curricular</span>
-                            </td>
-                            <td className="py-1">
-                                <div className="flex flex-wrap gap-0.5">
-                                    <span className="px-0.5 py-0.2 bg-warning/10 border border-warning/20 text-warning rounded-[2px] text-[3.5px]">Coord. Académica</span>
-                                </div>
-                            </td>
-                            <td className="py-1">
-                                <span className="px-1 py-0.2 bg-success/15 border border-success/35 text-success rounded-[2px] text-[3.5px] font-semibold">
-                                    ✓ PKCS#12
-                                </span>
-                            </td>
-                            <td className="py-1 text-right">
-                                <span className="text-success font-semibold">● Activo</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-1.5 transition-all duration-300 ${highlightBottomClass}`}>
+                {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-zinc-800/70">
+                        <div className="space-y-0.5">
+                            <div className="w-24 h-1.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+                            <div className="w-16 h-1 bg-slate-200 dark:bg-zinc-700 rounded" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[5px] font-mono text-emerald-600">PKCS#12</span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        </div>
+                    </div>
+                ))}
             </div>
         </>
     )
 };
 
 export const AUDITORIA_CONFIG: HelpConfig = {
-    icon: <History size={24} className="text-brand" />,
-    title: "Registro de auditoría del sistema",
-    summary: "Historial de acciones y cambios realizados en la base de datos.",
-    description: "Módulo de seguridad que registra cronológicamente cada acción importante en DOSIER. Permite saber qué usuario hizo un cambio, qué campos se modificaron, la fecha y hora, la dirección IP y otros datos de verificación.",
+    icon: <History size={20} className="text-[#0070f3]" />,
+    title: 'Registro de Auditoría del Sistema',
+    summary: 'Bitácora cronológica de eventos, cambios estructurales y trazabilidad forense de DOSIER.',
+    description: 'Registra cada acción relevante ejecutada en la plataforma: usuario operante, módulo afectado, fecha y hora exacta, dirección IP y detalle de cambios (antes y después).',
     steps: [
         {
-            title: "Filtros de búsqueda y consulta de registros",
-            description: "Utiliza el panel de búsqueda superior para filtrar las transacciones. Puedes acotar los registros por módulo específico del sistema (por ejemplo: Proyectos, Usuarios, Finanzas), acción ejecutada (Inserción, Actualización, Eliminación), rango de fechas con marcas de tiempo y el identificador único del usuario operante.",
+            title: 'Filtros de búsqueda y exportación de reportes',
+            description: 'Acota los registros por módulo, tipo de acción, rango de fechas o usuario desde la barra superior, y exporta reportes certificados cuando sea requerido.',
             highlight: 'content-top'
         },
         {
-            title: "Inspección de diferencias estructuradas (Diff)",
-            description: "Haz clic en cualquier registro de la bitácora para desplegar el visor de diferencias. El sistema mostrará los valores anteriores (en rojo) y los valores nuevos (en verde) de cada campo modificado.",
+            title: 'Inspección de diferencias estructuradas (Diff)',
+            description: 'Selecciona cualquier fila de la bitácora para inspeccionar los valores anteriores y nuevos de los campos modificados.',
             highlight: 'content-bottom'
-        },
-        {
-            title: "Exportación certificada de reportes",
-            description: "Utiliza el botón 'Exportar Reporte' para generar un archivo Excel con sello de verificación. Incluye todas las columnas de auditoría y un código que permite comprobar que los registros no han sido alterados manualmente.",
-            highlight: 'content-top'
         }
     ],
-    compliance: "Garantiza el cumplimiento de los estándares de seguridad y la normativa sobre integridad de la información exigida en los procesos de auditoría tecnológica y licenciamiento del CACES y entes reguladores de protección de datos (LOPDP).",
+    compliance: 'Garantiza integridad de la información y trazabilidad forense conforme a auditorías tecnológicas del CACES y la LOPDP.',
     tips: [
-        "Puedes copiar el detalle de cambios con el botón de copiado rápido en el panel lateral para compartirlo con el equipo de soporte en caso de auditorías externas.",
-        "Los registros de eliminación de borradores de proyectos guardan el contenido completo del protocolo para permitir su recuperación rápida en caso de incidentes."
+        'Usa los filtros por rango de fechas para auditar ventanas específicas de aprobación o cambios de roles.'
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            {/* Header & Filters Area */}
-            <div className={`rounded-lg border p-1.5 flex flex-col gap-1.5 transition-all duration-300 shrink-0 ${highlightTopClass}`}>
-                <div className="flex justify-between items-center">
-                    <div className="flex flex-col">
-                        <span className="text-[4px] text-text-dim uppercase font-mono tracking-wider font-semibold">Seguridad e Integridad</span>
-                        <span className="text-[7px] text-text-main font-bold">Registro de auditoría</span>
-                    </div>
-                    <div className="px-1.5 py-0.5 bg-text-main/10 border border-border-thin text-text-main rounded text-[5px] font-bold flex items-center gap-0.5">
-                        <Download size={6} className="text-text-main" /> Exportar Reporte <span className="text-[3.5px] text-text-dim font-mono">(certificado)</span>
-                    </div>
-                </div>
-                <div className="flex gap-1 text-[4.5px]">
-                    <div className="flex-1 h-3.5 bg-surface-hover/20 border border-border-thin rounded-md px-1 flex items-center justify-between text-text-dim">
-                        <span>Filtro: Todos los módulos</span>
-                        <span>▼</span>
-                    </div>
-                    <div className="w-18 h-3.5 bg-surface-hover/20 border border-border-thin rounded-md px-1 flex items-center justify-between text-text-dim">
-                        <span>Rango: Hoy</span>
-                        <span>▼</span>
-                    </div>
-                </div>
+            <div className={`rounded-lg border p-1.5 flex justify-between items-center shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="w-28 h-2.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+                <div className="w-14 h-4 bg-slate-200 dark:bg-zinc-700 rounded" />
             </div>
-
-            {/* Split Workspace Layout */}
-            <div className="flex-1 flex gap-1.5 min-h-0">
-                {/* Left side: Forensic Logs Table */}
-                <div className={`flex-[1.8] rounded-lg border p-1.5 flex flex-col gap-1 transition-all duration-300 min-h-0 overflow-hidden ${highlightBottomClass}`}>
-                    <table className="w-full text-left border-collapse text-[4px]">
-                        <thead>
-                            <tr className="border-b border-border-thin/60 text-[3.5px] font-mono text-text-dim uppercase tracking-wider">
-                                <th className="pb-1 font-bold">Fecha / IP</th>
-                                <th className="pb-1 font-bold">Usuario</th>
-                                <th className="pb-1 font-bold">Módulo</th>
-                                <th className="pb-1 font-bold">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border-thin/30">
-                            <tr className="bg-surface-hover/10">
-                                <td className="py-1 font-mono">
-                                    <span className="text-text-main font-semibold block leading-none">08:24:12</span>
-                                    <span className="text-[3.5px] text-text-dim">192.168.10.45</span>
-                                </td>
-                                <td className="py-1">
-                                    <span className="text-text-main font-semibold block leading-none">jdoicela</span>
-                                    <span className="text-[3.5px] text-text-dim font-mono">ID: 408</span>
-                                </td>
-                                <td className="py-1 text-text-dim">Proyectos</td>
-                                <td className="py-1">
-                                    <span className="px-1 py-0.2 bg-warning/10 border border-warning/20 text-warning rounded-[2px] text-[3.5px] font-semibold">
-                                        Actualización
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr className="hover:bg-surface/30">
-                                <td className="py-1 font-mono">
-                                    <span className="text-text-main font-semibold block leading-none">08:21:05</span>
-                                    <span className="text-[3.5px] text-text-dim">192.168.10.45</span>
-                                </td>
-                                <td className="py-1">
-                                    <span className="text-text-main font-semibold block leading-none">jdoicela</span>
-                                    <span className="text-[3.5px] text-text-dim font-mono">ID: 408</span>
-                                </td>
-                                <td className="py-1 text-text-dim">Firmas</td>
-                                <td className="py-1">
-                                    <span className="px-1 py-0.2 bg-success/10 border border-success/20 text-success rounded-[2px] text-[3.5px] font-semibold">
-                                        Registro nuevo
-                                    </span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div className={`flex-1 flex gap-1.5 min-h-0`}>
+                <div className={`flex-[1.5] rounded-lg border p-1.5 space-y-1.5 transition-all duration-300 ${highlightBottomClass}`}>
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex justify-between py-0.5 border-b border-slate-100 dark:border-zinc-800">
+                            <div className="w-16 h-1.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+                            <div className="w-10 h-1.5 bg-[#0070f3]/60 rounded" />
+                        </div>
+                    ))}
                 </div>
-
-                {/* Right side: JSON Diff Viewer */}
-                <div className={`flex-1 rounded-lg border p-1.5 flex flex-col gap-1 transition-all duration-300 min-h-0 bg-bg-deep/80 ${highlightBottomClass}`}>
-                    <span className="text-[4px] font-bold text-text-main uppercase block border-b border-border-thin/40 pb-0.5">Visor de cambios</span>
-                    <div className="flex-1 font-mono text-[3.5px] leading-tight overflow-y-auto space-y-0.5">
-                        <div className="text-text-dim">{"{"}</div>
-                        <div className="pl-1.5 text-text-dim">"id": 104,</div>
-                        <div className="pl-1.5 text-text-dim">"codigo": "PROY-001",</div>
-                        <div className="pl-1.5 bg-error/15 text-error-hover border-l border-error block w-full px-0.5">
-                            - "estado": "Borrador",
-                        </div>
-                        <div className="pl-1.5 bg-success/15 text-success-hover border-l border-success block w-full px-0.5">
-                            + "estado": "Enviado",
-                        </div>
-                        <div className="pl-1.5 text-text-dim">"updatedAt": "2026-06-05"</div>
-                        <div className="text-text-dim">{"}"}</div>
-                    </div>
+                <div className={`flex-1 rounded-lg border p-1.5 font-mono text-[5px] space-y-1 bg-slate-50 dark:bg-zinc-900 transition-all duration-300 ${highlightBottomClass}`}>
+                    <div className="text-rose-500">- estado: Borrador</div>
+                    <div className="text-emerald-600">+ estado: Aprobado</div>
                 </div>
             </div>
         </>
     )
 };
 
-export const CONFIGURACION_CONFIG: HelpConfig = {
-    icon: <Settings2 size={24} className="text-brand" />,
-    title: "Parámetros del Sistema",
-    summary: "Panel para configurar períodos académicos institucionales y el calendario docente.",
-    description: "Módulo administrativo enfocado en el mantenimiento de los períodos académicos del instituto y la gestión integral de los hitos y plazos normativos en el calendario institucional.",
+export const PLANTILLAS_CONFIG: HelpConfig = {
+    icon: <LayoutTemplate size={20} className="text-[#0070f3]" />,
+    title: 'Editor de Plantillas Documentales',
+    summary: 'Diseñador visual de moldes oficiales PEA con bloques modulares, propiedades y previsualización PDF.',
+    description: 'Permite configurar la estructura maestra de los formatos institucionales (como PEA_OFICIAL). Los cambios realizados en el molde aplican a nuevas instancias sin alterar documentos ya generados.',
     steps: [
         {
-            title: "Administración de periodos académicos",
-            description: "Abre, edita o cierra los períodos académicos institucionales (ciclos lectivos). Permite configurar las fechas iniciales y finales de vigencia en sincronía con SIGAFI.",
-            highlight: 'content-bottom'
+            title: 'Barra de acciones y previsualización PDF',
+            description: 'En la cabecera puedes previsualizar el PDF en caliente con los bloques y estilos actuales o restablecer la plantilla oficial cuando sea necesario.',
+            highlight: 'content-top'
         },
         {
-            title: "Hitos y calendario institucional",
-            description: "Programa los eventos y fechas clave de entrega curricular, plazos de registro y revisión, asegurando que todos los docentes cuenten con alertas preventivas oportunas.",
+            title: 'Lienzo interactivo y panel de propiedades',
+            description: 'Organiza bloques en el lienzo central y ajusta su configuración en el panel lateral derecho (Propiedades y Estilos) sin perder reactividad.',
             highlight: 'content-bottom'
         }
     ],
-    compliance: "Garantiza la trazabilidad temporal de los procesos académicos conforme a los períodos oficiales aprobados por las autoridades del instituto.",
+    compliance: 'Mantiene la separación entre el molde maestro institucional y las instancias inmutables de cada asignatura.',
     tips: [
-        "Establece las fechas de inicio y fin de períodos con precisión para asegurar el correcto filtrado cronológico de asignaturas y expedientes.",
-        "Los hitos de calendario generan automáticamente recordatorios visuales en el panel de los docentes."
+        'Las instancias de PEA ya resueltas conservan su snapshot original para evitar desconfiguraciones en documentos en curso.'
     ],
-    Mockup: ({ highlightBottomClass }: MockupProps) => (
+    Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            {/* Header / Tabs */}
-            <div className="border-b border-border-thin">
-                <nav className="-mb-px flex items-center gap-2">
-                    {['Períodos Académicos', 'Hitos de Calendario'].map((tab, idx) => (
-                        <div 
-                            key={idx} 
-                            className={`pb-1 pt-0.5 px-1 text-[5px] font-semibold border-b-2 cursor-pointer transition-colors ${
-                                idx === 0 
-                                    ? 'border-[#0070f3] text-brand' 
-                                    : 'border-transparent text-text-dim hover:text-text-main'
-                            }`}
-                        >
-                            {tab}
-                        </div>
-                    ))}
-                </nav>
-            </div>
-
-            {/* Config Content / Catalog Table */}
-            <div className={`flex-1 rounded-b-lg border-x border-b p-2 flex flex-col gap-1.5 transition-all duration-300 min-h-0 overflow-hidden ${highlightBottomClass}`}>
-                <div className="flex justify-between items-center pb-1 border-b border-border-thin/40">
-                    <span className="text-[6px] font-bold text-text-main">Ponderaciones y Metas del CACES</span>
-                    <span className="text-[4px] text-text-dim font-mono">Modelo 2026</span>
+            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="w-24 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                <div className="flex gap-1">
+                    <div className="w-12 h-3.5 border border-slate-200 dark:border-zinc-700 rounded" />
+                    <div className="w-12 h-3.5 bg-[#0070f3] rounded" />
                 </div>
-                <div className="flex-1 overflow-y-auto space-y-1">
-                    {/* Catalog Item 1 */}
-                    <div className="border border-border-thin rounded-md p-1 bg-surface flex justify-between items-center hover:border-brand/40">
-                        <div className="space-y-0.5">
-                            <span className="text-[5.5px] font-semibold text-text-main block">B.1.2 Relación Artículos / Docente FTE</span>
-                            <span className="text-[3.5px] text-text-dim uppercase font-mono">Meta Anual: 0.50 Artículos/Docente</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="text-right">
-                                <span className="text-[5px] font-bold text-text-main block">0.48 / 0.50</span>
-                                <span className="text-[3px] text-warning font-mono">96% del objetivo</span>
-                            </div>
-                            <div className="w-1.5 h-1.5 rounded-full bg-warning" />
-                        </div>
+            </div>
+            <div className={`flex-1 flex gap-1.5 min-h-0`}>
+                <div className={`flex-[2] rounded-lg border p-2 space-y-1.5 transition-all duration-300 ${highlightBottomClass}`}>
+                    <div className="w-full h-5 rounded border border-[#0070f3] bg-[#0070f3]/5" />
+                    <div className="w-full h-7 rounded border border-slate-200 dark:border-zinc-800" />
+                    <div className="w-full h-5 rounded border border-slate-200 dark:border-zinc-800" />
+                </div>
+                <div className={`flex-1 rounded-lg border p-1.5 space-y-1 transition-all duration-300 ${highlightBottomClass}`}>
+                    <div className="flex gap-2 border-b border-slate-200 dark:border-zinc-800 pb-0.5 text-[5px]">
+                        <span className="text-[#0070f3] font-semibold">Propiedades</span>
+                        <span className="text-slate-400">Estilos</span>
                     </div>
-                    {/* Catalog Item 2 */}
-                    <div className="border border-border-thin rounded-md p-1 bg-surface flex justify-between items-center hover:border-brand/40">
-                        <div className="space-y-0.5">
-                            <span className="text-[5.5px] font-semibold text-text-main block">B.1.1 Presupuesto de Investigación</span>
-                            <span className="text-[3.5px] text-text-dim uppercase font-mono">Meta Anual: 6.00% del Presupuesto</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="text-right">
-                                <span className="text-[5px] font-bold text-text-main block">6.25% / 6.00%</span>
-                                <span className="text-[3px] text-success font-mono">Meta cumplida</span>
-                            </div>
-                            <div className="w-1.5 h-1.5 rounded-full bg-success" />
-                        </div>
-                    </div>
+                    <div className="w-full h-3 rounded bg-slate-100 dark:bg-zinc-900" />
+                    <div className="w-full h-3 rounded bg-slate-100 dark:bg-zinc-900" />
+                </div>
+            </div>
+        </>
+    )
+};
+
+export const ALMACENAMIENTO_CONFIG: HelpConfig = {
+    icon: <HardDrive size={20} className="text-[#0070f3]" />,
+    title: 'Almacenamiento y Copias de Seguridad',
+    summary: 'Consola de mantenimiento documental, diagnóstico de archivos y respaldo de documentos generados.',
+    description: 'Permite a los administradores supervisar el almacenamiento de documentos PDF, anexos y copias de seguridad del sistema.',
+    steps: [
+        {
+            title: 'Resumen de uso y mantenimiento',
+            description: 'Consulta el estado del almacenamiento de archivos institucionales y ejecuta tareas de verificación o respaldo.',
+            highlight: 'content-top'
+        },
+        {
+            title: 'Gestión de archivos y respaldos',
+            description: 'Inspecciona el listado de paquetes de respaldo y verifica su integridad para recuperación ante contingencias.',
+            highlight: 'content-bottom'
+        }
+    ],
+    compliance: 'Respalda la continuidad operativa y preservación documental exigida para repositorios académicos institucionales.',
+    tips: [
+        'Programa copias de seguridad periódicas antes de realizar actualizaciones mayores o cierres de período lectivo.'
+    ],
+    Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
+        <>
+            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="w-32 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                <div className="w-14 h-4 bg-[#0070f3] rounded" />
+            </div>
+            <div className={`flex-1 rounded-lg border p-2 space-y-2 transition-all duration-300 ${highlightBottomClass}`}>
+                <div className="w-full h-2 bg-slate-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                    <div className="w-2/5 h-full bg-[#0070f3] rounded-full" />
+                </div>
+                <div className="space-y-1">
+                    <div className="w-full h-5 rounded border border-slate-200 dark:border-zinc-800" />
+                    <div className="w-full h-5 rounded border border-slate-200 dark:border-zinc-800" />
                 </div>
             </div>
         </>
@@ -327,218 +187,43 @@ export const CONFIGURACION_CONFIG: HelpConfig = {
 };
 
 export const EMAILS_CONFIG: HelpConfig = {
-    icon: <Mail size={24} className="text-brand" />,
-    title: "Plantillas y correos institucionales",
-    summary: "Consola de administración para la edición de plantillas de correo electrónico transaccionales y notificaciones del sistema.",
-    description: "Módulo diseñado para configurar y gestionar las comunicaciones y correos electrónicos institucionales que el sistema envía de forma automatizada o masiva (alertas de firma, notificaciones institucionales, recordatorios de hitos y avisos).",
+    icon: <Mail size={20} className="text-[#0070f3]" />,
+    title: 'Plantillas y Correos Institucionales',
+    summary: 'Administración de plantillas de correo transaccionales y configuración de notificaciones por email.',
+    description: 'Permite editar las plantillas HTML de notificaciones automáticas del circuito PEA (envío a revisión, devolución con observaciones, aprobación final) y realizar envíos de prueba.',
     steps: [
         {
-            title: "Selección y edición de plantillas dinámicas",
-            description: "Navega por el catálogo de plantillas de correo categorizadas por módulo. Puedes editar el contenido HTML utilizando variables dinámicas del sistema como el nombre del docente, título del proyecto o enlace de firma.",
-            highlight: 'content-bottom'
-        },
-        {
-            title: "Configuración del servidor de correo y envío de prueba",
-            description: "Administra los parámetros de conexión con el servidor de correo institucional y realiza pruebas de entrega para verificar la correcta visualización del diseño y etiquetas.",
+            title: 'Configuración y envío de prueba',
+            description: 'Valida la conexión con el servidor de correo institucional y envía un mensaje de prueba antes de publicar cambios.',
             highlight: 'content-top'
+        },
+        {
+            title: 'Edición de plantillas y variables dinámicas',
+            description: 'Selecciona una plantilla de la lista izquierda y ajusta su contenido HTML utilizando las variables dinámicas disponibles.',
+            highlight: 'content-bottom'
         }
     ],
-    compliance: "Garantiza la formalidad de la comunicación institucional y el debido proceso administrativo en las notificaciones del ciclo de vida de los proyectos de investigación científica.",
+    compliance: 'Asegura la formalidad de las comunicaciones automáticas emitidas durante el flujo de revisión y aprobación curricular.',
     tips: [
-        "Utiliza las variables dinámicas entre llaves dobles (ej. {{nombre_usuario}}) con precaución para no alterar la estructura de la plantilla.",
-        "Siempre realiza un envío de prueba a tu dirección de correo antes de guardar y aplicar cambios globales en una plantilla activa."
+        'Conserva intactas las variables entre llaves dobles (por ejemplo {{nombre_usuario}}) para que los datos se reemplacen correctamente.'
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            {/* Header & SMTP Test Controls */}
-            <div className={`rounded-lg border p-1.5 flex justify-between items-center transition-all duration-300 shrink-0 ${highlightTopClass}`}>
-                <div className="flex flex-col gap-0.5">
-                    <span className="text-[4px] text-brand uppercase font-mono tracking-wider font-semibold">Notificaciones</span>
-                    <span className="text-[7px] text-text-main font-bold">Plantillas de correo</span>
-                </div>
-                <div className="flex gap-1">
-                    <div className="px-1.5 py-0.5 bg-brand text-white rounded text-[5px] font-bold shadow-sm">
-                        Enviar prueba
-                    </div>
-                </div>
+            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="w-28 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                <div className="w-14 h-4 bg-[#0070f3] rounded" />
             </div>
-
-            {/* Split Screen Workspace */}
-            <div className="flex-1 flex gap-1.5 min-h-0">
-                {/* Left side: Templates List */}
-                <div className={`flex-[1.2] rounded-lg border p-1 flex flex-col gap-1 transition-all duration-300 bg-surface-hover/10 min-h-0 ${highlightBottomClass}`}>
-                    <span className="text-[4.5px] font-bold text-text-main uppercase block border-b border-border-thin/40 pb-0.5">Plantillas</span>
-                    <div className="space-y-0.5 overflow-y-auto pr-0.5">
-                        <div className="p-0.5 border border-brand bg-surface rounded-[3px] text-[4px] leading-tight font-semibold text-brand">
-                            doc_evaluacion
-                        </div>
-                        <div className="p-0.5 border border-border-thin/40 bg-surface/40 rounded-[3px] text-[4px] leading-tight text-text-dim">
-                            firma_pendiente
-                        </div>
-                        <div className="p-0.5 border border-border-thin/40 bg-surface/40 rounded-[3px] text-[4px] leading-tight text-text-dim">
-                            proyecto_devuelto
-                        </div>
-                    </div>
+            <div className={`flex-1 flex gap-1.5 min-h-0`}>
+                <div className={`flex-1 rounded-lg border p-1.5 space-y-1 transition-all duration-300 ${highlightBottomClass}`}>
+                    <div className="w-full h-4 rounded border border-[#0070f3] bg-[#0070f3]/10" />
+                    <div className="w-full h-4 rounded border border-slate-200 dark:border-zinc-800" />
+                    <div className="w-full h-4 rounded border border-slate-200 dark:border-zinc-800" />
                 </div>
-
-                {/* Right side: HTML / Variables Code Editor */}
-                <div className={`flex-[2] rounded-lg border p-1 flex flex-col gap-1 bg-bg-deep transition-all duration-300 min-h-0 overflow-hidden ${highlightBottomClass}`}>
-                    <div className="border-b border-border-thin/40 pb-1 flex justify-between items-center">
-                        <span className="text-[3.5px] font-mono text-text-dim">Asunto: Invitación a Evaluar - DOSIER</span>
-                        <span className="text-[3.5px] text-success font-mono font-bold">✓ HTML Válido</span>
-                    </div>
-                    {/* Code editor pane */}
-                    <div className="flex-1 font-mono text-[3.5px] leading-normal text-text-dim overflow-y-auto bg-surface/40 rounded p-1 space-y-0.5">
-                        <div><span className="text-text-main">1</span> &lt;<span className="text-brand">p</span>&gt;Estimado(a) {"{"}{"{"}nombre{"}"}{"}"},&lt;/<span className="text-brand">p</span>&gt;</div>
-                        <div><span className="text-text-main">2</span> &lt;<span className="text-brand">p</span>&gt;Ha sido designado(a) para evaluar el proyecto: &lt;/<span className="text-brand">p</span>&gt;</div>
-                        <div><span className="text-text-main">3</span> &lt;<span className="text-brand">strong</span>&gt;&lt;<span className="text-brand">em</span>&gt;{"{"}{"{"}titulo_proyecto{"}"}{"}"}&lt;/<span className="text-brand">em</span>&gt;&lt;/<span className="text-brand">strong</span>&gt;</div>
-                        <div><span className="text-text-main">4</span> &lt;<span className="text-brand">br</span> /&gt;</div>
-                        <div><span className="text-text-main">5</span> &lt;<span className="text-brand">a</span> <span className="text-success">href</span>="{"{"}{"{"}url_evaluacion{"}"}{"}"}"&gt;Ir al Portal&lt;/<span className="text-brand">a</span>&gt;</div>
-                    </div>
-                    {/* Editor Action footer */}
-                    <div className="flex justify-between items-center border-t border-border-thin/40 pt-1 text-[3.5px]">
-                        <span className="text-text-dim">Variables: 3 detectadas</span>
-                        <button className="px-1 py-0.2 bg-success text-white font-bold rounded-[2px]">Guardar</button>
-                    </div>
+                <div className={`flex-[1.8] rounded-lg border p-1.5 space-y-1 bg-slate-50 dark:bg-zinc-900 transition-all duration-300 ${highlightBottomClass}`}>
+                    <div className="w-3/4 h-1.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+                    <div className="w-full h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
+                    <div className="w-2/3 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
                 </div>
-            </div>
-        </>
-    )
-};
-
-export const GRUPOS_CONFIG: HelpConfig = {
-    icon: <Award size={24} className="text-brand" />,
-    title: "Comités y Grupos Documentales",
-    summary: "Registro institucional, estructura colaborativa y proyectos de los comités y grupos documentales oficiales.",
-    description: "Panel para la postulación, formalización y seguimiento de los comités y colectivos documentales de la institución. Permite a los directores y coordinadores registrar áreas temáticas grupales, integrar miembros docentes y estudiantes, y reportar la producción colectiva.",
-    roleOverrides: {
-        estudiante: {
-            summary: "Directorio institucional de comités y grupos documentales para estudiantes."
-        }
-    },
-    steps: [
-        {
-            title: "Directorio y visualización de grupos activos",
-            description: "Explora la lista completa de grupos documentales aprobados institucionalmente. Revisa sus áreas de acción, miembros activos y la producción documental acumulada durante el ciclo.",
-            highlight: 'content-bottom',
-            roles: ['todos']
-        },
-        {
-            title: "Creación y postulación de nuevo grupo o comité",
-            description: "Inicia una solicitud para la creación de un nuevo grupo documental completando los campos de justificación académica, plan de trabajo, áreas temáticas y presupuesto estimado.",
-            highlight: 'content-top',
-            roles: ['admin', 'docente']
-        },
-        {
-            title: "Gestión de miembros y roles del grupo",
-            description: "Configura el equipo de trabajo asignando el rol de Director o Coordinador, Co-autores docentes o estudiantes colaboradores para fortalecer los expedientes.",
-            highlight: 'content-bottom',
-            roles: ['admin', 'docente']
-        },
-        {
-            title: "Vinculación y equipos de trabajo",
-            description: "Revisa las líneas de investigación activas de cada grupo para identificar oportunidades de titulación y postular a proyectos tutelados por docentes investigadores.",
-            highlight: 'content-bottom',
-            roles: ['estudiante']
-        }
-    ],
-    compliance: "Mapea el Criterio B.1.2 del CACES sobre fomento a la investigación formativa y asociatividad científica, promoviendo la consolidación de redes de investigación internas y externas.",
-    tips: [
-        {
-            text: "Asegúrate de incluir al menos un estudiante colaborador para cumplir con los requerimientos institucionales de semilleros de investigación.",
-            roles: ['admin', 'docente']
-        },
-        {
-            text: "Si eres estudiante, tu participación activa en un grupo acredita tu vinculación académica según el reglamento.",
-            roles: ['estudiante']
-        },
-        "Actualiza el plan de trabajo bienal de tu grupo para evitar el estado de inactividad temporal en el sistema."
-    ],
-    Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
-        <>
-            {/* Header & Controls Area */}
-            <div className={`rounded-lg border p-1.5 flex flex-col gap-1.5 transition-all duration-300 shrink-0 ${highlightTopClass}`}>
-                <div className="flex justify-between items-center">
-                    <div className="flex flex-col">
-                        <span className="text-[4px] text-text-dim uppercase font-mono tracking-wider font-semibold">Investigación y Desarrollo</span>
-                        <span className="text-[7px] text-text-main font-bold">Grupos de Investigación</span>
-                    </div>
-                    <div className="px-1.5 py-0.5 bg-brand text-white rounded text-[5px] font-bold">
-                        + Proponer Grupo
-                    </div>
-                </div>
-                <div className="flex gap-1">
-                    <div className="flex-1 h-3.5 bg-surface-hover/20 border border-border-thin rounded-md px-1 flex items-center gap-1 text-[5px] text-text-dim">
-                        <span className="truncate">Buscar grupos por nombre, siglas...</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Table Area */}
-            <div className={`flex-1 rounded-lg border p-1.5 flex flex-col gap-1 transition-all duration-300 min-h-0 overflow-hidden ${highlightBottomClass}`}>
-                <table className="w-full text-left border-collapse text-[4.5px]">
-                    <thead>
-                        <tr className="border-b border-border-thin/60 text-[3.5px] font-mono text-text-dim uppercase tracking-wider">
-                            <th className="pb-1 font-bold">Grupo</th>
-                            <th className="pb-1 font-bold">Coordinador</th>
-                            <th className="pb-1 font-bold">Vinculación</th>
-                            <th className="pb-1 font-bold">Estado</th>
-                            <th className="pb-1 font-bold text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-thin/30">
-                        <tr className="hover:bg-surface/30">
-                            <td className="py-1">
-                                <span className="text-text-main font-semibold block leading-tight">Grupo de Computación Ubicua</span>
-                                <span className="text-[3.5px] font-mono text-text-dim font-bold bg-bg-deep px-0.5 rounded border border-border-thin/40">GCU</span>
-                            </td>
-                            <td className="py-1">
-                                <span className="text-text-main font-semibold block leading-tight">Dr. Juan Pérez</span>
-                                <span className="text-[3.5px] text-text-dim uppercase font-semibold">Sistemas</span>
-                            </td>
-                            <td className="py-1 text-text-dim leading-normal font-mono">
-                                <div>2 Líneas Inv.</div>
-                                <div>3 Carreras</div>
-                            </td>
-                            <td className="py-1">
-                                <div className="flex flex-col gap-0.5 items-start">
-                                    <span className="px-1 py-0.2 bg-success/15 border border-success/35 text-success rounded-[2px] text-[3.5px] font-semibold flex items-center gap-0.5">
-                                        ● Aprobado
-                                    </span>
-                                    <span className="text-[3px] text-success uppercase tracking-wider font-mono">● Vigente</span>
-                                </div>
-                            </td>
-                            <td className="py-1 text-right">
-                                <span className="text-text-dim font-mono text-[3.5px]">Ver</span>
-                            </td>
-                        </tr>
-                        <tr className="hover:bg-surface/30">
-                            <td className="py-1">
-                                <span className="text-text-main font-semibold block leading-tight">Grupo de Energía Sostenible</span>
-                                <span className="text-[3.5px] font-mono text-text-dim font-bold bg-bg-deep px-0.5 rounded border border-border-thin/40">GES</span>
-                            </td>
-                            <td className="py-1">
-                                <span className="text-text-main font-semibold block leading-tight">Mgs. Ana Gomez</span>
-                                <span className="text-[3.5px] text-text-dim uppercase font-semibold">Electricidad</span>
-                            </td>
-                            <td className="py-1 text-text-dim leading-normal font-mono">
-                                <div>1 Líneas Inv.</div>
-                                <div>2 Carreras</div>
-                            </td>
-                            <td className="py-1">
-                                <div className="flex flex-col gap-0.5 items-start">
-                                    <span className="px-1 py-0.2 bg-warning/15 border border-warning/35 text-warning rounded-[2px] text-[3.5px] font-semibold flex items-center gap-0.5">
-                                        ● Pendiente
-                                    </span>
-                                    <span className="text-[3px] text-text-dim/60 uppercase tracking-wider font-mono">● Inactivo</span>
-                                </div>
-                            </td>
-                            <td className="py-1 text-right">
-                                <span className="text-text-dim font-mono text-[3.5px]">Ver</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
         </>
     )

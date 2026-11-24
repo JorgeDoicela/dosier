@@ -1932,23 +1932,41 @@ namespace dosier_infrastructure.Curriculum
             decimal horasApe = pea.HorasPracticoExperimental;
             decimal horasTa = pea.HorasAutonomo;
 
-            if ((string.IsNullOrEmpty(unidadOrg) || totalHoras == 0) && pea.IdDetalleMalla.HasValue)
+            if (pea.IdDetalleMalla.HasValue)
             {
                 var detalle = await _context.DetalleMallas.AsNoTracking().FirstOrDefaultAsync(d => d.IdDetalleMalla == pea.IdDetalleMalla);
                 if (detalle != null)
                 {
-                    if (string.IsNullOrEmpty(unidadOrg) && detalle.IdTipoAsignatura > 0)
+                    var tipoAsig = detalle.IdTipoAsignatura > 0
+                        ? await _context.TiposAsignatura.AsNoTracking().FirstOrDefaultAsync(t => t.IdTipoAsignatura == detalle.IdTipoAsignatura)
+                        : null;
+                    string? sigafiUnidadOrg = dosier_infrastructure.Academico.AcademicContextResolver.NormalizarUnidadOrganizacion(tipoAsig?.TipoAsignatura1, detalle.Tipo);
+
+                    if (string.IsNullOrEmpty(unidadOrg) || (pea.Estado != "Aprobado" && !string.IsNullOrEmpty(sigafiUnidadOrg) && unidadOrg != sigafiUnidadOrg))
                     {
-                        var tipoAsig = await _context.TiposAsignatura.AsNoTracking().FirstOrDefaultAsync(t => t.IdTipoAsignatura == detalle.IdTipoAsignatura);
-                        unidadOrg = tipoAsig?.TipoAsignatura1;
+                        unidadOrg = sigafiUnidadOrg;
                     }
-                    if (totalHoras == 0)
+
+                    decimal sigafiTotal = detalle.Horas ?? 0m;
+                    decimal sigafiCred = detalle.Creditos ?? 0m;
+                    decimal sigafiCd = detalle.HorasDocente ?? 0m;
+                    decimal sigafiApe = detalle.HorasPracticoExperimental ?? 0m;
+                    bool hasRealSigafiBreakdown = sigafiTotal > 0m && (sigafiCd > 0m || sigafiApe > 0m) && (sigafiCd + sigafiApe) <= sigafiTotal;
+
+                    bool isFallbackUniformThirds = horasCd > 0m && Math.Abs(horasCd - horasApe) < 0.01m && Math.Abs(horasApe - horasTa) < 0.01m;
+                    bool shouldSyncFromSigafi = totalHoras == 0m
+                        || (pea.Estado != "Aprobado" && hasRealSigafiBreakdown && (Math.Abs(totalHoras - sigafiTotal) >= 0.01m || isFallbackUniformThirds));
+
+                    if (shouldSyncFromSigafi && sigafiTotal > 0m)
                     {
-                        totalHoras = detalle.Horas ?? 0m;
-                        creditos = detalle.Creditos ?? 0m;
-                        horasCd = detalle.HorasDocente ?? 0m;
-                        horasApe = detalle.HorasPracticoExperimental ?? 0m;
-                        horasTa = Math.Max(0m, totalHoras - horasCd - horasApe);
+                        totalHoras = sigafiTotal;
+                        if (sigafiCred > 0m) creditos = sigafiCred;
+                        if (hasRealSigafiBreakdown)
+                        {
+                            horasCd = sigafiCd;
+                            horasApe = sigafiApe;
+                            horasTa = Math.Max(0m, sigafiTotal - sigafiCd - sigafiApe);
+                        }
                     }
                 }
             }

@@ -547,10 +547,10 @@ public class CalendarioServiceTests
     [Fact]
     [Trait("Category", "Unit")]
     [Trait("Feature", "Calendario")]
-    public async Task GetEventosAsync_DocenteExclusivo_OcultaPeasEnRevisionOAprobadosYUsaRutaValida()
+    public async Task GetEventosAsync_Docente_VeTodosLosEstadosPeaDeSuCarrera()
     {
         // Arrange
-        var dbName = nameof(GetEventosAsync_DocenteExclusivo_OcultaPeasEnRevisionOAprobadosYUsaRutaValida);
+        var dbName = nameof(GetEventosAsync_Docente_VeTodosLosEstadosPeaDeSuCarrera);
         await using var context = CreateInMemoryContext(dbName);
 
         context.Users.Add(new User
@@ -602,16 +602,52 @@ public class CalendarioServiceTests
             .Where(e => e.TipoEntidadOrigen == "PEA")
             .ToList();
 
-        // Assert: solo Borrador y Observado deben aparecer al docente
-        Assert.Equal(2, eventos.Count);
+        // Assert: todos los estados del ciclo PEA de la carrera son visibles
+        Assert.Equal(8, eventos.Count);
         Assert.Contains(eventos, e => e.Uuid == "pea-borrador" && e.UrlAccion == "/documentacion/mis-proyectos/workspace/pea-oficial/pea-borrador?edit=pea-oficial");
         Assert.Contains(eventos, e => e.Uuid == "pea-observado" && e.UrlAccion == "/documentacion/mis-proyectos/workspace/pea-oficial/pea-observado?edit=pea-oficial");
-        Assert.DoesNotContain(eventos, e => e.Uuid == "pea-enrevision");
-        Assert.DoesNotContain(eventos, e => e.Uuid == "pea-corregido");
-        Assert.DoesNotContain(eventos, e => e.Uuid == "pea-revisadocoord");
-        Assert.DoesNotContain(eventos, e => e.Uuid == "pea-revisadoacad");
-        Assert.DoesNotContain(eventos, e => e.Uuid == "pea-aprobado");
-        Assert.DoesNotContain(eventos, e => e.Uuid == "pea-publicado");
+        Assert.Contains(eventos, e => e.Uuid == "pea-aprobado");
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    [Trait("Feature", "Calendario")]
+    public async Task CreateUsuarioEventoAsync_DocenteEnSuCarrera_PermiteCarreraYBloqueaInstituto()
+    {
+        var dbName = nameof(CreateUsuarioEventoAsync_DocenteEnSuCarrera_PermiteCarreraYBloqueaInstituto);
+        await using var context = CreateInMemoryContext(dbName);
+
+        context.Carreras.Add(new Carrera { IdCarrera = 5, Carrera1 = "Software", EsInstituto = 1 });
+        context.Users.Add(new User { IdUsuario = 40, IdSigafi = "PROF-040", Administrador = false, Nombre = "Profe Software" });
+        context.DocPeas.Add(new DocPea
+        {
+            IdPea = 301,
+            Uuid = "pea-soft-1",
+            IdAsignatura = 1,
+            IdCarrera = 5,
+            IdDocenteElaborador = "PROF-040",
+            Estado = "Borrador",
+            Activo = true,
+            FechaModificacion = DateTime.UtcNow
+        });
+        await context.SaveChangesAsync();
+
+        var sut = CreateSut(context);
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+
+        var dtoCarrera = new EventoNormativoDto(
+            null, "Reunión de Software", "Avance PEA", "Reunion",
+            hoy, null, true, false, null, null, "CARRERA", null, "#3B82F6", 3, true, false, "Media", "Pendiente",
+            IdCarrera: 5
+        );
+        var (uuidCarrera, forbiddenCarrera) = await sut.CreateUsuarioEventoAsync(dtoCarrera, 40, "DOSIER_DOCENTE");
+        Assert.False(forbiddenCarrera);
+        Assert.False(string.IsNullOrEmpty(uuidCarrera));
+
+        var dtoInstituto = dtoCarrera with { Titulo = "Global Instituto", IdCarrera = null };
+        var (uuidInst, forbiddenInst) = await sut.CreateUsuarioEventoAsync(dtoInstituto, 40, "DOSIER_DOCENTE");
+        Assert.True(forbiddenInst);
+        Assert.Null(uuidInst);
     }
 }
 

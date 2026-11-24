@@ -1,6 +1,12 @@
 import React from 'react';
 
-export type DosierRole = 'admin' | 'docente' | 'estudiante' | 'revisor' | 'todos';
+export type DosierRole =
+    | 'admin'
+    | 'docente'
+    | 'coord_carrera'
+    | 'coord_acad'
+    | 'vicerrector'
+    | 'todos';
 
 export interface HelpStep {
     title: string;

@@ -929,6 +929,110 @@ namespace Dosier.Infrastructure.Common.Documents
                     await _context.SaveChangesAsync(ct);
                 }
             }
+            else
+            {
+                await SyncOfficialSigafiHoursToSnapshotAsync(instance, ct);
+            }
+        }
+
+        private async Task SyncOfficialSigafiHoursToSnapshotAsync(DocumentInstance instance, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(instance.DataSnapshotJson)) return;
+
+            var pea = await _context.DocPeas
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Uuid == instance.EntityUuid && p.Activo, ct);
+
+            if (pea == null || pea.Estado == "Aprobado" || !pea.IdDetalleMalla.HasValue) return;
+
+            var detalle = await _context.DetalleMallas
+                .AsNoTracking()
+                .FirstOrDefaultAsync(d => d.IdDetalleMalla == pea.IdDetalleMalla, ct);
+
+            if (detalle == null || !detalle.Horas.HasValue || detalle.Horas.Value <= 0) return;
+
+            decimal sigafiTotal = detalle.Horas.Value;
+            decimal sigafiCd = detalle.HorasDocente ?? 0m;
+            decimal sigafiApe = detalle.HorasPracticoExperimental ?? 0m;
+            if ((sigafiCd <= 0m && sigafiApe <= 0m) || (sigafiCd + sigafiApe) > sigafiTotal) return;
+
+            decimal sigafiTa = Math.Max(0m, sigafiTotal - sigafiCd - sigafiApe);
+            decimal sigafiCred = detalle.Creditos ?? pea.Creditos;
+
+            Dictionary<string, object?>? snapshot;
+            try
+            {
+                snapshot = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object?>>(instance.DataSnapshotJson);
+            }
+            catch
+            {
+                return;
+            }
+
+            if (snapshot == null) return;
+
+            static decimal ReadDec(Dictionary<string, object?> dict, params string[] keys)
+            {
+                foreach (var k in keys)
+                {
+                    if (dict.TryGetValue(k, out var val) && val != null)
+                    {
+                        if (val is System.Text.Json.JsonElement je)
+                        {
+                            if (je.ValueKind == System.Text.Json.JsonValueKind.Number && je.TryGetDecimal(out var d)) return d;
+                            if (je.ValueKind == System.Text.Json.JsonValueKind.String && decimal.TryParse(je.GetString(), out var ds)) return ds;
+                        }
+                        else if (decimal.TryParse(val.ToString(), out var dp))
+                        {
+                            return dp;
+                        }
+                    }
+                }
+                return 0m;
+            }
+
+            decimal curCd = ReadDec(snapshot, "HorasContactoDocente", "horas_contacto_docente");
+            decimal curApe = ReadDec(snapshot, "HorasPracticoExperimental", "horas_practico_experimental");
+            decimal curTa = ReadDec(snapshot, "HorasAutonomo", "horas_autonomo");
+            decimal curTotal = ReadDec(snapshot, "TotalHorasAsignatura", "total_horas_asignatura");
+
+            bool isZero = curTotal <= 0m || (curCd <= 0m && curApe <= 0m && curTa <= 0m);
+            bool isUniformThirds = curCd > 0m && Math.Abs(curCd - curApe) < 0.01m && Math.Abs(curApe - curTa) < 0.01m;
+            bool differsFromSigafi = Math.Abs(curCd - sigafiCd) >= 0.01m
+                || Math.Abs(curApe - sigafiApe) >= 0.01m
+                || Math.Abs(curTa - sigafiTa) >= 0.01m
+                || Math.Abs(curTotal - sigafiTotal) >= 0.01m;
+
+            var tipoAsig = detalle.IdTipoAsignatura > 0
+                ? await _context.TiposAsignatura.AsNoTracking().FirstOrDefaultAsync(t => t.IdTipoAsignatura == detalle.IdTipoAsignatura, ct)
+                : null;
+            string sigafiUnidadOrg = dosier_infrastructure.Academico.AcademicContextResolver.NormalizarUnidadOrganizacion(tipoAsig?.TipoAsignatura1, detalle.Tipo);
+            string curUnidadOrg = snapshot.TryGetValue("UnidadOrganizacion", out var uoVal) ? (uoVal?.ToString() ?? string.Empty) : string.Empty;
+            bool needsUnidadOrgSync = !string.IsNullOrWhiteSpace(sigafiUnidadOrg) && !string.Equals(curUnidadOrg.Trim(), sigafiUnidadOrg, StringComparison.OrdinalIgnoreCase);
+
+            bool needsHoursSync = differsFromSigafi && (isZero || isUniformThirds || Math.Abs(curTotal - sigafiTotal) >= 0.01m);
+
+            if (!needsHoursSync && !needsUnidadOrgSync)
+            {
+                return;
+            }
+
+            if (needsHoursSync)
+            {
+                snapshot["TotalHorasAsignatura"] = sigafiTotal;
+                snapshot["Creditos"] = sigafiCred;
+                snapshot["HorasContactoDocente"] = sigafiCd;
+                snapshot["HorasPracticoExperimental"] = sigafiApe;
+                snapshot["HorasAutonomo"] = sigafiTa;
+            }
+
+            if (needsUnidadOrgSync)
+            {
+                snapshot["UnidadOrganizacion"] = sigafiUnidadOrg;
+            }
+
+            instance.UpdateDataSnapshot(System.Text.Json.JsonSerializer.Serialize(snapshot));
+            await _context.SaveChangesAsync(ct);
         }
 
         private static void MergeField(Dictionary<string, object> target, string key, object? newValue)

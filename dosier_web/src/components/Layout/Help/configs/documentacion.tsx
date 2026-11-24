@@ -1,265 +1,190 @@
-import { 
-    PenTool, BookOpen, Activity, Folder, FileText, Search
+import {
+    PenTool, BookOpen, Activity, FileCheck2, Users, FileEdit
 } from 'lucide-react';
 import type { HelpConfig, MockupProps } from '../types';
 
 export const DOCUMENTACION_CONFIG: HelpConfig = {
-    icon: <PenTool size={24} className="text-brand" />,
-    title: "Supervisión de Documentación y Planificación PEA",
-    summary: "Módulo administrativo central para la formulación, registro y supervisión de instrumentos curriculares oficiales PEA.",
-    description: "Esta consola proporciona un entorno estructurado para la planificación y seguimiento de los instrumentos curriculares de la institución. Permite a directivos y coordinadores supervisar el estado de formulación, revisar las cargas horarias, conformar equipos docentes y verificar el cumplimiento curricular institucional.",
+    icon: <PenTool size={20} className="text-[#0070f3]" />,
+    title: 'Revisión Curricular de Programas de Estudio (PEA)',
+    summary: 'Bandeja de supervisión, control normativo y aval colegiado de los PEAs del período lectivo.',
+    description: 'Consola central para Coordinación de Carrera, Coordinación Académica, Vicerrectorado y Administración. Permite filtrar los instrumentos enviados por los docentes, inspeccionar su estado en el circuito de firmas y emitir observaciones o aprobaciones.',
+    roleOverrides: {
+        coord_carrera: {
+            summary: 'Bandeja de revisión disciplinar y aval de PEAs para tu carrera asignada.',
+            description: 'Revisa los Programas de Estudio enviados por los docentes de tu carrera, verifica la pertinencia de contenidos y unidades, y emite el aval de carrera o devuelve con observaciones.'
+        },
+        coord_acad: {
+            summary: 'Supervisión académica transversal de PEAs avalados por las coordinaciones de carrera.',
+            description: 'Verifica el cumplimiento estructural, balance de horas CD/APE/TA y alineación normativa CACES antes de elevar el PEA a legalización.'
+        },
+        vicerrector: {
+            summary: 'Despacho de aprobación final y legalización institucional de PEAs.',
+            description: 'Inspecciona los instrumentos con aval académico completo para proceder con la aprobación definitiva y firma electrónica institucional.'
+        }
+    },
     steps: [
         {
-            title: "Creación y registro de instrumentos PEA",
-            description: "Usa el botón de acción principal '+ Nuevo Instrumento PEA' para iniciar el asistente interactivo. Este formulario te guiará en la definición de la asignatura, el campo de conocimiento, la justificación pedagógica y las horas curriculares.",
+            title: 'Filtros por carrera, período y estado del flujo',
+            description: 'Utiliza las pestañas y filtros superiores para segmentar los PEAs por estado (En Revisión, Revisado Carrera, Revisado Académica, Aprobado, Con Observaciones) o buscar por asignatura y docente.',
             highlight: 'content-top'
         },
         {
-            title: "Buzón de expedientes e instrumentos firmados",
-            description: "Inspecciona el buzón inferior de documentos generados por el sistema. Aquí se listan en tiempo real los PEAs aprobados, resoluciones académicas y actas institucionales. Todos incorporan firma electrónica válida y certificados de validación en formato PDF/A.",
+            title: 'Inspección y revisión técnica del PEA',
+            description: 'Haz clic en Revisar o Ver PEA sobre cualquier registro de la tabla para abrir la vista de revisión técnica, donde podrás leer todas las secciones, dejar observaciones o aprobar el avance.',
             highlight: 'content-bottom'
         },
         {
-            title: "Seguimiento y control de avance curricular",
-            description: "Durante el período académico, utiliza las herramientas de seguimiento para supervisar el avance de las unidades temáticas y el cumplimiento de resultados de aprendizaje.",
+            title: 'Seguimiento de trazabilidad y firmas',
+            description: 'Accede al monitoreo del expediente para verificar la línea de tiempo de cambios, avales previos y estado de estampado de firmas digitales.',
             highlight: 'content-bottom'
         }
     ],
-    compliance: "Alineado con los estándares del CACES y el modelo curricular institucional del ISTPET, garantizando la trazabilidad integral de la planificación académica.",
+    compliance: 'Respalda el circuito colegiado de validación curricular exigido por el Reglamento de Régimen Académico y los criterios de evaluación del CACES.',
     tips: [
-        "Asegúrate de que la distribución horaria (docencia, prácticas y trabajo autónomo) cumpla con los créditos establecidos en la malla curricular oficial.",
-        "Descarga una copia oficial en PDF del PEA firmado una vez que el instrumento cambie a 'Aprobado'."
+        'Al devolver un PEA con observaciones, detalla la sección específica para que el docente pueda subsanar con precisión.',
+        'Los PEAs aprobados por Vicerrectorado quedan bloqueados contra edición para garantizar su inmutabilidad.'
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            {/* Header & Controls Area */}
-            <div className={`rounded-lg border p-1.5 flex justify-between items-center transition-all duration-300 shrink-0 ${highlightTopClass}`}>
-                <div className="flex flex-col gap-0.5">
-                    <span className="text-[4px] text-brand uppercase font-mono tracking-wider font-semibold">Documentación</span>
-                    <span className="text-[7px] text-text-main font-bold">Consola de Supervisión PEA</span>
-                </div>
-                <div className="flex gap-1">
-                    <div className="px-1.5 py-0.5 bg-brand text-white rounded text-[5px] font-bold shadow-sm">
-                        + Nuevo Instrumento PEA
+            <div className={`rounded-lg border p-1.5 flex flex-col gap-1.5 shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="flex justify-between items-center">
+                    <div className="space-y-0.5">
+                        <div className="w-28 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                        <div className="w-20 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
                     </div>
+                    <div className="w-16 h-4 bg-slate-200 dark:bg-zinc-700 rounded" />
+                </div>
+                <div className="flex gap-3 border-b border-slate-200 dark:border-zinc-800 pb-0.5 text-[6px]">
+                    <span className="font-semibold text-[#0070f3] border-b border-[#0070f3] pb-0.5">Pendientes</span>
+                    <span className="text-slate-400">Observados</span>
+                    <span className="text-slate-400">Aprobados</span>
                 </div>
             </div>
-
-            {/* Bento cards & DocumentTray / Bottom Content */}
-            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-2 transition-all duration-300 min-h-0 ${highlightBottomClass}`}>
-                {/* Bento Cards Row */}
-                <div className="grid grid-cols-2 gap-1.5 shrink-0">
-                    <div className="rounded-md border border-border-thin bg-surface-hover/10 p-1.5 flex flex-col gap-1">
-                        <div className="w-3.5 h-3.5 rounded bg-brand/10 text-brand flex items-center justify-center">
-                            <Folder size={8} />
+            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-1.5 transition-all duration-300 ${highlightBottomClass}`}>
+                {[1, 2, 3].map((row) => (
+                    <div key={row} className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-zinc-800/70">
+                        <div className="space-y-0.5">
+                            <div className="w-28 h-1.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+                            <div className="w-20 h-1 bg-slate-200 dark:bg-zinc-700 rounded" />
                         </div>
-                        <span className="text-[7px] font-bold text-text-main leading-tight uppercase">Mis Proyectos</span>
-                        <span className="text-[5px] text-text-dim leading-none uppercase">Mis proyectos</span>
-                    </div>
-                    <div className="rounded-md border border-border-thin bg-surface-hover/10 p-1.5 flex flex-col gap-1">
-                        <div className="w-3.5 h-3.5 rounded bg-brand/10 text-brand flex items-center justify-center">
-                            <FileText size={8} />
-                        </div>
-                        <span className="text-[7px] font-bold text-text-main leading-tight uppercase">Informes de Avance</span>
-                        <span className="text-[5px] text-text-dim leading-none uppercase">Avances</span>
-                    </div>
-                </div>
-
-                {/* DocumentTray */}
-                <div className="flex-1 flex flex-col gap-1 min-h-0">
-                    <span className="text-[6px] font-bold text-text-main uppercase tracking-wider">Documentos Generados</span>
-                    <div className="flex-1 border border-dashed border-border-thin rounded bg-surface p-1 space-y-1 overflow-hidden">
-                        <div className="flex justify-between items-center py-0.5 border-b border-border-thin/40 text-[5px]">
-                            <div className="flex items-center gap-1">
-                                <FileText size={7} className="text-brand shrink-0" />
-                                <span className="text-text-main font-medium truncate max-w-[120px]">CONTRATO_FONDOS_2026.pdf</span>
-                            </div>
-                            <span className="px-1 py-0.2 bg-success/15 border border-success/35 text-success rounded text-[4px] font-semibold">FIRMADO</span>
-                        </div>
-                        <div className="flex justify-between items-center py-0.5 border-b border-border-thin/40 text-[5px]">
-                            <div className="flex items-center gap-1">
-                                <FileText size={7} className="text-brand shrink-0" />
-                                <span className="text-text-main font-medium truncate max-w-[120px]">RESOLUCION_DI-008.pdf</span>
-                            </div>
-                            <span className="px-1 py-0.2 bg-success/15 border border-success/35 text-success rounded text-[4px] font-semibold">FIRMADO</span>
+                        <div className="flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />
+                            <div className="w-10 h-3.5 bg-[#0070f3] rounded" />
                         </div>
                     </div>
-                </div>
+                ))}
             </div>
         </>
     )
 };
 
 export const MIS_PROYECTOS_CONFIG: HelpConfig = {
-    icon: <BookOpen size={24} className="text-brand" />,
-    title: "Mis Instrumentos Curriculares y PEA",
-    summary: "Gestión docente centralizada, co-redacción y seguimiento del ciclo de vida de los PEAs asignados.",
-    description: "Tablero docente principal para la administración de todas las asignaturas e instrumentos PEA asignados. Muestra tarjetas con métricas en tiempo real sobre estados de revisión colegiada, aprobación de autoridades y accesos directos al espacio de co-redacción concurrente.",
+    icon: <BookOpen size={20} className="text-[#0070f3]" />,
+    title: 'Mis Instrumentos Curriculares - PEA',
+    summary: 'Espacio docente para consultar tu distributivo académico de SIGAFI y gestionar la elaboración de tus PEAs.',
+    description: 'Lista las asignaturas asignadas en el período lectivo actual y también permite consultar PEAs de otros docentes de la institución como referencia. Desde aquí inicias, continúas o corriges cada Programa de Estudio de la Asignatura.',
     steps: [
         {
-            title: "Listado interactivo de asignaturas y estado curricular",
-            description: "Visualiza de forma clara el estado actual de cada instrumento curricular (Borrador, En Revisión, En Corrección, Aprobado). El distintivo de color te permite identificar de un vistazo si existen observaciones de la coordinación de carrera.",
+            title: 'Pestañas de vista y filtros de búsqueda',
+            description: 'Alterna entre Mis Asignaturas y PEAs de Otros Docentes en el riel superior, y filtra por carrera, estado del workflow (Borrador, En Revisión, Con Observaciones, Aprobado) o nombre de asignatura.',
+            highlight: 'content-top'
+        },
+        {
+            title: 'Elaboración, continuación y corrección del PEA',
+            description: 'Cada tarjeta muestra el código, carrera, nivel, horas distributivas y estado actual. Usa Elaborar PEA, Continuar PEA o Corregir PEA para abrir el Workspace colaborativo.',
             highlight: 'content-bottom'
         },
         {
-            title: "Acceso al espacio de trabajo y editor curricular",
-            description: "Haz clic en cualquier tarjeta para abrir el Espacio de Trabajo. Podrás acceder al editor TipTap colaborativo en tiempo real, redactar los resultados de aprendizaje y verificar la consistencia de las horas asignadas.",
-            highlight: 'content-bottom'
-        },
-        {
-            title: "Seguimiento pedagógico y unidades temáticas",
-            description: "Monitorea la barra de avance y las unidades temáticas para comprobar que tu instrumento curricular cumple con la planificación del período académico.",
+            title: 'Monitoreo y descarga oficial',
+            description: 'Accede al monitoreo del documento para revisar observaciones de coordinación o descargar el PDF oficial cuando el instrumento esté disponible.',
             highlight: 'content-bottom'
         }
     ],
-    compliance: "Garantiza el cumplimiento de las metas curriculares de la asignatura según la normativa institucional y los estándares CACES.",
+    compliance: 'Vincula directamente el distributivo oficial de SIGAFI con la planificación microcurricular del docente conforme a los estándares CACES.',
     tips: [
-        "Revisa periódicamente las observaciones en caso de devolución para ajustar oportunamente los contenidos de la asignatura.",
-        "Utiliza la opción de descarga para exportar el PEA completo en formato PDF institucional en cualquier momento."
+        'Si tu PEA tiene observaciones, el botón cambia a Corregir PEA para que atiendas los comentarios de coordinación.',
+        'Puedes abrir el monitoreo de cualquier asignatura para revisar su historial de estados antes de enviarla a revisión.'
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            {/* Top Toolbar */}
-            <div className={`rounded-lg border p-1.5 flex flex-col gap-1 transition-all duration-300 shrink-0 ${highlightTopClass}`}>
-                <div className="flex justify-between items-center">
-                    <div className="flex flex-col">
-                        <span className="text-[4px] text-brand uppercase font-mono tracking-wider font-semibold">Mis Asignaturas</span>
-                        <span className="text-[7px] text-text-main font-bold">Mis instrumentos curriculares</span>
-                    </div>
-                    <div className="px-1.5 py-0.5 bg-brand text-white rounded text-[5px] font-bold">
-                        + Nuevo Instrumento PEA
-                    </div>
+            <div className={`rounded-lg border p-1.5 flex flex-col gap-1.5 shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="flex gap-3 border-b border-slate-200 dark:border-zinc-800 pb-0.5 text-[6px]">
+                    <span className="font-semibold text-[#0070f3] border-b border-[#0070f3] pb-0.5">Mis Asignaturas</span>
+                    <span className="text-slate-400">PEAs de Otros Docentes</span>
                 </div>
-                <div className="flex gap-1">
-                    <div className="flex-1 h-3.5 bg-surface-hover/20 border border-border-thin rounded-md px-1 flex items-center gap-1 text-[5px] text-text-dim">
-                        <Search size={7} className="shrink-0" />
-                        <span className="truncate">Buscar por título...</span>
-                    </div>
-                    <div className="w-16 h-3.5 bg-surface-hover/20 border border-border-thin rounded-md px-1 flex items-center justify-between text-[4.5px] text-text-main">
-                        <span>Todos los estados</span>
-                        <span>▼</span>
-                    </div>
+                <div className="flex gap-1.5">
+                    <div className="flex-1 h-4 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded" />
+                    <div className="w-16 h-4 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded" />
                 </div>
             </div>
-
-            {/* Grid of Projects */}
-            <div className={`flex-1 rounded-lg border p-1.5 grid grid-cols-2 gap-1.5 transition-all duration-300 min-h-0 overflow-hidden ${highlightBottomClass}`}>
-                {/* Project Card 1 */}
-                <div className="rounded-md border border-border-thin bg-surface p-1.5 flex flex-col justify-between hover:border-brand/40 transition-colors">
-                    <div className="space-y-1">
-                        <div className="flex justify-between items-center text-[4px] font-mono text-text-dim font-bold">
-                            <span>PROY-SOFT-2026-001</span>
-                            <span>&rarr;</span>
+            <div className={`flex-1 rounded-lg border p-2 grid grid-cols-2 gap-2 transition-all duration-300 ${highlightBottomClass}`}>
+                {[1, 2].map((i) => (
+                    <div key={i} className="rounded-lg border border-slate-200 dark:border-zinc-800 p-2 flex flex-col justify-between">
+                        <div className="space-y-1">
+                            <div className="flex justify-between items-center">
+                                <span className="text-[5px] font-mono text-slate-400">DS-20{i}</span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />
+                            </div>
+                            <div className="w-full h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                            <div className="w-2/3 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
                         </div>
-                        <h4 className="text-[5.5px] font-semibold text-text-main leading-tight line-clamp-2">
-                            Plataforma IoT con IA para Monitoreo de Consumo...
-                        </h4>
-                        <div className="flex items-center gap-1 py-0.2 px-1 rounded-full bg-brand/10 text-brand border border-brand/20 w-fit text-[4.5px]">
-                            <span className="w-1 h-1 rounded-full bg-brand" />
-                            <span>En Ejecución · IP</span>
-                        </div>
-                        <div className="text-[4px] text-text-dim truncate">
-                            IA y Aprendizaje Automático
-                        </div>
+                        <div className="w-full h-3.5 bg-[#0070f3] rounded mt-2" />
                     </div>
+                ))}
+            </div>
+        </>
+    )
+};
 
-                    <div className="space-y-1 mt-1.5">
-                        {/* Metrics Grid */}
-                        <div className="grid grid-cols-3 gap-0.5 text-center">
-                            <div className="bg-bg-deep rounded p-0.5 border border-border-thin">
-                                <span className="text-[5px] font-bold text-text-main block">3</span>
-                                <span className="text-[3.5px] text-text-dim uppercase">Invest.</span>
-                            </div>
-                            <div className="bg-bg-deep rounded p-0.5 border border-border-thin">
-                                <span className="text-[5px] font-bold text-text-main block">2</span>
-                                <span className="text-[3.5px] text-text-dim uppercase">Produc.</span>
-                            </div>
-                            <div className="bg-bg-deep rounded p-0.5 border border-border-thin">
-                                <span className="text-[5px] font-bold text-text-main block">2/2</span>
-                                <span className="text-[3.5px] text-text-dim uppercase">Informes</span>
-                            </div>
-                        </div>
-
-                        {/* Budget Progress */}
-                        <div className="space-y-0.5">
-                            <div className="flex justify-between text-[4px] text-text-dim">
-                                <span>Ejecución</span>
-                                <span className="font-bold text-text-main">71%</span>
-                            </div>
-                            <div className="w-full h-0.5 bg-border-thin rounded-full overflow-hidden">
-                                <div className="h-full bg-brand rounded-full" style={{ width: '71%' }} />
-                            </div>
-                            <div className="flex justify-between text-[3.5px] text-text-dim font-mono">
-                                <span>$3.200</span>
-                                <span>$4.500</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="border-t border-border-thin/40 pt-1 mt-1.5 flex justify-between items-center text-[4px] text-text-dim">
-                        <span>4/15/2026</span>
-                        <span className="px-0.5 rounded bg-success/15 text-success border border-success/35 font-bold">85.5/100</span>
-                    </div>
+export const WORKSPACE_CONFIG: HelpConfig = {
+    icon: <FileEdit size={20} className="text-[#0070f3]" />,
+    title: 'Espacio de Trabajo y Co-Redacción PEA',
+    summary: 'Editor curricular modular en tiempo real con sincronización colaborativa Yjs y guardado automático por sección.',
+    description: 'Entorno de redacción oficial del Programa de Estudio de la Asignatura (Secciones A - K). Permite trabajar simultáneamente con otros docentes de la misma cátedra mediante co-edición en vivo, validar horas normativas y enviar el instrumento a revisión.',
+    steps: [
+        {
+            title: 'Navegación por secciones del PEA',
+            description: 'Usa la barra lateral del Workspace para saltar entre las secciones oficiales del PEA (Datos Generales, Descripción, Objetivos, Contenidos/Unidades, Metodología, Evaluación, Bibliografía y Firmas).',
+            highlight: 'sidebar'
+        },
+        {
+            title: 'Co-redacción concurrente y autoguardado',
+            description: 'Redacta directamente sobre los campos activos. Los bloques colaborativos sincronizan cambios en tiempo real con otros co-autores y guardan automáticamente tu progreso sin bloquear la interfaz.',
+            highlight: 'content-bottom'
+        },
+        {
+            title: 'Envío a revisión y previsualización',
+            description: 'En la barra superior del editor puedes verificar el estado de guardado, previsualizar el documento o enviarlo formalmente a Coordinación de Carrera cuando todas las secciones estén completas.',
+            highlight: 'topbar'
+        }
+    ],
+    compliance: 'Implementa la estructura oficial de 11 secciones del PEA del ISTPET con trazabilidad por campo, control de concurrencia y bloqueo formal al entrar en revisión.',
+    tips: [
+        'Cuando el PEA avanza a En Revisión o Aprobado, las secciones pasan automáticamente a modo solo lectura para proteger la integridad del dictamen.',
+        'Si trabajas junto a otro docente de la misma materia, verás los cambios reflejados al instante sin sobrescribir su trabajo.'
+    ],
+    Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
+        <>
+            <div className={`h-7 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="flex items-center gap-1.5">
+                    <div className="w-20 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 </div>
-
-                {/* Project Card 2 */}
-                <div className="rounded-md border border-border-thin bg-surface p-1.5 flex flex-col justify-between hover:border-brand/40 transition-colors">
-                    <div className="space-y-1">
-                        <div className="flex justify-between items-center text-[4px] font-mono text-text-dim font-bold">
-                            <span>PROY-ADM-2026-003</span>
-                            <span>&rarr;</span>
-                        </div>
-                        <h4 className="text-[5.5px] font-semibold text-text-main leading-tight line-clamp-2">
-                            Impacto del Teletrabajo en la Productividad...
-                        </h4>
-                        <div className="flex items-center gap-1 py-0.2 px-1 rounded-full bg-brand/10 text-brand border border-brand/20 w-fit text-[4.5px]">
-                            <span className="w-1 h-1 rounded-full bg-brand" />
-                            <span>En Ejecución · Dir</span>
-                        </div>
-                        <div className="text-[4px] text-text-dim truncate">
-                            Gestión del Talento Humano
-                        </div>
-                    </div>
-
-                    <div className="space-y-1 mt-1.5">
-                        {/* Metrics Grid */}
-                        <div className="grid grid-cols-3 gap-0.5 text-center">
-                            <div className="bg-bg-deep rounded p-0.5 border border-border-thin">
-                                <span className="text-[5px] font-bold text-text-main block">3</span>
-                                <span className="text-[3.5px] text-text-dim uppercase">Invest.</span>
-                            </div>
-                            <div className="bg-bg-deep rounded p-0.5 border border-border-thin">
-                                <span className="text-[5px] font-bold text-text-main block">1</span>
-                                <span className="text-[3.5px] text-text-dim uppercase">Produc.</span>
-                            </div>
-                            <div className="bg-bg-deep rounded p-0.5 border border-border-thin">
-                                <span className="text-[5px] font-bold text-text-main block">0/0</span>
-                                <span className="text-[3.5px] text-text-dim uppercase">Informes</span>
-                            </div>
-                        </div>
-
-                        {/* Budget Progress */}
-                        <div className="space-y-0.5">
-                            <div className="flex justify-between text-[4px] text-text-dim">
-                                <span>Ejecución</span>
-                                <span className="font-bold text-text-main">67%</span>
-                            </div>
-                            <div className="w-full h-0.5 bg-border-thin rounded-full overflow-hidden">
-                                <div className="h-full bg-brand rounded-full" style={{ width: '67%' }} />
-                            </div>
-                            <div className="flex justify-between text-[3.5px] text-text-dim font-mono">
-                                <span>$1.200</span>
-                                <span>$1.800</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="border-t border-border-thin/40 pt-1 mt-1.5 flex justify-between items-center text-[4px] text-text-dim">
-                        <span>4/15/2026</span>
-                        <span className="px-0.5 rounded bg-success/15 text-success border border-success/35 font-bold">78/100</span>
-                    </div>
+                <div className="flex gap-1">
+                    <div className="w-10 h-3.5 border border-slate-200 dark:border-zinc-700 rounded" />
+                    <div className="w-12 h-3.5 bg-[#0070f3] rounded" />
+                </div>
+            </div>
+            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-1.5 transition-all duration-300 ${highlightBottomClass}`}>
+                <div className="w-1/2 h-2.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+                <div className="grid grid-cols-2 gap-1.5">
+                    <div className="h-5 rounded border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900" />
+                    <div className="h-5 rounded border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900" />
+                </div>
+                <div className="flex-1 rounded border border-[#0070f3]/40 bg-[#0070f3]/5 p-1.5 space-y-1">
+                    <div className="w-full h-1.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+                    <div className="w-5/6 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
+                    <div className="w-2/3 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
                 </div>
             </div>
         </>
@@ -267,178 +192,141 @@ export const MIS_PROYECTOS_CONFIG: HelpConfig = {
 };
 
 export const MONITOREO_CONFIG: HelpConfig = {
-    icon: <Activity size={24} className="text-brand" />,
-    title: "Monitoreo Curricular y Planificación",
-    summary: "Consola de seguimiento curricular, cronograma de unidades temáticas y registro de avance en tiempo real.",
-    description: "Interfaz integral para supervisar la ejecución pedagógica y temporal de las asignaturas activas. Permite a los docentes y coordinadores registrar avances, verificar hitos del período académico y asegurar la cobertura de contenidos.",
+    icon: <Activity size={20} className="text-[#0070f3]" />,
+    title: 'Monitoreo y Trazabilidad del PEA',
+    summary: 'Seguimiento detallado del estado del workflow, historial de revisiones, observaciones y firmas del expediente.',
+    description: 'Vista de expediente individual de un PEA. Permite consultar en qué etapa del circuito de aprobación se encuentra, revisar observaciones históricas, verificar firmas estampadas y acceder a la edición o revisión.',
     steps: [
         {
-            title: "Control del cronograma e hitos curriculares",
-            description: "Monitorea el progreso de cada unidad temática planificada en el PEA. Marca hitos como completados y registra las actividades prácticas ejecutadas.",
+            title: 'Resumen del expediente y estado actual',
+            description: 'Consulta en la cabecera el código de la asignatura, carrera, docente responsable, período académico y el paso actual dentro del flujo de aprobación.',
             highlight: 'content-top'
         },
         {
-            title: "Carga de evidencias y rúbricas de evaluación",
-            description: "Adjunta soportes de actividades prácticas, talleres y evaluaciones para respaldar el cumplimiento de los resultados de aprendizaje.",
-            highlight: 'content-bottom'
-        },
-        {
-            title: "Bitácora pedagógica y horas impartidas",
-            description: "Registra detalladamente las horas impartidas de docencia presencial, prácticas y tutorías en base a la carga horaria establecida.",
+            title: 'Línea de tiempo, observaciones y acciones',
+            description: 'Revisa el historial cronológico de envíos, devoluciones y avales colegiados, y accede directamente al Workspace o a la descarga del PDF certificado.',
             highlight: 'content-bottom'
         }
     ],
-    compliance: "Asegura el cumplimiento de los estándares de aseguramiento de la calidad del CACES, certificando el avance del programa de estudio.",
+    compliance: 'Garantiza la trazabilidad completa del proceso de aprobación microcurricular y conserva la bitácora de observaciones para auditoría académica.',
     tips: [
-        "Actualiza el avance de tus unidades temáticas semanalmente para mantener al día el portafolio docente institucional.",
-        "Consulta el estado de revisión colegiada para validar el cumplimiento de las observaciones de carrera."
+        'Desde esta pantalla puedes comprobar rápidamente qué autoridad tiene pendiente la revisión o firma del PEA.'
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            {/* Header & Overall Monitoring Stats */}
-            <div className={`rounded-lg border p-1.5 flex justify-between items-center transition-all duration-300 shrink-0 ${highlightTopClass}`}>
-                <div className="flex flex-col gap-0.5">
-                    <span className="text-[4px] text-brand uppercase font-mono tracking-wider font-semibold">Seguimiento de Hitos</span>
-                    <span className="text-[7px] text-text-main font-bold">Monitoreo de Proyecto #104</span>
+            <div className={`rounded-lg border p-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="space-y-1">
+                    <div className="w-28 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                    <div className="w-16 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
                 </div>
-                <div className="flex gap-1.5 items-center font-mono">
-                    <div className="text-right text-[4px] text-text-dim">
-                        <span>Físico: 75%</span> · <span className="text-brand">Finan: 60%</span>
-                    </div>
-                    <div className="w-10 h-4 bg-success/10 border border-success/30 text-success rounded flex items-center justify-center text-[4px] font-bold">
-                        A Tiempo
-                    </div>
+                <div className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span className="text-[6px] font-semibold text-emerald-600">En Circuito</span>
                 </div>
             </div>
-
-            {/* Activities Progress & Evidence Upload Panel */}
-            <div className="flex-1 flex gap-1.5 min-h-0">
-                {/* Left Side: Tasks Timeline */}
-                <div className={`flex-[1.4] rounded-lg border p-1.5 flex flex-col gap-1 transition-all duration-300 min-h-0 overflow-hidden ${highlightBottomClass}`}>
-                    <span className="text-[5px] text-text-main font-bold uppercase pb-0.5 border-b border-border-thin/40">Cronograma</span>
-                    <div className="space-y-1.5 py-1 overflow-y-auto">
-                        <div className="flex items-center gap-1 text-[4px]">
-                            <span className="text-success">●</span>
-                            <div className="flex-1">
-                                <span className="text-text-main font-semibold block leading-tight">Fase 1: Requisitos</span>
-                                <span className="text-text-dim text-[3.5px]">Entregable aprobado</span>
-                            </div>
+            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-2 transition-all duration-300 ${highlightBottomClass}`}>
+                {[1, 2, 3].map((step) => (
+                    <div key={step} className="flex items-center gap-2">
+                        <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[6px] font-bold ${step === 1 ? 'bg-emerald-500 text-white' : step === 2 ? 'bg-[#0070f3] text-white' : 'border border-slate-300 dark:border-zinc-700 text-slate-400'}`}>
+                            {step}
                         </div>
-                        <div className="flex items-center gap-1 text-[4px]">
-                            <span className="text-brand">●</span>
-                            <div className="flex-1">
-                                <span className="text-text-main font-semibold block leading-tight">Fase 2: Prototipo IoT</span>
-                                <span className="text-text-dim text-[3.5px]">En ejecución</span>
-                            </div>
+                        <div className="flex-1 space-y-0.5">
+                            <div className="w-24 h-1.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+                            <div className="w-16 h-1 bg-slate-200 dark:bg-zinc-700 rounded" />
                         </div>
                     </div>
-                </div>
-
-                {/* Right Side: Evidence Uploader */}
-                <div className={`flex-1 rounded-lg border p-1.5 flex flex-col justify-between border-dashed transition-all duration-300 min-h-0 ${highlightBottomClass}`}>
-                    <div className="flex flex-col gap-1 items-center justify-center py-2 flex-1 border border-dashed border-border-thin/60 rounded bg-surface-hover/10">
-                        <span className="text-brand text-xs font-bold">+</span>
-                        <span className="text-[4.5px] font-semibold text-text-main uppercase tracking-wider leading-none">Cargar Evidencia</span>
-                        <span className="text-[3px] text-text-dim">PDF / ZIP</span>
-                    </div>
-                    <div className="border-t border-border-thin/40 pt-1 mt-1 text-[3.5px] flex justify-between text-text-dim">
-                        <span>Límite: 25MB</span>
-                        <span className="text-brand font-bold cursor-pointer">Historial</span>
-                    </div>
-                </div>
+                ))}
             </div>
         </>
     )
 };
 
-export const INFORMES_AVANCE_CONFIG: HelpConfig = {
-    icon: <BookOpen size={24} className="text-brand" />,
-    title: "Bandeja de Revisiones Curriculares",
-    summary: "Consola de revisión y validación de instrumentos curriculares y PEAs institucionales.",
-    description: "Espacio centralizado donde la Coordinación de Carrera, Coordinación Académica y Vicerrectorado revisan, aprueban o devuelven los PEAs presentados por los docentes para asegurar la calidad académica.",
+export const REVISION_TECNICA_CONFIG: HelpConfig = {
+    icon: <FileCheck2 size={20} className="text-[#0070f3]" />,
+    title: 'Revisión Técnica y Previsualización Oficial',
+    summary: 'Inspección integral del PEA para emitir avales colegiados, registrar observaciones o ejecutar firma electrónica.',
+    description: 'Interfaz especializada para revisores (Coordinación de Carrera, Coordinación Académica, Vicerrectorado y Administración) que muestra la previsualización oficial del documento junto con los controles de dictamen.',
     steps: [
         {
-            title: "Revisión técnica y metodológica del PEA",
-            description: "Examina los contenidos, unidades temáticas, bibliografía y metodología del PEA para validar su correspondencia con la malla curricular.",
+            title: 'Previsualización fiel del documento PEA',
+            description: 'Examina el contenido completo del Programa de Estudio de la Asignatura tal como se generará en el PDF oficial institucional.',
             highlight: 'content-bottom'
         },
         {
-            title: "Gestión de observaciones colegiadas",
-            description: "En caso de observaciones, emite comentarios contextuales y devuelve el instrumento al docente con plazo de subsanación.",
+            title: 'Emisión de observaciones o aprobación con firma',
+            description: 'Utiliza las acciones superiores para aprobar y avanzar el PEA a la siguiente instancia (o legalizarlo con firma electrónica), o bien devolverlo al docente con observaciones detalladas.',
             highlight: 'content-top'
         }
     ],
-    compliance: "Respalda los procesos de auditoría y calidad académica requeridos en los modelos de acreditación del CACES.",
+    compliance: 'Soporta el control de calidad microcurricular previo a la legalización y estampado de firmas electrónicas institucionales.',
     tips: [
-        "Sé específico en las observaciones para que el docente pueda realizar los ajustes pedagógicos rápidamente.",
-        "Verifica que las firmas electrónicas institucionales se apliquen en el orden reglamentario."
+        'Verifica que la distribución de horas y la bibliografía correspondan al formato vigente antes de emitir tu aval.',
+        'Al aprobar en la instancia final, el sistema genera el PDF legalizado con código QR de verificación.'
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            {/* Header & Controls */}
-            <div className={`rounded-lg border p-1.5 flex justify-between items-center transition-all duration-300 shrink-0 ${highlightTopClass}`}>
-                <div className="flex flex-col gap-0.5">
-                    <span className="text-[4px] text-text-dim uppercase font-mono tracking-wider font-semibold">Revisión de Entregables</span>
-                    <span className="text-[7px] text-text-main font-bold">Bandeja de Informes de Avance</span>
-                </div>
-                <div className="flex gap-1 text-[4.5px]">
-                    <div className="w-16 h-4 bg-surface-hover/20 border border-border-thin rounded px-1 flex items-center justify-between text-text-dim">
-                        <span>Todos los periodos</span>
-                        <span>▼</span>
-                    </div>
+            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="w-24 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                <div className="flex gap-1">
+                    <div className="w-12 h-4 bg-amber-600 rounded" />
+                    <div className="w-12 h-4 bg-[#0070f3] rounded" />
                 </div>
             </div>
+            <div className={`flex-1 rounded-lg border p-2.5 flex flex-col gap-1.5 bg-slate-50 dark:bg-zinc-900 transition-all duration-300 ${highlightBottomClass}`}>
+                <div className="w-1/2 h-2.5 bg-slate-300 dark:bg-zinc-600 rounded mx-auto" />
+                <div className="w-full h-1.5 bg-slate-200 dark:bg-zinc-700 rounded mt-1" />
+                <div className="w-full h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
+                <div className="w-4/5 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
+                <div className="flex-1 border border-slate-200 dark:border-zinc-800 rounded bg-white dark:bg-zinc-950 mt-1" />
+            </div>
+        </>
+    )
+};
 
-            {/* Table Area */}
-            <div className={`flex-1 rounded-lg border p-1.5 flex flex-col gap-1 transition-all duration-300 min-h-0 overflow-hidden ${highlightBottomClass}`}>
-                <table className="w-full text-left border-collapse text-[4.5px]">
-                    <thead>
-                        <tr className="border-b border-border-thin/60 text-[3.5px] font-mono text-text-dim uppercase tracking-wider">
-                            <th className="pb-1 font-bold">Informe / Proyecto</th>
-                            <th className="pb-1 font-bold">Investigador</th>
-                            <th className="pb-1 font-bold text-center">Estado</th>
-                            <th className="pb-1 font-bold text-right">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-thin/30">
-                        <tr className="hover:bg-surface/30">
-                            <td className="py-1">
-                                <span className="text-text-main font-semibold block leading-tight">Informe Hito 2 - IA IoT</span>
-                                <span className="text-[3.5px] font-mono text-text-dim">PROY-SOFT-2026-001</span>
-                            </td>
-                            <td className="py-1">
-                                <span className="text-text-main block leading-tight">Dr. Carlos Mendoza</span>
-                                <span className="text-[3.5px] text-text-dim">Dpto. Sistemas</span>
-                            </td>
-                            <td className="py-1 text-center">
-                                <span className="px-1 py-0.2 bg-warning/15 border border-warning/35 text-warning rounded-[2px] text-[3.5px] font-semibold">
-                                    En Revisión
-                                </span>
-                            </td>
-                            <td className="py-1 text-right">
-                                <span className="px-1 py-0.5 bg-brand text-white text-[4px] rounded font-bold cursor-pointer">Detalles</span>
-                            </td>
-                        </tr>
-                        <tr className="hover:bg-surface/30">
-                            <td className="py-1">
-                                <span className="text-text-main font-semibold block leading-tight">Informe Hito 1 - Teletrabajo</span>
-                                <span className="text-[3.5px] font-mono text-text-dim">PROY-ADM-2026-003</span>
-                            </td>
-                            <td className="py-1">
-                                <span className="text-text-main block leading-tight">Mgs. Juan Pérez</span>
-                                <span className="text-[3.5px] text-text-dim">Dpto. Administración</span>
-                            </td>
-                            <td className="py-1 text-center">
-                                <span className="px-1 py-0.2 bg-success/15 border border-success/35 text-success rounded-[2px] text-[3.5px] font-semibold">
-                                    Aprobado
-                                </span>
-                            </td>
-                            <td className="py-1 text-right">
-                                <span className="px-1 py-0.5 bg-text-main/10 border border-border-thin text-text-main rounded text-[4px] font-bold cursor-pointer">Revisar</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+export const SALAS_CURRICULARES_CONFIG: HelpConfig = {
+    icon: <Users size={20} className="text-[#0070f3]" />,
+    title: 'Salas Curriculares Colegiadas',
+    summary: 'Espacio colaborativo por carrera para coordinar asignaturas, compartir lineamientos y dar seguimiento en vivo.',
+    description: 'Reúne a los docentes de una misma carrera junto con su Coordinación de Carrera en el período activo para alinear criterios pedagógicos, revisar avances grupales y acceder a los PEAs de la carrera.',
+    steps: [
+        {
+            title: 'Contexto de carrera y período activo',
+            description: 'En la cabecera identificas la carrera seleccionada y el período lectivo vigente. Si perteneces a más de una carrera, puedes cambiar entre ellas.',
+            highlight: 'content-top'
+        },
+        {
+            title: 'Trabajo colegiado y acceso a instrumentos',
+            description: 'Consulta el listado de asignaturas y participantes de la sala, coordina acuerdos curriculares y abre directamente los documentos asociados.',
+            highlight: 'content-bottom'
+        }
+    ],
+    compliance: 'Fomenta la articulación microcurricular horizontal y vertical entre docentes de una misma carrera según los lineamientos CACES.',
+    tips: [
+        'Las salas curriculares reflejan automáticamente las asignaturas y docentes vinculados a la carrera en SIGAFI.'
+    ],
+    Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
+        <>
+            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+                <div className="space-y-0.5">
+                    <div className="w-28 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
+                    <div className="w-20 h-1 bg-slate-200 dark:bg-zinc-700 rounded" />
+                </div>
+                <div className="w-12 h-3.5 bg-[#0070f3]/15 border border-[#0070f3]/30 rounded" />
+            </div>
+            <div className={`flex-1 rounded-lg border p-2 flex gap-2 transition-all duration-300 ${highlightBottomClass}`}>
+                <div className="flex-[1.5] space-y-1.5">
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="h-5 rounded border border-slate-200 dark:border-zinc-800 px-1.5 flex items-center justify-between">
+                            <div className="w-20 h-1.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+                            <div className="w-6 h-1.5 bg-[#0070f3] rounded" />
+                        </div>
+                    ))}
+                </div>
+                <div className="flex-1 rounded border border-slate-200 dark:border-zinc-800 p-1.5 space-y-1">
+                    <div className="w-12 h-1.5 bg-slate-300 dark:bg-zinc-600 rounded" />
+                    <div className="w-full h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
+                    <div className="w-4/5 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
+                </div>
             </div>
         </>
     )

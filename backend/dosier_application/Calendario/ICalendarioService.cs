@@ -1,5 +1,10 @@
 namespace dosier_application.Calendario;
 
+public record CalendarioCarreraDto(
+    int IdCarrera,
+    string Nombre
+);
+
 public record CalendarioEventoDto(
     string IdEventoCalendario,
     string Uuid,
@@ -21,7 +26,10 @@ public record CalendarioEventoDto(
     string Estado,
     int? CreadoPor,
     int? AlertaDias,
-    bool RecurrenciaAnual
+    bool RecurrenciaAnual,
+    int? IdCarrera = null,
+    string? NombreCarrera = null,
+    string? NombreDocente = null
 );
 
 public record EventoNormativoDto(
@@ -45,7 +53,8 @@ public record EventoNormativoDto(
     string Estado,
     // Notas Rápidas — campos extendidos
     string? NotaDetalle = null,
-    int? OrdenBandeja = null
+    int? OrdenBandeja = null,
+    int? IdCarrera = null
 );
 
 /// <summary>Payload para reordenar notas en la bandeja Inbox.</summary>
@@ -53,14 +62,20 @@ public record ReordenarBandejaItem(string Uuid, int Orden);
 
 public interface ICalendarioService
 {
-    /// <summary>Obtiene todos los eventos del rango indicado, filtrados por rol y idUsuario (para eventos privados).</summary>
-    Task<IEnumerable<CalendarioEventoDto>> GetEventosAsync(DateOnly desde, DateOnly hasta, string rolUsuario, int idUsuario);
+    /// <summary>Obtiene las carreras del instituto accesibles para el usuario según su rol y asignación académica.</summary>
+    Task<IEnumerable<CalendarioCarreraDto>> GetCarrerasUsuarioAsync(int idUsuario, string rolUsuario);
+
+    /// <summary>Obtiene todos los eventos del rango indicado, filtrados por rol, carreras del usuario, filtro opcional de carrera y idUsuario.</summary>
+    Task<IEnumerable<CalendarioEventoDto>> GetEventosAsync(DateOnly desde, DateOnly hasta, string rolUsuario, int idUsuario, int? idCarreraFiltro = null);
 
     // ── CRUD normativos y personales ──────────────────────────────────────────────
     Task<IEnumerable<EventoNormativoDto>> GetNormativosAsync();
     Task<string> CreateNormativoAsync(EventoNormativoDto dto, int idUsuarioAdmin);
     Task<bool> UpdateNormativoAsync(string uuid, EventoNormativoDto dto);
     Task<bool> DeleteNormativoAsync(string uuid);
+
+    /// <summary>Crea un evento de usuario validando permisos de alcance (Personal, Carrera, Instituto).</summary>
+    Task<(string? Uuid, bool Forbidden)> CreateUsuarioEventoAsync(EventoNormativoDto dto, int idUsuario, string rolUsuario);
 
     /// <summary>Obtiene las notas adhesivas/rápidas sin programar del usuario, ordenadas por OrdenBandeja.</summary>
     Task<IEnumerable<EventoNormativoDto>> GetStickyNotesAsync(int idUsuario);
@@ -74,11 +89,11 @@ public interface ICalendarioService
     /// <summary>Resuelve el IdUsuario interno a partir del IdSigafi o identificador de sesión.</summary>
     Task<int?> ResolveUserIdBySigafiAsync(string idSigafi);
 
-    /// <summary>Actualiza un evento personal validando que pertenezca al usuario solicitante. Retorna null si no existe, false si no tiene permisos, true si se actualizó con éxito.</summary>
-    Task<bool?> UpdateUsuarioEventoAsync(string uuid, EventoNormativoDto dto, int idUsuario);
+    /// <summary>Actualiza un evento validando permisos del solicitante. Retorna null si no existe, false si no tiene permisos, true si se actualizó con éxito.</summary>
+    Task<bool?> UpdateUsuarioEventoAsync(string uuid, EventoNormativoDto dto, int idUsuario, string rolUsuario = "");
 
-    /// <summary>Elimina un evento personal validando que pertenezca al usuario solicitante. Retorna null si no existe, false si no tiene permisos, true si se eliminó con éxito.</summary>
-    Task<bool?> DeleteUsuarioEventoAsync(string uuid, int idUsuario);
+    /// <summary>Elimina un evento validando permisos del solicitante. Retorna null si no existe, false si no tiene permisos, true si se eliminó con éxito.</summary>
+    Task<bool?> DeleteUsuarioEventoAsync(string uuid, int idUsuario, string rolUsuario = "");
 
     /// <summary>Llamado por el job diario: envía alertas por email de eventos próximos.</summary>
     Task ProcesarAlertasDiariasAsync();

@@ -5,6 +5,11 @@ import { buildWorkspacePath } from '../core/documents/templateUrl';
 //  Tipos
 // ─────────────────────────────────────────────────────────────
 
+export interface CalendarioCarrera {
+    id_carrera: number;
+    nombre: string;
+}
+
 export interface EventoCalendario {
     id_evento_calendario: string;
     uuid: string;
@@ -27,9 +32,13 @@ export interface EventoCalendario {
     uuid_entidad_origen?: string | null;
     tipo_entidad_origen?: string | null;
     roles_visibles?: string | null;
+    id_carrera?: number | null;
+    nombre_carrera?: string | null;
+    nombre_docente?: string | null;
     // Notas Rápidas — campos extendidos
     nota_detalle?: string | null;
     orden_bandeja?: number | null;
+    id_carrera?: number | null;
 }
 
 export interface EventoPayload {
@@ -53,6 +62,7 @@ export interface EventoPayload {
     // Notas Rápidas — campos extendidos
     nota_detalle?: string | null;
     orden_bandeja?: number | null;
+    id_carrera?: number | null;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -66,11 +76,18 @@ const formatLocalDate = (d: Date): string => {
     return `${y}-${m}-${day}`;
 };
 
-export const getEventos = (date: Date): Promise<EventoCalendario[]> => {
+export const getCarrerasUsuario = (): Promise<CalendarioCarrera[]> =>
+    api.get('/calendario/carreras').then(r => r.data || []);
+
+export const getEventos = (date: Date, idCarrera?: number | null): Promise<EventoCalendario[]> => {
     const desde = new Date(date.getFullYear(), date.getMonth() - 1, 1);
     const hasta = new Date(date.getFullYear(), date.getMonth() + 2, 0);
     return api.get('/calendario/eventos', {
-        params: { desde: formatLocalDate(desde), hasta: formatLocalDate(hasta) }
+        params: {
+            desde: formatLocalDate(desde),
+            hasta: formatLocalDate(hasta),
+            ...(idCarrera ? { idCarrera } : {}),
+        }
     }).then(r => r.data || []);
 };
 
@@ -184,6 +201,7 @@ export const buildPayload = (fields: {
     notaDetalle?: string | null;
     ordenBandeja?: number | null;
     rolesVisibles?: string | null;
+    idCarrera?: number | null;
 }): EventoPayload => ({
     titulo: fields.titulo,
     descripcion: fields.descripcion,
@@ -204,6 +222,7 @@ export const buildPayload = (fields: {
     estado: fields.estado,
     nota_detalle: fields.notaDetalle ?? null,
     orden_bandeja: fields.ordenBandeja ?? null,
+    id_carrera: fields.idCarrera ?? null,
 });
 
 export const EVENTO_CONTEXTO_HELP: Record<string, string> = {

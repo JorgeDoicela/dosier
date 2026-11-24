@@ -116,6 +116,9 @@ El motor analiza la validez pedagógica del borrador generado antes de retornarl
 El procesamiento de archivos preexistentes está desacoplado del asistente generador en su propio servicio e interfaz especializada:
 * **Servicio Backend:** `PeaDocumentExtractorService.cs` implementando `IPeaDocumentExtractorService`.
 * **Ruta Oficial de Ingestión:** `POST /api/pea/uuid/{uuid}/importar-documento` (con alias `/ai/importar-archivo`).
+* **Modo Dual de Estructuración (Con y Sin API Key):**
+  1. **Con API Key configurada (o Ollama local):** Utiliza el modelo configurado como analizador sintáctico determinista bajo fidelidad textual estricta (`ParseAndNormalizeDraft`).
+  2. **Sin API Key configurada (Modo Determinista Offline):** Delega automáticamente el texto extraído a `DeterministicPeaDocumentParser.cs`, el cual segmenta el documento por encabezados oficiales del PEA (`a)` a `k)`), procesa tablas (`[TABLA DOCUMENTAL]`) y párrafos mediante heurísticas y expresiones regulares compiladas sin llamadas externas (`ProviderUsed = "deterministic-parser"`, `ModelUsed = "regex-heuristic-v1"`), compartiendo la misma reconciliación matemática SIGAFI (`FinalizeAndNormalizeDraft`).
 * **Formatos Digitales Admitidos:**
   1. **PDF con Texto Digital (`.pdf`):** Extracción nativa página por página mediante `iText 9` (`PdfTextExtractor` con `LocationTextExtractionStrategy` para preservación fiel de coordenadas espaciales y orden de columnas en tablas).
   2. **Microsoft Word OpenXML (`.docx`):** Descompresión nativa en memoria mediante `System.IO.Compression.ZipArchive` y recorrido jerárquico de `word/document.xml` con `XDocument`, extrayendo párrafos (`<w:p>`) y celdas de tablas curriculares (`<w:tbl>`, `<w:tr>`, `<w:tc>`).
