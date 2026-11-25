@@ -2,6 +2,19 @@ import {
     PenTool, BookOpen, Activity, FileCheck2, Users, FileEdit
 } from 'lucide-react';
 import type { HelpConfig, MockupProps } from '../types';
+import {
+    WfZone,
+    WfSearchBar,
+    WfSelect,
+    WfTabs,
+    WfButton,
+    WfStatusBadge,
+    WfListRow,
+    WfMiniCard,
+    WfStepperRail,
+    WfDocSheet,
+    WfThreadBubbles
+} from '../WireframePrimitives';
 
 export const DOCUMENTACION_CONFIG: HelpConfig = {
     icon: <PenTool size={20} className="text-[#0070f3]" />,
@@ -46,34 +59,18 @@ export const DOCUMENTACION_CONFIG: HelpConfig = {
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            <div className={`rounded-lg border p-1.5 flex flex-col gap-1.5 shrink-0 transition-all duration-300 ${highlightTopClass}`}>
-                <div className="flex justify-between items-center">
-                    <div className="space-y-0.5">
-                        <div className="w-28 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
-                        <div className="w-20 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
-                    </div>
-                    <div className="w-16 h-4 bg-slate-200 dark:bg-zinc-700 rounded" />
+            <WfZone className={`shrink-0 ${highlightTopClass}`}>
+                <WfTabs count={3} activeIndex={0} />
+                <div className="flex items-center gap-1.5">
+                    <WfSearchBar />
+                    <WfSelect widthClass="w-16" />
                 </div>
-                <div className="flex gap-3 border-b border-slate-200 dark:border-zinc-800 pb-0.5 text-[6px]">
-                    <span className="font-semibold text-[#0070f3] border-b border-[#0070f3] pb-0.5">Pendientes</span>
-                    <span className="text-slate-400">Observados</span>
-                    <span className="text-slate-400">Aprobados</span>
-                </div>
-            </div>
-            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-1.5 transition-all duration-300 ${highlightBottomClass}`}>
-                {[1, 2, 3].map((row) => (
-                    <div key={row} className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-zinc-800/70">
-                        <div className="space-y-0.5">
-                            <div className="w-28 h-1.5 bg-slate-300 dark:bg-zinc-600 rounded" />
-                            <div className="w-20 h-1 bg-slate-200 dark:bg-zinc-700 rounded" />
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />
-                            <div className="w-10 h-3.5 bg-[#0070f3] rounded" />
-                        </div>
-                    </div>
-                ))}
-            </div>
+            </WfZone>
+            <WfZone className={`flex-1 divide-y divide-slate-100 dark:divide-zinc-800 justify-center ${highlightBottomClass}`}>
+                <WfListRow dotTone="blue" titleWidth="w-24" metaWidth="w-14" actionTone="blue" />
+                <WfListRow dotTone="amber" titleWidth="w-20" metaWidth="w-12" actionTone="amber" />
+                <WfListRow dotTone="emerald" titleWidth="w-24" metaWidth="w-16" actionTone="neutral" />
+            </WfZone>
         </>
     )
 };
@@ -107,31 +104,17 @@ export const MIS_PROYECTOS_CONFIG: HelpConfig = {
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            <div className={`rounded-lg border p-1.5 flex flex-col gap-1.5 shrink-0 transition-all duration-300 ${highlightTopClass}`}>
-                <div className="flex gap-3 border-b border-slate-200 dark:border-zinc-800 pb-0.5 text-[6px]">
-                    <span className="font-semibold text-[#0070f3] border-b border-[#0070f3] pb-0.5">Mis Asignaturas</span>
-                    <span className="text-slate-400">PEAs de Otros Docentes</span>
+            <WfZone className={`shrink-0 ${highlightTopClass}`}>
+                <WfTabs count={2} activeIndex={0} />
+                <div className="flex items-center gap-1.5">
+                    <WfSearchBar />
+                    <WfSelect widthClass="w-16" />
                 </div>
-                <div className="flex gap-1.5">
-                    <div className="flex-1 h-4 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded" />
-                    <div className="w-16 h-4 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded" />
-                </div>
-            </div>
-            <div className={`flex-1 rounded-lg border p-2 grid grid-cols-2 gap-2 transition-all duration-300 ${highlightBottomClass}`}>
-                {[1, 2].map((i) => (
-                    <div key={i} className="rounded-lg border border-slate-200 dark:border-zinc-800 p-2 flex flex-col justify-between">
-                        <div className="space-y-1">
-                            <div className="flex justify-between items-center">
-                                <span className="text-[5px] font-mono text-slate-400">DS-20{i}</span>
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />
-                            </div>
-                            <div className="w-full h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
-                            <div className="w-2/3 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
-                        </div>
-                        <div className="w-full h-3.5 bg-[#0070f3] rounded mt-2" />
-                    </div>
-                ))}
-            </div>
+            </WfZone>
+            <WfZone layout="grid2" className={`flex-1 ${highlightBottomClass}`}>
+                <WfMiniCard dotTone="blue" progress={60} actionTone="blue" />
+                <WfMiniCard dotTone="amber" progress={30} actionTone="amber" />
+            </WfZone>
         </>
     )
 };
@@ -165,28 +148,16 @@ export const WORKSPACE_CONFIG: HelpConfig = {
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            <div className={`h-7 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
-                <div className="flex items-center gap-1.5">
-                    <div className="w-20 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
+                <WfStatusBadge tone="emerald" barWidth="w-14" />
+                <div className="flex items-center gap-1">
+                    <WfButton tone="neutral" widthClass="w-10" />
+                    <WfButton tone="blue" widthClass="w-12" />
                 </div>
-                <div className="flex gap-1">
-                    <div className="w-10 h-3.5 border border-slate-200 dark:border-zinc-700 rounded" />
-                    <div className="w-12 h-3.5 bg-[#0070f3] rounded" />
-                </div>
-            </div>
-            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-1.5 transition-all duration-300 ${highlightBottomClass}`}>
-                <div className="w-1/2 h-2.5 bg-slate-300 dark:bg-zinc-600 rounded" />
-                <div className="grid grid-cols-2 gap-1.5">
-                    <div className="h-5 rounded border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900" />
-                    <div className="h-5 rounded border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900" />
-                </div>
-                <div className="flex-1 rounded border border-[#0070f3]/40 bg-[#0070f3]/5 p-1.5 space-y-1">
-                    <div className="w-full h-1.5 bg-slate-300 dark:bg-zinc-600 rounded" />
-                    <div className="w-5/6 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
-                    <div className="w-2/3 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
-                </div>
-            </div>
+            </WfZone>
+            <WfZone className={`flex-1 ${highlightBottomClass}`}>
+                <WfDocSheet collaborative />
+            </WfZone>
         </>
     )
 };
@@ -214,29 +185,19 @@ export const MONITOREO_CONFIG: HelpConfig = {
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            <div className={`rounded-lg border p-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
+            <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
                 <div className="space-y-1">
-                    <div className="w-28 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
-                    <div className="w-16 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
+                    <span className="block w-24 h-2 rounded-full bg-slate-300 dark:bg-zinc-600" />
+                    <span className="block w-14 h-1 rounded-full bg-slate-200 dark:bg-zinc-700" />
                 </div>
-                <div className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <span className="text-[6px] font-semibold text-emerald-600">En Circuito</span>
+                <div className="flex items-center gap-1.5">
+                    <WfStatusBadge tone="emerald" barWidth="w-10" />
+                    <WfButton tone="neutral" widthClass="w-8" />
                 </div>
-            </div>
-            <div className={`flex-1 rounded-lg border p-2 flex flex-col gap-2 transition-all duration-300 ${highlightBottomClass}`}>
-                {[1, 2, 3].map((step) => (
-                    <div key={step} className="flex items-center gap-2">
-                        <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[6px] font-bold ${step === 1 ? 'bg-emerald-500 text-white' : step === 2 ? 'bg-[#0070f3] text-white' : 'border border-slate-300 dark:border-zinc-700 text-slate-400'}`}>
-                            {step}
-                        </div>
-                        <div className="flex-1 space-y-0.5">
-                            <div className="w-24 h-1.5 bg-slate-300 dark:bg-zinc-600 rounded" />
-                            <div className="w-16 h-1 bg-slate-200 dark:bg-zinc-700 rounded" />
-                        </div>
-                    </div>
-                ))}
-            </div>
+            </WfZone>
+            <WfZone className={`flex-1 justify-center ${highlightBottomClass}`}>
+                <WfStepperRail />
+            </WfZone>
         </>
     )
 };
@@ -265,20 +226,16 @@ export const REVISION_TECNICA_CONFIG: HelpConfig = {
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
-                <div className="w-24 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
-                <div className="flex gap-1">
-                    <div className="w-12 h-4 bg-amber-600 rounded" />
-                    <div className="w-12 h-4 bg-[#0070f3] rounded" />
+            <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
+                <span className="w-24 h-2 rounded-full bg-slate-300 dark:bg-zinc-600" />
+                <div className="flex items-center gap-1">
+                    <WfButton tone="amber" widthClass="w-11" />
+                    <WfButton tone="blue" widthClass="w-11" />
                 </div>
-            </div>
-            <div className={`flex-1 rounded-lg border p-2.5 flex flex-col gap-1.5 bg-slate-50 dark:bg-zinc-900 transition-all duration-300 ${highlightBottomClass}`}>
-                <div className="w-1/2 h-2.5 bg-slate-300 dark:bg-zinc-600 rounded mx-auto" />
-                <div className="w-full h-1.5 bg-slate-200 dark:bg-zinc-700 rounded mt-1" />
-                <div className="w-full h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
-                <div className="w-4/5 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
-                <div className="flex-1 border border-slate-200 dark:border-zinc-800 rounded bg-white dark:bg-zinc-950 mt-1" />
-            </div>
+            </WfZone>
+            <WfZone className={`flex-1 ${highlightBottomClass}`}>
+                <WfDocSheet stamped />
+            </WfZone>
         </>
     )
 };
@@ -306,28 +263,24 @@ export const SALAS_CURRICULARES_CONFIG: HelpConfig = {
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
-            <div className={`h-8 rounded-lg border px-2 flex items-center justify-between shrink-0 transition-all duration-300 ${highlightTopClass}`}>
-                <div className="space-y-0.5">
-                    <div className="w-28 h-2 bg-slate-300 dark:bg-zinc-600 rounded" />
-                    <div className="w-20 h-1 bg-slate-200 dark:bg-zinc-700 rounded" />
+            <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
+                <WfSelect widthClass="w-24" active />
+                <div className="flex items-center gap-1.5">
+                    <div className="flex -space-x-1">
+                        <span className="w-3 h-3 rounded-full bg-[#0070f3] border border-white dark:border-zinc-950" />
+                        <span className="w-3 h-3 rounded-full bg-emerald-500 border border-white dark:border-zinc-950" />
+                        <span className="w-3 h-3 rounded-full bg-amber-500 border border-white dark:border-zinc-950" />
+                    </div>
+                    <WfStatusBadge tone="emerald" barWidth="w-6" />
                 </div>
-                <div className="w-12 h-3.5 bg-[#0070f3]/15 border border-[#0070f3]/30 rounded" />
-            </div>
-            <div className={`flex-1 rounded-lg border p-2 flex gap-2 transition-all duration-300 ${highlightBottomClass}`}>
-                <div className="flex-[1.5] space-y-1.5">
-                    {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-5 rounded border border-slate-200 dark:border-zinc-800 px-1.5 flex items-center justify-between">
-                            <div className="w-20 h-1.5 bg-slate-300 dark:bg-zinc-600 rounded" />
-                            <div className="w-6 h-1.5 bg-[#0070f3] rounded" />
-                        </div>
-                    ))}
+            </WfZone>
+            <WfZone layout="split" className={`flex-1 ${highlightBottomClass}`}>
+                <div className="flex-[1.3] divide-y divide-slate-100 dark:divide-zinc-800 flex flex-col justify-center">
+                    <WfListRow dotTone="blue" titleWidth="w-16" metaWidth="w-10" actionTone="blue" />
+                    <WfListRow dotTone="emerald" titleWidth="w-14" metaWidth="w-10" actionTone="neutral" />
                 </div>
-                <div className="flex-1 rounded border border-slate-200 dark:border-zinc-800 p-1.5 space-y-1">
-                    <div className="w-12 h-1.5 bg-slate-300 dark:bg-zinc-600 rounded" />
-                    <div className="w-full h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
-                    <div className="w-4/5 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded" />
-                </div>
-            </div>
+                <WfThreadBubbles />
+            </WfZone>
         </>
     )
 };

@@ -22,12 +22,15 @@ import { GeistSelect } from '../../../components/Common/GeistSelect';
 import { 
     formatModalidad,
     isPeaPropio,
+    isPeaBorrador,
     isPeaPendienteParaRol,
     isPeaRezagado,
+    normalizePeaStatus,
     getPeaNavegacion,
     getPeaMetricsForRole
 } from '../../Curriculum/utils/peaStatusWorkflow';
 import { DocenteAgendaWidget } from './Components/DocenteAgendaWidget';
+import { PendientesResumenCard } from './Components/PendientesResumenCard';
 import { getAvanceDetalle } from './Components/DocenteActividadesPanel';
 import {
     recordRecentSubjectOpen,
@@ -135,10 +138,19 @@ export const CoordAcadDashboard: React.FC = () => {
     }, [peas, user]);
 
     const pendientesRevisionAcadCount = metrics.pendientes;
+    const pendientesRevision = useMemo(() => {
+        return peas.filter(p => isPeaPendienteParaRol(p.estado, 'DOSIER_COORD_ACAD'));
+    }, [peas]);
     const misMaterias = useMemo(() => {
         return peas.filter(p => isPeaPropio(p, user));
     }, [peas, user]);
-    const misPendientesFormularCount = metrics.misPendientesCount;
+    const misPendientes = useMemo(() => {
+        return misMaterias.filter(p =>
+            isPeaBorrador(p.estado) ||
+            normalizePeaStatus(p.estado) === 'Observado' ||
+            !p.firma_docente
+        );
+    }, [misMaterias]);
 
     const [recentsVersion, setRecentsVersion] = useState<number>(0);
 
@@ -428,80 +440,16 @@ export const CoordAcadDashboard: React.FC = () => {
 
                 {/* Columna Derecha: Tareas de Supervisión, Rezagados y Agenda Curricular */}
                 <div className="lg:col-span-5 space-y-6">
-                    {/* Tarjeta Ejecutiva de Tareas Curriculares */}
-                    <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 sm:p-6 shadow-xs space-y-4">
-                        <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-zinc-800">
-                            <div>
-                                <h2 className="text-sm font-bold text-slate-900 dark:text-zinc-100">
-                                    Resumen de Pendientes
-                                </h2>
-                                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                                    Aprobaciones normativas institucionales y materias propias.
-                                </p>
-                            </div>
-                            <span className="text-xs font-mono font-semibold text-zinc-500 bg-slate-100 dark:bg-zinc-900 px-2 py-0.5 rounded">
-                                {pendientesRevisionAcadCount + misPendientesFormularCount} por atender
-                            </span>
-                        </div>
-
-                        <div className="space-y-3">
-                            {/* Tarea 1: Lo que tiene que revisar de las carreras */}
-                            <div className="p-3.5 rounded-lg border border-slate-100 dark:border-zinc-800/80 bg-slate-50/50 dark:bg-zinc-900/30 flex items-center justify-between gap-3">
-                                <div className="space-y-0.5 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <span className={`w-2 h-2 rounded-full ${pendientesRevisionAcadCount > 0 ? 'bg-[#0070f3]' : 'bg-emerald-500'}`} />
-                                        <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100">
-                                            Aprobación de Coordinación Académica
-                                        </h3>
-                                    </div>
-                                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 pl-4">
-                                        {pendientesRevisionAcadCount > 0
-                                            ? `${pendientesRevisionAcadCount} ${pendientesRevisionAcadCount === 1 ? 'PEA cuenta con aprobación de carrera y espera' : 'PEAs cuentan con aprobación de carrera y esperan'} tu aprobación formal`
-                                            : 'Al día · No hay instrumentos esperando aprobación académica'}
-                                    </p>
-                                </div>
-                                {pendientesRevisionAcadCount > 0 ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => setFilterTab('pendientes')}
-                                        className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] transition-colors cursor-pointer"
-                                    >
-                                        Revisar ({pendientesRevisionAcadCount})
-                                    </button>
-                                ) : (
-                                    <span className="shrink-0 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                                        Completado
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* Tarea 2: Carga docente propia */}
-                            {misMaterias.length > 0 && (
-                                <div className="p-3.5 rounded-lg border border-slate-100 dark:border-zinc-800/80 bg-slate-50/50 dark:bg-zinc-900/30 flex items-center justify-between gap-3">
-                                    <div className="space-y-0.5 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <span className={`w-2 h-2 rounded-full ${misPendientesFormularCount > 0 ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                                            <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100">
-                                                Carga Docente Propia
-                                            </h3>
-                                        </div>
-                                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 pl-4">
-                                            {misPendientesFormularCount > 0
-                                                ? `${misPendientesFormularCount} ${misPendientesFormularCount === 1 ? 'asignatura propia por formular' : 'asignaturas propias por formular o firmar'}`
-                                                : 'Todas tus asignaturas propias han sido formuladas y enviadas'}
-                                        </p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => setFilterTab('mis_materias')}
-                                        className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
-                                    >
-                                        Ver Mis PEA ({misMaterias.length})
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <PendientesResumenCard
+                        revisionScopeLabel="Revisiones académicas"
+                        pendientesRevision={pendientesRevision}
+                        misPendientes={misPendientes}
+                        misMateriasCount={misMaterias.length}
+                        isLoading={isLoading}
+                        onAbrirPea={handleAbrirRevision}
+                        onVerRevisiones={() => setFilterTab('pendientes')}
+                        onVerMisMaterias={() => setFilterTab('mis_materias')}
+                    />
 
                     {/* Tarjeta Minimalista de Rezagados (Exclusiva para Administrador del Sistema) */}
                     {isAdmin && docentesRezagados.length > 0 && (

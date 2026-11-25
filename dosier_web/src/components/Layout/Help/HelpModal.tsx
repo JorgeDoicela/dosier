@@ -1,7 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import {
-    X, Award, Zap, ChevronLeft, ChevronRight, Check, GripHorizontal
-} from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X } from 'lucide-react';
 import type { HelpConfig, DosierRole } from './types';
 import { HELP_MAP, DEFAULT_CONFIG, normalizePathname } from './configs';
 import { useAuth } from '../../../api/AuthContext';
@@ -14,111 +12,134 @@ interface HelpModalProps {
 
 interface LayoutMockupProps {
     highlight: 'sidebar' | 'topbar' | 'content-top' | 'content-bottom' | 'all' | 'none';
-    stepTitle: string;
+    stepLabel: string;
     config: HelpConfig;
 }
 
-const LayoutMockup: React.FC<LayoutMockupProps> = ({ highlight, stepTitle, config }) => {
-    const getPointerStyle = () => {
+const LayoutMockup: React.FC<LayoutMockupProps> = ({ highlight, stepLabel, config }) => {
+    const isDimmed = (zone: 'sidebar' | 'topbar' | 'content-top' | 'content-bottom') => {
+        if (highlight === 'all' || highlight === 'none') return false;
+        return highlight !== zone;
+    };
+
+    const getPointerPos = () => {
         switch (highlight) {
             case 'sidebar':
-                return { left: '12%', top: '55%' };
+                return { left: '22%', top: '38%' };
             case 'topbar':
-                return { left: '60%', top: '15%' };
+                return { left: '60%', top: '19%' };
             case 'content-top':
-                return { left: '55%', top: '35%' };
+                return { left: '61%', top: '33%' };
             case 'content-bottom':
-                return { left: '55%', top: '65%' };
-            case 'all':
-                return { left: '50%', top: '50%' };
+                return { left: '61%', top: '53%' };
             default:
                 return null;
         }
     };
 
-    const pointerPos = getPointerStyle();
+    const pointerPos = getPointerPos();
 
-    const renderContentMockup = () => {
-        const isHighlightTop = highlight === 'content-top';
-        const isHighlightBottom = highlight === 'content-bottom';
-        const highlightTopClass = isHighlightTop
-            ? 'border-[#0070f3] bg-[#0070f3]/10 shadow-[0_0_10px_rgba(0,112,243,0.18)]'
-            : 'border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950';
-        const highlightBottomClass = isHighlightBottom
-            ? 'border-[#0070f3] bg-[#0070f3]/10 shadow-[0_0_10px_rgba(0,112,243,0.18)] border-2'
-            : 'border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950';
+    const highlightTopClass = highlight === 'content-top'
+        ? 'border-[#0070f3] bg-blue-50/50 dark:bg-blue-950/30'
+        : `border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 ${isDimmed('content-top') ? 'opacity-40' : ''}`;
 
-        const MockupComp = config.Mockup || DEFAULT_CONFIG.Mockup;
-        if (MockupComp) {
-            return <MockupComp highlightTopClass={highlightTopClass} highlightBottomClass={highlightBottomClass} />;
-        }
-        return null;
-    };
+    const highlightBottomClass = highlight === 'content-bottom'
+        ? 'border-[#0070f3] bg-blue-50/50 dark:bg-blue-950/30'
+        : `border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 ${isDimmed('content-bottom') ? 'opacity-40' : ''}`;
+
+    const MockupComp = config.Mockup || DEFAULT_CONFIG.Mockup;
 
     return (
-        <div className="relative w-full max-w-[420px] aspect-[16/10] bg-zinc-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 shadow-inner select-none transition-all duration-300">
-            <div className={`w-full h-full flex flex-col gap-1.5 rounded-lg overflow-hidden p-1.5 transition-all duration-300 ${
-                highlight === 'all'
-                    ? 'border-2 border-[#0070f3] bg-white dark:bg-zinc-950'
-                    : 'border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950'
-            }`}>
-                {/* Simulated TopBar */}
-                <div className={`h-8 border rounded-md px-2 flex items-center justify-between transition-all duration-300 ${
-                    highlight === 'topbar'
-                        ? 'border-[#0070f3] bg-[#0070f3]/10 shadow-[0_0_10px_rgba(0,112,243,0.18)]'
-                        : 'border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950'
-                }`}>
-                    <div className="flex items-center gap-1.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-zinc-700" />
-                        <div className="w-12 h-2 rounded bg-slate-200 dark:bg-zinc-700" />
-                    </div>
-                    <div className="w-20 h-2 bg-slate-200 dark:bg-zinc-700 rounded hidden xs:block" />
-                    <div className="flex items-center gap-1.5">
-                        <div className="w-8 h-3 rounded bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700" />
-                        <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-zinc-700" />
-                    </div>
-                </div>
-
-                {/* Simulated Body Grid */}
-                <div className="flex-1 flex gap-1.5 min-h-0">
-                    {/* Simulated Sidebar */}
-                    <div className={`w-[22%] rounded-md border p-1.5 flex flex-col justify-between transition-all duration-300 ${
-                        highlight === 'sidebar'
-                            ? 'border-[#0070f3] bg-[#0070f3]/10 shadow-[0_0_10px_rgba(0,112,243,0.18)]'
-                            : 'border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950'
+        <div className="w-full max-w-[500px] space-y-3 select-none">
+            <div
+                data-testid="help-mockup-frame"
+                className={`relative w-full aspect-[16/10] bg-white dark:bg-zinc-950 border rounded-xl p-3 shadow-xs transition-colors duration-300 ${
+                    highlight === 'all'
+                        ? 'border-[#0070f3]'
+                        : 'border-slate-200 dark:border-zinc-800'
+                }`}
+            >
+                <div className="w-full h-full flex flex-col gap-1.5">
+                    {/* Simulated TopBar (100% sin palabras) */}
+                    <div className={`h-7 border rounded-md px-2 flex items-center justify-between transition-all duration-300 ${
+                        highlight === 'topbar'
+                            ? 'border-[#0070f3] bg-blue-50/50 dark:bg-blue-950/30'
+                            : `border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 ${isDimmed('topbar') ? 'opacity-40' : ''}`
                     }`}>
-                        <div className="space-y-1.5">
-                            <div className="w-8 h-2.5 bg-slate-300 dark:bg-zinc-600 rounded-sm mx-auto mb-2" />
-                            <div className={`w-full h-2 rounded-sm ${highlight === 'sidebar' ? 'bg-[#0070f3]' : 'bg-slate-200 dark:bg-zinc-700'}`} />
-                            <div className="w-4/5 h-2 bg-slate-100 dark:bg-zinc-800 rounded-sm" />
-                            <div className="w-full h-2 bg-slate-100 dark:bg-zinc-800 rounded-sm" />
-                            <div className="w-3/5 h-2 bg-slate-100 dark:bg-zinc-800 rounded-sm" />
+                        <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-xs bg-[#0070f3]" />
+                            <span className="w-8 h-1.5 rounded-full bg-slate-300 dark:bg-zinc-600" />
                         </div>
-                        <div className="w-full h-2.5 bg-slate-200 dark:bg-zinc-800 rounded-sm" />
+                        <div className="w-24 h-3.5 rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-1.5 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full border border-slate-400 dark:border-zinc-500" />
+                            <span className="w-10 h-1 rounded-full bg-slate-200 dark:bg-zinc-700" />
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="relative w-3 h-3 rounded-full bg-slate-200 dark:bg-zinc-700">
+                                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[#0070f3]" />
+                            </span>
+                            <span className="w-3.5 h-3.5 rounded-full bg-[#0070f3]/20 border border-[#0070f3]/40" />
+                        </div>
                     </div>
 
-                    {/* Simulated Main Content Workspace */}
-                    <div className="flex-1 flex flex-col gap-1.5 min-h-0">
-                        {renderContentMockup()}
+                    {/* Simulated Body Grid */}
+                    <div className="flex-1 flex gap-1.5 min-h-0">
+                        {/* Simulated Sidebar (100% sin palabras) */}
+                        <div className={`w-[22%] rounded-md border p-1.5 flex flex-col justify-between transition-all duration-300 ${
+                            highlight === 'sidebar'
+                                ? 'border-[#0070f3] bg-blue-50/50 dark:bg-blue-950/30'
+                                : `border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 ${isDimmed('sidebar') ? 'opacity-40' : ''}`
+                        }`}>
+                            <div className="space-y-1.5">
+                                <div className="flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-xs bg-[#0070f3] shrink-0" />
+                                    <span className="flex-1 h-1.5 rounded-full bg-[#0070f3]" />
+                                </div>
+                                {[1, 2, 3, 4].map((item) => (
+                                    <div key={item} className="flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-xs bg-slate-300 dark:bg-zinc-700 shrink-0" />
+                                        <span className={`h-1.5 rounded-full bg-slate-200 dark:bg-zinc-800 ${item % 2 === 0 ? 'w-3/4' : 'w-full'}`} />
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex items-center gap-1 pt-1 border-t border-slate-200/70 dark:border-zinc-800">
+                                <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-zinc-700 shrink-0" />
+                                <span className="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-zinc-800" />
+                            </div>
+                        </div>
+
+                        {/* Simulated Main Content Workspace */}
+                        <div className="flex-1 flex flex-col gap-1.5 min-h-0 min-w-0">
+                            {MockupComp ? (
+                                <MockupComp
+                                    highlightTopClass={highlightTopClass}
+                                    highlightBottomClass={highlightBottomClass}
+                                />
+                            ) : null}
+                        </div>
                     </div>
                 </div>
+
+                {/* Spotlight Pointer */}
+                {pointerPos && (
+                    <div
+                        style={{ left: pointerPos.left, top: pointerPos.top }}
+                        className="absolute z-20 -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-all duration-500 ease-out"
+                    >
+                        <div className="relative flex items-center justify-center">
+                            <span className="animate-ping absolute inline-flex h-6 w-6 rounded-full bg-[#0070f3] opacity-50" />
+                            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-[#0070f3] border-2 border-white shadow-md" />
+                        </div>
+                    </div>
+                )}
             </div>
 
-            {/* Dynamic Animated Pointer */}
-            {pointerPos && (
-                <div
-                    style={{ left: pointerPos.left, top: pointerPos.top }}
-                    className="absolute z-20 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none transition-all duration-500 ease-out"
-                >
-                    <div className="relative flex items-center justify-center">
-                        <span className="animate-ping absolute inline-flex h-6 w-6 rounded-full bg-[#0070f3] opacity-60" />
-                        <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-[#0070f3] border-2 border-white shadow-md" />
-                    </div>
-                    <div className="mt-1 bg-zinc-950 text-[10px] font-mono font-semibold tracking-wide text-white px-2 py-0.5 rounded shadow-lg border border-zinc-700 whitespace-nowrap animate-fade-in">
-                        {stepTitle}
-                    </div>
-                </div>
-            )}
+            {/* Clean Visual Caption */}
+            <div className="flex items-center justify-center text-xs text-slate-500 dark:text-zinc-400">
+                <span className="font-medium text-slate-700 dark:text-zinc-300 truncate">
+                    {stepLabel}
+                </span>
+            </div>
         </div>
     );
 };
@@ -136,18 +157,6 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname 
 
     const normalizedPathname = normalizePathname(pathname);
     const [currentStep, setCurrentStep] = useState(0);
-    const [direction, setDirection] = useState<'next' | 'prev'>('next');
-
-    // Estado para ventana movible (arrastrable desde la cabecera)
-    const [offset, setOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-    const [isDragging, setIsDragging] = useState(false);
-    const modalRef = useRef<HTMLDivElement>(null);
-    const dragStartRef = useRef<{
-        pointerX: number;
-        pointerY: number;
-        startX: number;
-        startY: number;
-    } | null>(null);
 
     const primaryRole = useMemo<DosierRole>(() => {
         if (activeRole === 'DOSIER_ADMIN') return 'admin';
@@ -205,8 +214,6 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname 
     useEffect(() => {
         if (isOpen) {
             setCurrentStep(0);
-            setDirection('next');
-            setOffset({ x: 0, y: 0 });
         }
     }, [normalizedPathname, isOpen]);
 
@@ -225,102 +232,30 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname 
             if (e.key === 'Escape') {
                 e.preventDefault();
                 onClose();
-            } else if (e.key === 'ArrowRight') {
+            } else if (e.key === 'ArrowRight' && currentStep < totalSteps - 1) {
                 e.preventDefault();
-                if (currentStep < totalSteps - 1) {
-                    setDirection('next');
-                    setCurrentStep(prev => prev + 1);
-                }
-            } else if (e.key === 'ArrowLeft') {
+                setCurrentStep(prev => prev + 1);
+            } else if (e.key === 'ArrowLeft' && currentStep > 0) {
                 e.preventDefault();
-                if (currentStep > 0) {
-                    setDirection('prev');
-                    setCurrentStep(prev => prev - 1);
-                }
+                setCurrentStep(prev => prev - 1);
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isOpen, currentStep, totalSteps, onClose]);
 
-    const handleHeaderPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-        if (e.button !== 0) return;
-        dragStartRef.current = {
-            pointerX: e.clientX,
-            pointerY: e.clientY,
-            startX: offset.x,
-            startY: offset.y
-        };
-        setIsDragging(true);
-    }, [offset.x, offset.y]);
-
-    useEffect(() => {
-        if (!isDragging) return;
-
-        const handlePointerMove = (e: PointerEvent) => {
-            if (!dragStartRef.current) return;
-            const dx = e.clientX - dragStartRef.current.pointerX;
-            const dy = e.clientY - dragStartRef.current.pointerY;
-
-            const modalEl = modalRef.current;
-            const maxOffsetX = modalEl
-                ? Math.max(80, (window.innerWidth - modalEl.offsetWidth) / 2 + modalEl.offsetWidth * 0.25)
-                : 300;
-            const maxOffsetY = modalEl
-                ? Math.max(60, (window.innerHeight - modalEl.offsetHeight) / 2 + modalEl.offsetHeight * 0.2)
-                : 200;
-
-            const nextX = Math.min(maxOffsetX, Math.max(-maxOffsetX, dragStartRef.current.startX + dx));
-            const nextY = Math.min(maxOffsetY, Math.max(-maxOffsetY, dragStartRef.current.startY + dy));
-            setOffset({ x: nextX, y: nextY });
-        };
-
-        const handlePointerUp = () => {
-            setIsDragging(false);
-            dragStartRef.current = null;
-        };
-
-        window.addEventListener('pointermove', handlePointerMove);
-        window.addEventListener('pointerup', handlePointerUp);
-        return () => {
-            window.removeEventListener('pointermove', handlePointerMove);
-            window.removeEventListener('pointerup', handlePointerUp);
-        };
-    }, [isDragging]);
-
     if (!isOpen) return null;
-
-    const handleNext = () => {
-        if (currentStep < totalSteps - 1) {
-            setDirection('next');
-            setCurrentStep(prev => prev + 1);
-        }
-    };
-
-    const handlePrev = () => {
-        if (currentStep > 0) {
-            setDirection('prev');
-            setCurrentStep(prev => prev - 1);
-        }
-    };
-
-    const handleDotClick = (index: number) => {
-        setDirection(index > currentStep ? 'next' : 'prev');
-        setCurrentStep(index);
-    };
 
     const getActiveHighlight = () => {
         if (currentStep === 0) return 'all';
         if (currentStep === totalSteps - 1) return 'none';
-        const stepIdx = currentStep - 1;
-        return config.steps[stepIdx]?.highlight || 'none';
+        return config.steps[currentStep - 1]?.highlight || 'none';
     };
 
     const getActiveStepLabel = () => {
-        if (currentStep === 0) return 'Visión General';
-        if (currentStep === totalSteps - 1) return 'Normativa CACES';
-        const stepIdx = currentStep - 1;
-        return config.steps[stepIdx]?.title || 'Paso';
+        if (currentStep === 0) return 'Vista general del módulo';
+        if (currentStep === totalSteps - 1) return 'Recomendaciones y normativa';
+        return config.steps[currentStep - 1]?.title || 'Detalle';
     };
 
     return (
@@ -328,196 +263,126 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname 
             className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
             role="dialog"
             aria-modal="true"
-            aria-label={`Guía Interactiva: ${config.title}`}
+            aria-label={`Guía: ${config.title}`}
         >
-            {/* Overlay Sólido */}
             <div
-                className="absolute inset-0 bg-black/55 dark:bg-black/75 cursor-pointer animate-fade-in"
+                className="absolute inset-0 bg-black/55 dark:bg-black/75 cursor-pointer"
                 onClick={onClose}
             />
 
-            {/* Modal Dialog Card (Movible desde cabecera) */}
-            <div
-                ref={modalRef}
-                style={{ transform: `translate3d(${offset.x}px, ${offset.y}px, 0)` }}
-                className={`relative w-full max-w-3xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl flex flex-col z-10 overflow-hidden max-h-[90vh] ${
-                    isDragging ? 'transition-none' : 'transition-transform duration-150 ease-out animate-scale-up'
-                }`}
-            >
-                {/* Header Movible */}
-                <div
-                    onPointerDown={handleHeaderPointerDown}
-                    onDoubleClick={() => setOffset({ x: 0, y: 0 })}
-                    className={`flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shrink-0 select-none ${
-                        isDragging ? 'cursor-grabbing' : 'cursor-grab'
-                    }`}
-                    title="Arrastra para mover la guía (doble clic para centrar)"
-                >
-                    <div className="flex items-center gap-3">
-                        <span className="text-[#0070f3] shrink-0">
-                            {config.icon}
-                        </span>
-                        <div>
-                            <div className="flex items-center gap-2 mb-0.5">
-                                <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100">
-                                    DOSIER
-                                </span>
-                                <span className="text-slate-400 dark:text-zinc-600">/</span>
-                                <span className="text-[11px] font-mono text-slate-500 dark:text-zinc-400">
-                                    Guía del Módulo
-                                </span>
-                                {roleDisplayName && (
-                                    <span className="text-[11px] font-mono text-slate-500 dark:text-zinc-400">
-                                        ({roleDisplayName})
-                                    </span>
-                                )}
-                            </div>
-                            <h3 className="text-xs font-semibold tracking-tight text-slate-900 dark:text-zinc-100 font-sans">
-                                {config.title}
-                            </h3>
-                        </div>
+            <div className="relative w-full max-w-4xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl flex flex-col z-10 overflow-hidden max-h-[90vh]">
+                {/* Header */}
+                <div className="flex items-center justify-between gap-4 px-7 pt-6 pb-2 bg-white dark:bg-zinc-950 shrink-0">
+                    <div className="min-w-0">
+                        <h3 className="text-base font-bold tracking-tight text-slate-900 dark:text-zinc-100 leading-snug">
+                            {config.title}
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                            {roleDisplayName ? `Guía · ${roleDisplayName}` : 'Guía del módulo'}
+                        </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <GripHorizontal size={15} className="text-slate-400 dark:text-zinc-500 hidden sm:block" aria-hidden="true" />
-                        <button
-                            type="button"
-                            onPointerDown={(e) => e.stopPropagation()}
-                            onClick={onClose}
-                            className="p-1.5 rounded-md text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-200/70 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                            title="Cerrar Guía"
-                            aria-label="Cerrar Guía"
-                        >
-                            <X size={16} />
-                        </button>
-                    </div>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="p-1.5 rounded-md text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
+                        title="Cerrar Guía"
+                        aria-label="Cerrar Guía"
+                    >
+                        <X size={18} />
+                    </button>
                 </div>
 
-                {/* Two-Column Body Grid */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar relative min-h-[380px] flex flex-col md:flex-row border-b border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-                    {/* Left Column: Explanations & Text Wizard */}
-                    <div className="w-full md:w-[45%] p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-                        <div
-                            key={`${normalizedPathname}-${currentStep}`}
-                            className={`flex-1 flex flex-col justify-center ${
-                                direction === 'next' ? 'animate-slide-in-from-right' : 'animate-slide-in-from-left'
-                            }`}
-                        >
-                            {currentStep === 0 && (
-                                <div className="space-y-3.5 py-1">
-                                    <div className="text-[#0070f3]">
-                                        {config.icon}
-                                    </div>
-                                    <div className="space-y-0.5">
-                                        <span className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">
-                                            Introducción
-                                        </span>
-                                        <h4 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 tracking-tight">
-                                            {config.title}
-                                        </h4>
-                                    </div>
-                                    <p className="text-xs font-medium text-slate-800 dark:text-zinc-200 leading-snug">
-                                        {config.summary}
-                                    </p>
-                                    <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
-                                        {config.description}
+                {/* Cuerpo paginado para lectura dosificada */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[380px] flex flex-col md:flex-row bg-white dark:bg-zinc-950">
+                    <div className="w-full md:w-[42%] p-7 flex flex-col justify-center bg-white dark:bg-zinc-950">
+                        {currentStep === 0 && (
+                            <div className="space-y-3.5">
+                                <p className="text-sm font-semibold text-slate-900 dark:text-zinc-100 leading-relaxed">
+                                    {config.summary}
+                                </p>
+                                <p className="text-[13px] text-slate-600 dark:text-zinc-400 leading-relaxed">
+                                    {config.description}
+                                </p>
+                            </div>
+                        )}
+
+                        {currentStep > 0 && currentStep <= config.steps.length && (() => {
+                            const step = config.steps[currentStep - 1];
+                            return (
+                                <div className="space-y-3">
+                                    <h4 className="text-base font-semibold text-slate-900 dark:text-zinc-100 tracking-tight">
+                                        {step.title}
+                                    </h4>
+                                    <p className="text-[13px] text-slate-600 dark:text-zinc-400 leading-relaxed">
+                                        {step.description}
                                     </p>
                                 </div>
-                            )}
+                            );
+                        })()}
 
-                            {currentStep > 0 && currentStep <= config.steps.length && (() => {
-                                const stepIdx = currentStep - 1;
-                                const step = config.steps[stepIdx];
-                                return (
-                                    <div className="space-y-3.5 py-1">
-                                        <div className="w-7 h-7 rounded-full bg-[#0070f3] text-white flex items-center justify-center text-xs font-mono font-semibold">
-                                            {currentStep}
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <span className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">
-                                                Paso {currentStep} de {config.steps.length}
-                                            </span>
-                                            <h4 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 tracking-tight">
-                                                {step.title}
-                                            </h4>
-                                        </div>
-                                        <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
-                                            {step.description}
-                                        </p>
-                                    </div>
-                                );
-                            })()}
-
-                            {currentStep === totalSteps - 1 && (
-                                <div className="space-y-4 py-1">
-                                    <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 flex items-start gap-2.5">
-                                        <Award size={15} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                                        <div className="space-y-0.5">
-                                            <h5 className="text-xs font-semibold text-slate-900 dark:text-zinc-100">
-                                                Cumplimiento CACES
-                                            </h5>
-                                            <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
-                                                {config.compliance}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <h5 className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider border-b border-slate-200 dark:border-zinc-800 pb-1">
-                                            Recomendaciones Operativas
-                                        </h5>
-                                        <ul className="space-y-1.5">
+                        {currentStep === totalSteps - 1 && (
+                            <div className="space-y-4">
+                                {config.tips.length > 0 && (
+                                    <div className="space-y-2.5">
+                                        <span className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">
+                                            Recomendaciones
+                                        </span>
+                                        <ul className="space-y-2">
                                             {config.tips.map((tip, idx) => (
-                                                <li key={idx} className="flex items-start gap-2 text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed">
-                                                    <Zap size={12} className="text-amber-500 shrink-0 mt-0.5" />
+                                                <li key={idx} className="flex items-start gap-2.5 text-[13px] text-slate-600 dark:text-zinc-400 leading-relaxed">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3] mt-2 shrink-0" />
                                                     <span>{typeof tip === 'string' ? tip : tip.text}</span>
                                                 </li>
                                             ))}
                                         </ul>
                                     </div>
-                                </div>
-                            )}
-                        </div>
+                                )}
+
+                                {config.compliance && (
+                                    <div className="flex items-start gap-2 pt-1 text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                                        <span>{config.compliance}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
-                    {/* Right Column: Interactive UI Mockup Simulator */}
-                    <div className="w-full md:w-[55%] p-6 bg-zinc-50 dark:bg-zinc-900 flex flex-col justify-center items-center select-none">
+                    <div className="w-full md:w-[58%] p-7 bg-white dark:bg-zinc-950 flex flex-col justify-center items-center">
                         <LayoutMockup
                             highlight={getActiveHighlight()}
-                            stepTitle={getActiveStepLabel()}
+                            stepLabel={getActiveStepLabel()}
                             config={config}
                         />
                     </div>
                 </div>
 
-                {/* Footer Controls */}
-                <div className="px-6 py-3.5 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-between shrink-0">
+                {/* Footer con Atrás / Siguiente */}
+                <div className="px-7 py-5 bg-white dark:bg-zinc-950 flex items-center justify-between shrink-0">
                     <button
                         type="button"
-                        onClick={handlePrev}
+                        onClick={() => currentStep > 0 && setCurrentStep(prev => prev - 1)}
                         disabled={currentStep === 0}
-                        className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium rounded-lg bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer ${
+                        className={`px-4 py-2 text-xs font-medium rounded-lg bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-colors cursor-pointer ${
                             currentStep === 0 ? 'opacity-30 pointer-events-none' : ''
                         }`}
-                        title="Paso Anterior"
                     >
-                        <ChevronLeft size={14} />
-                        <span>Atrás</span>
+                        Atrás
                     </button>
 
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                         {Array.from({ length: totalSteps }).map((_, idx) => (
                             <button
                                 key={idx}
                                 type="button"
-                                onClick={() => handleDotClick(idx)}
+                                onClick={() => setCurrentStep(idx)}
                                 className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                                     idx === currentStep
-                                        ? 'w-5 bg-[#0070f3]'
+                                        ? 'w-6 bg-[#0070f3]'
                                         : 'w-1.5 bg-slate-300 dark:bg-zinc-700 hover:bg-slate-400 dark:hover:bg-zinc-600'
                                 }`}
-                                title={`Ir a la diapositiva ${idx + 1}`}
-                                aria-label={`Paso ${idx + 1}`}
+                                aria-label={`Página ${idx + 1}`}
                             />
                         ))}
                     </div>
@@ -526,21 +391,17 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname 
                         <button
                             type="button"
                             onClick={onClose}
-                            className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] transition-colors cursor-pointer"
-                            title="Finalizar Guía"
+                            className="px-5 py-2 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] transition-colors cursor-pointer"
                         >
-                            <span>Entendido</span>
-                            <Check size={14} />
+                            Entendido
                         </button>
                     ) : (
                         <button
                             type="button"
-                            onClick={handleNext}
-                            className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] transition-colors cursor-pointer"
-                            title="Siguiente Paso"
+                            onClick={() => setCurrentStep(prev => prev + 1)}
+                            className="px-5 py-2 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] transition-colors cursor-pointer"
                         >
-                            <span>Siguiente</span>
-                            <ChevronRight size={14} />
+                            Siguiente
                         </button>
                     )}
                 </div>
