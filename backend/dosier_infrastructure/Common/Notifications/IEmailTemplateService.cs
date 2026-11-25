@@ -12,6 +12,6 @@ namespace dosier_infrastructure.Common.Notifications
         Task<EmailTemplateDto> CreateTemplateAsync(EmailTemplateDto dto);
         Task<EmailTemplateDto> UpdateTemplateAsync(EmailTemplateDto dto);
         Task DeleteTemplateAsync(int id);
-        Task<IEnumerable<EmailHistorialDto>> GetEmailHistoryAsync(int limit = 100);
+        Task<IEnumerable<EmailHistorialDto>> GetEmailHistoryAsync(int limit = 100, int? filterBySenderUserId = null);
     }
 }

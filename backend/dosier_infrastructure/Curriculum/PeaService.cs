@@ -471,6 +471,10 @@ namespace dosier_infrastructure.Curriculum
             entity.ActividadesPracticas = dto.ActividadesPracticas.Select(p => new DocPeaActividadPractica
             {
                 Uuid = Guid.NewGuid().ToString(),
+                IdUnidad = p.IdUnidad,
+                UnidadesReferencia = string.IsNullOrWhiteSpace(p.UnidadesReferencia)
+                    ? null
+                    : (p.UnidadesReferencia.Trim().Length > 50 ? p.UnidadesReferencia.Trim().Substring(0, 50) : p.UnidadesReferencia.Trim()),
                 NumeroPractica = p.NumeroPractica,
                 NombrePractica = p.NombrePractica,
                 Caracterizacion = p.Caracterizacion,
@@ -737,7 +741,7 @@ namespace dosier_infrastructure.Curriculum
             await RegistrarTrazabilidadAsync(idPea, estadoAnterior, nuevoEstado, motivo ?? $"Transición de estado a {nuevoEstado}", hashSha256, idUserInt);
 
             // Notificación e Hitos de Correo Electrónico Institucional
-            await NotificarHitoWorkflowPeaAsync(entity, estadoAnterior, nuevoEstado, motivo);
+            await NotificarHitoWorkflowPeaAsync(entity, estadoAnterior, nuevoEstado, motivo, idUserInt);
 
             return true;
         }
@@ -1125,7 +1129,7 @@ namespace dosier_infrastructure.Curriculum
             string verificationUrl = _appUrlService.BuildFrontendUrl($"/verificacion/{firmaCode}");
 
             // Notificación e Hitos de Correo Electrónico tras firma institucional
-            await NotificarHitoWorkflowPeaAsync(pea, estadoAnterior, estadoNuevo, dto.Motivo);
+            await NotificarHitoWorkflowPeaAsync(pea, estadoAnterior, estadoNuevo, dto.Motivo, idUsuario);
 
             return new PeaFirmaResultadoDto
             {
@@ -1273,7 +1277,7 @@ namespace dosier_infrastructure.Curriculum
                     await RegistrarTrazabilidadAsync(obs.IdPea, "Observado", "Corregido", "Todas las observaciones fueron subsanadas por el docente", null, idUsuario);
                     await _context.SaveChangesAsync();
 
-                    await NotificarHitoWorkflowPeaAsync(pea, "Observado", "Corregido", "Todas las observaciones fueron subsanadas por el docente");
+                    await NotificarHitoWorkflowPeaAsync(pea, "Observado", "Corregido", "Todas las observaciones fueron subsanadas por el docente", idUsuario);
                 }
             }
 
@@ -1320,7 +1324,7 @@ namespace dosier_infrastructure.Curriculum
                     await RegistrarTrazabilidadAsync(idPea, "Observado", "EnRevision", "Observación eliminada sin pendientes restantes. Retorno a EnRevision.", null, idUsuario);
                     await _context.SaveChangesAsync();
 
-                    await NotificarHitoWorkflowPeaAsync(pea, "Observado", "EnRevision", "Observaciones eliminadas sin pendientes. Retorno a EnRevision.");
+                    await NotificarHitoWorkflowPeaAsync(pea, "Observado", "EnRevision", "Observaciones eliminadas sin pendientes. Retorno a EnRevision.", idUsuario);
                 }
             }
 
@@ -1526,7 +1530,8 @@ namespace dosier_infrastructure.Curriculum
             DocPea pea, 
             string estadoAnterior, 
             string estadoNuevo, 
-            string? motivo = null, 
+            string? motivo = null,
+            int? idUsuarioActor = null,
             CancellationToken cancellationToken = default)
         {
             if (string.Equals(estadoAnterior, estadoNuevo, StringComparison.OrdinalIgnoreCase))
@@ -1615,7 +1620,8 @@ namespace dosier_infrastructure.Curriculum
                         string mensaje = $"El docente {nombreDocente} ha remitido a revisión curricular el PEA de '{nombreAsignatura}' ({nombreCarrera}). Se requiere la revisión colegiada y aprobación de Carrera.";
 
                         var destinatarios = destinatariosCoord.Concat(adminUsers)
-                            .Where(u => userDocente == null || u.IdUsuario != userDocente.IdUsuario)
+                            .Where(u => (userDocente == null || u.IdUsuario != userDocente.IdUsuario) &&
+                                        (!idUsuarioActor.HasValue || u.IdUsuario != idUsuarioActor.Value))
                             .DistinctBy(u => u.IdUsuario);
 
                         foreach (var dest in destinatarios)
@@ -1650,8 +1656,8 @@ namespace dosier_infrastructure.Curriculum
                             (string.IsNullOrWhiteSpace(motivo) ? "" : $" Requerimiento: {motivo}.") +
                             " Ingrese al editor microcurricular para subsanar los puntos observados.";
 
-                        // Notificar al docente titular para que subsane en el editor
-                        if (userDocente != null)
+                        // Notificar al docente titular para que subsane en el editor (nunca auto-notificar al actor)
+                        if (userDocente != null && (!idUsuarioActor.HasValue || userDocente.IdUsuario != idUsuarioActor.Value))
                         {
                             await notifService.NotifyUserAsync(
                                 userDocente.IdUsuario,
@@ -1662,16 +1668,22 @@ namespace dosier_infrastructure.Curriculum
                                 new Dictionary<string, string>(baseExtraData));
                         }
 
-                        // Notificar a los coordinadores de carrera para seguimiento en mesa de revisión
-                        foreach (var dest in destinatariosCoord.Where(u => userDocente == null || u.IdUsuario != userDocente.IdUsuario))
+                        // Notificar a los coordinadores de carrera únicamente cuando es devolución desde Coordinación Académica,
+                        // evitando notificar al coordinador que acaba de emitir la observación al docente.
+                        if (esDevolucionAcademica)
                         {
-                            await notifService.NotifyUserAsync(
-                                dest.IdUsuario,
-                                titulo,
-                                mensaje,
-                                "CURRICULUM",
-                                urlRevisionTecnica,
-                                new Dictionary<string, string>(baseExtraData));
+                            foreach (var dest in destinatariosCoord.Where(u =>
+                                (userDocente == null || u.IdUsuario != userDocente.IdUsuario) &&
+                                (!idUsuarioActor.HasValue || u.IdUsuario != idUsuarioActor.Value)))
+                            {
+                                await notifService.NotifyUserAsync(
+                                    dest.IdUsuario,
+                                    titulo,
+                                    mensaje,
+                                    "CURRICULUM",
+                                    urlRevisionTecnica,
+                                    new Dictionary<string, string>(baseExtraData));
+                            }
                         }
                         break;
                     }
@@ -1685,7 +1697,8 @@ namespace dosier_infrastructure.Curriculum
                         string mensaje = $"El docente {nombreDocente} ha subsanado las observaciones del PEA de '{nombreAsignatura}' ({nombreCarrera}). El instrumento está disponible para su verificación y aprobación de Carrera.";
 
                         var destinatarios = destinatariosCoord.Concat(adminUsers)
-                            .Where(u => userDocente == null || u.IdUsuario != userDocente.IdUsuario)
+                            .Where(u => (userDocente == null || u.IdUsuario != userDocente.IdUsuario) &&
+                                        (!idUsuarioActor.HasValue || u.IdUsuario != idUsuarioActor.Value))
                             .DistinctBy(u => u.IdUsuario);
 
                         foreach (var dest in destinatarios)
@@ -1725,7 +1738,8 @@ namespace dosier_infrastructure.Curriculum
                         string mensajeAutoridades = $"El PEA de '{nombreAsignatura}' ({nombreCarrera}) cuenta con la Aprobación de Carrera emitida y se encuentra listo para validación institucional y firma de aprobación por Vicerrectorado.";
 
                         var destinatariosAcad = autoridadesAcad.Concat(adminUsers)
-                            .Where(u => userDocente == null || u.IdUsuario != userDocente.IdUsuario)
+                            .Where(u => (userDocente == null || u.IdUsuario != userDocente.IdUsuario) &&
+                                        (!idUsuarioActor.HasValue || u.IdUsuario != idUsuarioActor.Value))
                             .DistinctBy(u => u.IdUsuario);
 
                         foreach (var dest in destinatariosAcad)
@@ -1759,7 +1773,9 @@ namespace dosier_infrastructure.Curriculum
                                 new Dictionary<string, string>(baseExtraData));
                         }
 
-                        foreach (var dest in destinatariosCoord.Where(u => userDocente == null || u.IdUsuario != userDocente.IdUsuario))
+                        foreach (var dest in destinatariosCoord.Where(u =>
+                            (userDocente == null || u.IdUsuario != userDocente.IdUsuario) &&
+                            (!idUsuarioActor.HasValue || u.IdUsuario != idUsuarioActor.Value)))
                         {
                             await notifService.NotifyUserAsync(
                                 dest.IdUsuario,
@@ -1791,7 +1807,8 @@ namespace dosier_infrastructure.Curriculum
                         }
 
                         var destinatarios = destinatariosCoord.Concat(adminUsers).Concat(autoridadesAcad)
-                            .Where(u => userDocente == null || u.IdUsuario != userDocente.IdUsuario)
+                            .Where(u => (userDocente == null || u.IdUsuario != userDocente.IdUsuario) &&
+                                        (!idUsuarioActor.HasValue || u.IdUsuario != idUsuarioActor.Value))
                             .DistinctBy(u => u.IdUsuario);
 
                         foreach (var dest in destinatarios)
@@ -2094,6 +2111,7 @@ namespace dosier_infrastructure.Curriculum
                     Uuid = p.Uuid,
                     IdPea = p.IdPea,
                     IdUnidad = p.IdUnidad,
+                    UnidadesReferencia = p.UnidadesReferencia,
                     NumeroPractica = p.NumeroPractica,
                     NombrePractica = p.NombrePractica,
                     Caracterizacion = p.Caracterizacion,
@@ -2456,8 +2474,12 @@ namespace dosier_infrastructure.Curriculum
                     int prIdx = 1;
                     foreach (var prEl in apProp.EnumerateArray())
                     {
+                        string unidadRef = "";
+                        if (SafeTryGetProperty(prEl, new[] { "unidad", "Unidad", "unidadesReferencia", "UnidadesReferencia", "unidades_referencia", "0" }, out var unP))
+                            unidadRef = SafeParseString(unP).Trim();
+
                         string nombre = "";
-                        if (SafeTryGetProperty(prEl, new[] { "nombre", "Nombre", "NombrePractica", "nombre_practica", "nombrePractica", "descripcion", "1" }, out var nmP))
+                        if (SafeTryGetProperty(prEl, new[] { "nombre", "Nombre", "NombrePractica", "nombre_practica", "nombrePractica", "nombre_caracterizacion", "NombreCaracterizacion", "descripcion", "1" }, out var nmP))
                             nombre = SafeParseString(nmP);
 
                         decimal horas = 2m;
@@ -2483,10 +2505,31 @@ namespace dosier_infrastructure.Curriculum
 
                         if (!string.IsNullOrWhiteSpace(nombre))
                         {
+                            string? normalizedRef = string.IsNullOrWhiteSpace(unidadRef)
+                                ? null
+                                : (unidadRef.Length > 50 ? unidadRef.Substring(0, 50) : unidadRef);
+
+                            // Enlazar FK idUnidad únicamente cuando la práctica corresponde a una sola unidad existente
+                            int? resolvedIdUnidad = null;
+                            if (!string.IsNullOrWhiteSpace(normalizedRef))
+                            {
+                                var numMatches = System.Text.RegularExpressions.Regex.Matches(normalizedRef, @"\d+");
+                                if (numMatches.Count == 1 && int.TryParse(numMatches[0].Value, out int singleUnitNum))
+                                {
+                                    var matchedUnit = entity.Unidades.FirstOrDefault(u => u.NumeroUnidad == singleUnitNum && u.IdUnidad > 0);
+                                    if (matchedUnit != null)
+                                    {
+                                        resolvedIdUnidad = matchedUnit.IdUnidad;
+                                    }
+                                }
+                            }
+
                             entity.ActividadesPracticas.Add(new DocPeaActividadPractica
                             {
                                 Uuid = Guid.NewGuid().ToString(),
                                 IdPea = entity.IdPea,
+                                IdUnidad = resolvedIdUnidad,
+                                UnidadesReferencia = normalizedRef,
                                 NumeroPractica = prIdx,
                                 NombrePractica = nombre,
                                 Caracterizacion = caracterizacion,

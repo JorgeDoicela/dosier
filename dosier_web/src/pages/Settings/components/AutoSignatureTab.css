@@ -105,11 +105,4 @@
     .font-delafield {
         font-family: 'Mrs Saint Delafield', cursive;
     }
-
-    /* Input del nombre de firma más grande y visible */
-    #sig-auto-text {
-        padding: 10px 14px;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
 }

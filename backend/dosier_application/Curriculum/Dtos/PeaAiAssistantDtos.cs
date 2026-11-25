@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace dosier_application.Curriculum.Dtos
 {
@@ -26,14 +27,18 @@ namespace dosier_application.Curriculum.Dtos
 
     public class PeaAiChatMessageDto
     {
+        [Required(AllowEmptyStrings = true)]
         public string Role { get; set; } = "user"; // "user" | "assistant"
+
+        [Required(AllowEmptyStrings = true)]
         public string Content { get; set; } = string.Empty;
     }
 
     public class GeneratePeaDraftRequestDto
     {
+        [Required(AllowEmptyStrings = true)]
         public string TargetSection { get; set; } = "all";
-        public List<string> TargetSections { get; set; } = new();
+        public List<string>? TargetSections { get; set; } = new();
         public string? CustomInstructions { get; set; }
         public string? Provider { get; set; }
         public string? Model { get; set; }
@@ -56,7 +61,7 @@ namespace dosier_application.Curriculum.Dtos
         public List<PeaDraftBibliografiaDto>? CurrentBibliografias { get; set; }
         public string? CurrentBibliografiaBasica { get; set; }
         public string? CurrentBibliografiaConsulta { get; set; }
-        public List<PeaAiChatMessageDto> ConversationHistory { get; set; } = new();
+        public List<PeaAiChatMessageDto>? ConversationHistory { get; set; } = new();
     }
 
     public class ImportPeaDocumentRequestDto
@@ -106,15 +111,23 @@ namespace dosier_application.Curriculum.Dtos
 
     public class PeaDraftPrerrequisitoDto
     {
+        [Required(AllowEmptyStrings = true)]
         public string Asignatura { get; set; } = string.Empty;
+
+        [Required(AllowEmptyStrings = true)]
         public string Observacion { get; set; } = string.Empty;
     }
 
     public class PeaDraftUnidadDto
     {
         public int Num { get; set; }
+
+        [Required(AllowEmptyStrings = true)]
         public string Titulo { get; set; } = string.Empty;
+
+        [Required(AllowEmptyStrings = true)]
         public string Contenidos { get; set; } = string.Empty;
+
         public decimal HorasCD { get; set; }
         public decimal HorasAPE { get; set; }
         public decimal HorasTA { get; set; }
@@ -125,26 +138,48 @@ namespace dosier_application.Curriculum.Dtos
     {
         public int Unidad { get; set; }
         public string? UnidadTexto { get; set; }
+
+        [Required(AllowEmptyStrings = true)]
         public string Nombre { get; set; } = string.Empty;
+
         public decimal Horas { get; set; } = 2m;
+
+        [Required(AllowEmptyStrings = true)]
         public string Escenario { get; set; } = string.Empty;
+
+        [Required(AllowEmptyStrings = true)]
         public string Producto { get; set; } = string.Empty;
+
+        [Required(AllowEmptyStrings = true)]
         public string Caracterizacion { get; set; } = string.Empty;
     }
 
     public class PeaDraftEvaluacionDto
     {
+        [Required(AllowEmptyStrings = true)]
         public string Nota { get; set; } = string.Empty;
+
+        [Required(AllowEmptyStrings = true)]
         public string Tipo { get; set; } = string.Empty;
+
         public decimal Calificacion { get; set; } = 10m;
     }
 
     public class PeaDraftBibliografiaDto
     {
+        [Required(AllowEmptyStrings = true)]
         public string TipoBibliografia { get; set; } = "Basica"; // "Basica" | "Consulta"
+
+        [Required(AllowEmptyStrings = true)]
         public string Autor { get; set; } = string.Empty;
+
+        [Required(AllowEmptyStrings = true)]
         public string TituloLibro { get; set; } = string.Empty;
+
+        [Required(AllowEmptyStrings = true)]
         public string EditorialCiudad { get; set; } = string.Empty;
+
+        [Required(AllowEmptyStrings = true)]
         public string CitaCompletaApa { get; set; } = string.Empty;
     }
 
@@ -172,6 +207,7 @@ namespace dosier_application.Curriculum.Dtos
 
     public class AnalyzePeaReviewRequestDto
     {
+        [Required(AllowEmptyStrings = true)]
         public string FocusMode { get; set; } = "overview"; // "overview" | "career_profile" | "hours_audit" | "methodology_bibliography" | "custom"
         public string? CustomQuestion { get; set; }
         public string? Provider { get; set; }
@@ -199,7 +235,7 @@ namespace dosier_application.Curriculum.Dtos
         public List<PeaDraftBibliografiaDto>? CurrentBibliografias { get; set; }
         public string? CurrentBibliografiaBasica { get; set; }
         public string? CurrentBibliografiaConsulta { get; set; }
-        public List<PeaAiChatMessageDto> ConversationHistory { get; set; } = new();
+        public List<PeaAiChatMessageDto>? ConversationHistory { get; set; } = new();
     }
 
     public class PeaReviewCheckItemDto

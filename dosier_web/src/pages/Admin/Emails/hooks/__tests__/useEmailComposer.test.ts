@@ -1,175 +1,148 @@
-﻿/**
- * DOSIER — Tests: useEmailComposer.ts (lógica pura)
- *
- * Valida la lógica del compositor de emails institucionales:
- *  - Validación del formulario de email (destinatario, asunto, cuerpo)
- *  - Sustitución de variables en templates ({{nombre}}, {{proyecto}}, etc.)
- *  - Clasificación de destinatarios (individual / grupo / rol)
- *  - Cálculo de longitud de asunto (máx 150 chars)
- *  - Detección de adjuntos válidos/inválidos por extensión
- *  - Estado del formulario por defecto
+/**
+ * DOSIER — Tests: Motor de Correos Curriculares (emailEngineConfig & emailPreviewLayout)
  */
 import { describe, it, expect } from "vitest";
+import {
+    applyTokenReplacements,
+    buildBodyWithAdditionalMessage,
+    buildEmailSendPayload,
+    buildTemplateDataForSend,
+    getPreviewDefaults,
+    getSubjectVariants,
+    getTokenLabel,
+    TEMPLATE_RECOMMENDED_CONTEXT
+} from "../../emailEngineConfig";
+import {
+    buildExtraDataForPreview,
+    clearContextTokenValues,
+    resolveActionUrlForPreview
+} from "../../emailPreviewLayout";
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
-
-interface EmailForm {
-    destinatarios: string[];
-    asunto: string;
-    cuerpoHtml: string;
-    templateId: number | null;
-    adjuntos: string[];
-}
-
-const EMAIL_FORM_DEFAULT: EmailForm = {
-    destinatarios: [],
-    asunto: "",
-    cuerpoHtml: "",
-    templateId: null,
-    adjuntos: [],
-};
-
-// ─── Lógica pura ──────────────────────────────────────────────────────────────
-
-function validarEmailForm(form: EmailForm): string | null {
-    if (form.destinatarios.length === 0) return "Debe especificar al menos un destinatario";
-    if (!form.asunto.trim()) return "El asunto es requerido";
-    if (form.asunto.length > 150) return "El asunto no puede superar 150 caracteres";
-    if (!form.cuerpoHtml.trim()) return "El cuerpo del email es requerido";
-    return null;
-}
-
-function sustituirVariables(template: string, variables: Record<string, string>): string {
-    return template.replace(/\{\{(\w+)\}\}/g, (_, key) => variables[key] ?? `{{${key}}}`);
-}
-
-const EXTENSIONES_PERMITIDAS = [".pdf", ".docx", ".doc", ".xlsx", ".png", ".jpg", ".jpeg"];
-
-function esAdjuntoValido(nombreArchivo: string): boolean {
-    const ext = nombreArchivo.toLowerCase().slice(nombreArchivo.lastIndexOf("."));
-    return EXTENSIONES_PERMITIDAS.includes(ext);
-}
-
-function validarEmail(email: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function limpiarDestinatarios(raw: string[]): string[] {
-    return raw.map((e) => e.trim().toLowerCase()).filter((e) => validarEmail(e));
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe("Estado inicial EmailForm", () => {
-    it("destinatarios vacío por defecto", () => {
-        expect(EMAIL_FORM_DEFAULT.destinatarios).toHaveLength(0);
+describe("emailEngineConfig — Tokens curriculares DOSIER", () => {
+    it("resuelve etiquetas en español para tokens de PEA y Período", () => {
+        expect(getTokenLabel("[[pea_asignatura]]")).toBe("Asignatura (PEA)");
+        expect(getTokenLabel("[[pea_carrera]]")).toBe("Carrera");
+        expect(getTokenLabel("[[periodo_nombre]]")).toBe("Nombre del período");
     });
 
-    it("asunto vacío por defecto", () => {
-        expect(EMAIL_FORM_DEFAULT.asunto).toBe("");
+    it("recomienda contexto PEA para plantillas de workflow curricular", () => {
+        expect(TEMPLATE_RECOMMENDED_CONTEXT.PEA_RECORDATORIO_ELABORACION.entityType).toBe("PEA");
+        expect(TEMPLATE_RECOMMENDED_CONTEXT.PEA_OBSERVACIONES_SUBSANACION.entityType).toBe("PEA");
+        expect(TEMPLATE_RECOMMENDED_CONTEXT.PERIODO_APERTURA_DISTRIBUTIVO.entityType).toBe("Periodo");
     });
 
-    it("templateId null por defecto", () => {
-        expect(EMAIL_FORM_DEFAULT.templateId).toBeNull();
-    });
-});
+    it("retorna variantes de asunto para plantillas oficiales y fallback estándar para personalizadas", () => {
+        const variants = getSubjectVariants({
+            idEmailTemplate: 1,
+            uuid: "u1",
+            codigo: "PEA_RECORDATORIO_ELABORACION",
+            nombre: "Recordatorio",
+            asunto: "Default",
+            cuerpoHtml: "<p>Hola</p>",
+            activo: true
+        });
+        expect(variants.length).toBeGreaterThanOrEqual(2);
 
-describe("validarEmailForm — validación del formulario", () => {
-    it("acepta formulario completo válido", () => {
-        const form: EmailForm = {
-            destinatarios: ["docente@ist.edu.ec"],
-            asunto: "Convocatoria Investigación 2026",
-            cuerpoHtml: "<p>Estimado docente...</p>",
-            templateId: 1,
-            adjuntos: [],
-        };
-        expect(validarEmailForm(form)).toBeNull();
-    });
-
-    it("rechaza sin destinatarios", () => {
-        const form = { ...EMAIL_FORM_DEFAULT, asunto: "Test", cuerpoHtml: "<p>Test</p>" };
-        expect(validarEmailForm(form)).toContain("destinatario");
-    });
-
-    it("rechaza asunto vacío", () => {
-        const form = { ...EMAIL_FORM_DEFAULT, destinatarios: ["a@b.com"], cuerpoHtml: "<p>X</p>" };
-        expect(validarEmailForm(form)).toContain("asunto");
+        const customVariants = getSubjectVariants({
+            idEmailTemplate: 2,
+            uuid: "u2",
+            codigo: "CUSTOM_TPL",
+            nombre: "Custom",
+            asunto: "Asunto Custom",
+            cuerpoHtml: "<p>Hola</p>",
+            activo: true
+        });
+        expect(customVariants).toHaveLength(1);
+        expect(customVariants[0].asunto).toBe("Asunto Custom");
     });
 
-    it("rechaza asunto mayor a 150 caracteres", () => {
-        const form = {
-            ...EMAIL_FORM_DEFAULT,
-            destinatarios: ["a@b.com"],
-            asunto: "A".repeat(151),
-            cuerpoHtml: "<p>X</p>",
-        };
-        expect(validarEmailForm(form)).toContain("150");
-    });
-
-    it("rechaza cuerpo vacío", () => {
-        const form = { ...EMAIL_FORM_DEFAULT, destinatarios: ["a@b.com"], asunto: "Test" };
-        expect(validarEmailForm(form)).toContain("cuerpo");
-    });
-});
-
-describe("sustituirVariables — interpolación de templates", () => {
-    it("sustituye variables correctamente", () => {
-        const result = sustituirVariables(
-            "Estimado {{nombre}}, su proyecto {{proyecto}} fue aprobado.",
-            { nombre: "Dr. Torres", proyecto: "IA Médica" }
+    it("sustituye tokens en asunto y escapa HTML en cuerpo", () => {
+        const subject = applyTokenReplacements(
+            "Revisión PEA — [[pea_asignatura]] ([[pea_periodo]])",
+            { "[[pea_asignatura]]": "Programación II", "[[pea_periodo]]": "ABR2026" },
+            "text"
         );
-        expect(result).toBe("Estimado Dr. Torres, su proyecto IA Médica fue aprobado.");
+        expect(subject).toBe("Revisión PEA — Programación II (ABR2026)");
+
+        const body = applyTokenReplacements(
+            "<p>Asignatura: [[pea_asignatura]]</p>",
+            { "[[pea_asignatura]]": "Base de Datos <Avanzada>" },
+            "html"
+        );
+        expect(body).toContain("Base de Datos &lt;Avanzada&gt;");
     });
 
-    it("deja variables sin definir sin cambios", () => {
-        const result = sustituirVariables("Hola {{nombre}}, {{apellido}}", { nombre: "Luis" });
-        expect(result).toContain("Luis");
-        expect(result).toContain("{{apellido}}");
+    it("limpia [[mensaje_adicional]] cuando está vacío o lo inserta escapado", () => {
+        const clean = buildBodyWithAdditionalMessage("<p>Inicio</p><p>[[mensaje_adicional]]</p>", "");
+        expect(clean).not.toContain("[[mensaje_adicional]]");
+
+        const withNote = buildBodyWithAdditionalMessage("<p>Inicio</p><p>[[mensaje_adicional]]</p>", "Revisar antes del viernes.");
+        expect(withNote).toContain("Revisar antes del viernes.");
     });
 
-    it("maneja template sin variables", () => {
-        const result = sustituirVariables("Sin variables aquí.", {});
-        expect(result).toBe("Sin variables aquí.");
+    it("usa correo institucional ISTPET en valores de vista previa", () => {
+        const defaults = getPreviewDefaults("https://dosier.istpet.edu.ec");
+        expect(defaults["[[destinatario_email]]"]).toContain("@istpet.edu.ec");
     });
 
-    it("soporta múltiples instancias de la misma variable", () => {
-        const result = sustituirVariables("{{x}} y {{x}}", { x: "test" });
-        expect(result).toBe("test y test");
+    it("construye payload en snake_case para el API .NET", () => {
+        const payload = buildEmailSendPayload({
+            templateCodigo: "PEA_SOLICITUD_AVAL",
+            destinatariosEmails: ["coord@istpet.edu.ec"],
+            destinatariosUserIds: [12],
+            targetRole: "DOSIER_COORD_CARRERA",
+            targetCarreraId: 5,
+            targetCarreraIds: [5, 10],
+            targetModalidadIds: [1],
+            targetPeaEstado: "Observado",
+            targetPeriodoId: "ABR2026",
+            customSubject: "Revisión PEA",
+            customBody: "<p>Contenido</p>",
+            templateData: buildTemplateDataForSend({ "[[pea_asignatura]]": "Cálculo", "[[vacio]]": "   " }),
+            attachments: [{ nombreArchivo: "pea_oficial.pdf", rutaArchivo: "SYSTEM:PEA_OFICIAL", contentType: "application/pdf" }],
+            entityUuid: "uuid-pea-1",
+            entityType: "PEA",
+            certificateBase64: null,
+            signaturePassword: null
+        });
+
+        expect(payload.template_codigo).toBe("PEA_SOLICITUD_AVAL");
+        expect(payload.entity_type).toBe("PEA");
+        expect(payload.entity_uuid).toBe("uuid-pea-1");
+        expect(payload.target_carrera_ids).toEqual([5, 10]);
+        expect(payload.target_modalidad_ids).toEqual([1]);
+        expect(payload.target_pea_estado).toBe("Observado");
+        expect(payload.target_periodo_id).toBe("ABR2026");
+        expect(payload.template_data).toEqual({ "[[pea_asignatura]]": "Cálculo" });
+        expect(payload.attachments[0].ruta_archivo).toBe("SYSTEM:PEA_OFICIAL");
     });
 });
 
-describe("esAdjuntoValido — validación de extensiones", () => {
-    it("acepta extensiones permitidas", () => {
-        expect(esAdjuntoValido("informe.pdf")).toBe(true);
-        expect(esAdjuntoValido("datos.xlsx")).toBe(true);
-        expect(esAdjuntoValido("foto.jpg")).toBe(true);
-        expect(esAdjuntoValido("doc.docx")).toBe(true);
+describe("emailPreviewLayout — Contexto PEA y Período", () => {
+    it("prioriza [[pea_workspace_url]] y [[pea_revision_url]] como botón de acción", () => {
+        const url = resolveActionUrlForPreview(
+            { "[[pea_workspace_url]]": "https://dosier.istpet.edu.ec/documentacion/workspace/PEA_OFICIAL/abc" },
+            "<p>Detalle</p>",
+            "https://dosier.istpet.edu.ec"
+        );
+        expect(url).toBe("https://dosier.istpet.edu.ec/documentacion/workspace/PEA_OFICIAL/abc");
     });
 
-    it("rechaza extensiones no permitidas", () => {
-        expect(esAdjuntoValido("script.exe")).toBe(false);
-        expect(esAdjuntoValido("data.csv")).toBe(false);
-        expect(esAdjuntoValido("virus.bat")).toBe(false);
+    it("limpia únicamente los tokens del contexto desvinculado", () => {
+        const cleared = clearContextTokenValues(
+            { "[[pea_asignatura]]": "Redes", "[[fecha_limite]]": "2026-05-01" },
+            "PEA"
+        );
+        expect(cleared["[[pea_asignatura]]"]).toBe("");
+        expect(cleared["[[fecha_limite]]"]).toBe("2026-05-01");
     });
 
-    it("es case-insensitive", () => {
-        expect(esAdjuntoValido("INFORME.PDF")).toBe(true);
-        expect(esAdjuntoValido("Foto.JPG")).toBe(true);
-    });
-});
-
-describe("limpiarDestinatarios — normalización de emails", () => {
-    it("elimina espacios y convierte a minúsculas", () => {
-        const result = limpiarDestinatarios(["  Dr.TORRES@IST.EDU.EC  "]);
-        expect(result[0]).toBe("dr.torres@ist.edu.ec");
-    });
-
-    it("filtra emails inválidos", () => {
-        const result = limpiarDestinatarios(["valido@ist.edu.ec", "no-es-email", "otro@valido.com"]);
-        expect(result).toHaveLength(2);
-    });
-
-    it("retorna vacío para lista de emails todos inválidos", () => {
-        expect(limpiarDestinatarios(["noEmail", "tampoco"])).toHaveLength(0);
+    it("construye ficha de detalles legibles omitiendo tokens globales y URLs", () => {
+        const extra = buildExtraDataForPreview({
+            "[[destinatario_nombre]]": "Ana",
+            "[[pea_asignatura]]": "Redes I",
+            "[[pea_workspace_url]]": "https://dosier.istpet.edu.ec/doc"
+        });
+        expect(extra).toEqual({ "Asignatura (PEA)": "Redes I" });
     });
 });

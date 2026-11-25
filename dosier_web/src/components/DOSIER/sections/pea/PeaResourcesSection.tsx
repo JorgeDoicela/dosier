@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import { GeistSelect } from '../../../Common/GeistSelect';
+import { UnitGroupSelect, parseSelectedUnitNums } from './UnitGroupSelect';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
 
 interface PracticaItem {
@@ -64,7 +64,7 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
     const rawPracticas: any[] = Array.isArray(formData?.ActividadesPracticas) ? formData.ActividadesPracticas : [];
 
     const practicas: PracticaItem[] = rawPracticas.map((p, idx) => ({
-        unidad: p.unidad || p.Unidad || p['0'] || availableUnits[0]?.value || `Unidad ${idx + 1}`,
+        unidad: p.unidad || p.Unidad || p.unidadesReferencia || p.unidades_referencia || p.UnidadesReferencia || p['0'] || availableUnits[0]?.value || `Unidad ${idx + 1}`,
         nombre: p.nombre || p.Nombre || p.nombre_caracterizacion || p.NombreCaracterizacion || p.descripcion || p['1'] || '',
         horas: p.horas ?? p.Horas,
         escenario: p.escenario || p.Escenario,
@@ -75,32 +75,28 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
     const getNextSmartUnit = (currentList: PracticaItem[]): string => {
         if (availableUnits.length === 0) return 'Unidad 1';
 
-        // 1. Contar prácticas asignadas a cada unidad oficial de la asignatura
-        const countMap = new Map<string, number>();
-        availableUnits.forEach(u => countMap.set(u.value.toLowerCase(), 0));
+        // 1. Contar prácticas asignadas a cada unidad oficial de la asignatura (incluyendo grupos como "1, 2")
+        const countMap = new Map<number, number>();
+        availableUnits.forEach(u => countMap.set(u.num, 0));
 
         currentList.forEach(p => {
-            const rawVal = (p.unidad || '').toLowerCase().trim();
-            for (const u of availableUnits) {
-                if (rawVal === u.value.toLowerCase() || rawVal === `unidad ${u.num}`) {
-                    countMap.set(u.value.toLowerCase(), (countMap.get(u.value.toLowerCase()) || 0) + 1);
-                    break;
-                }
-            }
+            const nums = parseSelectedUnitNums(p.unidad, availableUnits);
+            nums.forEach(num => {
+                countMap.set(num, (countMap.get(num) || 0) + 1);
+            });
         });
 
         // 2. Primera prioridad: Si hay unidades oficiales sin práctica, sugerir la siguiente en orden
-        const uncovered = availableUnits.find(u => (countMap.get(u.value.toLowerCase()) || 0) === 0);
+        const uncovered = availableUnits.find(u => (countMap.get(u.num) || 0) === 0);
         if (uncovered) {
             return uncovered.value;
         }
 
         // 3. Segunda prioridad: Si todas ya tienen prácticas, seguir la secuencia cíclica desde la última
         if (currentList.length > 0) {
-            const lastRaw = (currentList[currentList.length - 1]?.unidad || '').toLowerCase().trim();
-            const lastIndex = availableUnits.findIndex(
-                u => lastRaw === u.value.toLowerCase() || lastRaw === `unidad ${u.num}`
-            );
+            const lastNums = parseSelectedUnitNums(currentList[currentList.length - 1]?.unidad || '', availableUnits);
+            const lastNum = lastNums[lastNums.length - 1];
+            const lastIndex = availableUnits.findIndex(u => u.num === lastNum);
             if (lastIndex !== -1) {
                 const nextIndex = (lastIndex + 1) % availableUnits.length;
                 return availableUnits[nextIndex].value;
@@ -193,26 +189,11 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
                             practicas.map((item, idx) => (
                                 <tr key={idx} className="hover:bg-bg-deep/30 transition-colors">
                                     <td className="p-3 border-r border-border-thin align-top">
-                                        <GeistSelect
+                                        <UnitGroupSelect
                                             value={item.unidad || availableUnits[0]?.value || 'Unidad 1'}
-                                            options={(() => {
-                                                const base = availableUnits.map(u => ({ value: u.value, label: u.display }));
-                                                if (availableUnits.length > 1) {
-                                                    const nums = availableUnits.map(u => u.num).join(',');
-                                                    const comboLabel = `Unidades ${availableUnits.map(u => u.num).join(', ')}`;
-                                                    if (!base.some(b => b.value === nums || b.value === comboLabel)) {
-                                                        base.push({ value: nums, label: comboLabel });
-                                                    }
-                                                }
-                                                if (item.unidad && !base.some(b => String(b.value).toLowerCase() === item.unidad.toLowerCase())) {
-                                                    const displayLabel = item.unidad.includes(',') ? `Unidades ${item.unidad}` : item.unidad;
-                                                    return [{ value: item.unidad, label: displayLabel }, ...base];
-                                                }
-                                                return base;
-                                            })()}
-                                            onChange={(val) => handleUpdatePractica(idx, 'unidad', String(val))}
+                                            availableUnits={availableUnits}
+                                            onChange={(val) => handleUpdatePractica(idx, 'unidad', val)}
                                             disabled={readOnly}
-                                            className="w-full text-xs sm:text-sm font-semibold"
                                         />
                                     </td>
                                     <td className="p-3 align-top">

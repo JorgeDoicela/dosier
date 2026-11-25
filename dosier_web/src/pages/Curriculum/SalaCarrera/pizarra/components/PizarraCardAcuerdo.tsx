@@ -38,9 +38,11 @@ export const PizarraCardAcuerdo: React.FC<PizarraCardAcuerdoProps> = ({
     onDuplicate,
     onBringToFront,
 }) => {
-    const [localTitle, setLocalTitle] = useState(element.title || '');
-    const [localContent, setLocalContent] = useState(element.content || '');
+    const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
+    const [resizeSize, setResizeSize] = useState<{ width: number; height: number } | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const lastDragSyncRef = useRef<number>(0);
+    const lastResizeSyncRef = useRef<number>(0);
 
     const isDraggingRef = useRef(false);
     const dragStartRef = useRef<{ mouseX: number; mouseY: number; elemX: number; elemY: number }>({
@@ -58,18 +60,13 @@ export const PizarraCardAcuerdo: React.FC<PizarraCardAcuerdoProps> = ({
         startH: element.height || 210,
     });
 
-    useEffect(() => {
-        setLocalTitle(element.title || '');
-        setLocalContent(element.content || '');
-    }, [element.title, element.content]);
-
     // Auto-crecimiento vertical dinámico para no truncar la redacción
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = 'auto';
             textareaRef.current.style.height = `${Math.max(60, textareaRef.current.scrollHeight)}px`;
         }
-    }, [localContent]);
+    }, [element.content]);
 
     // Manejador de inicio de arrastre de la tarjeta
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -98,14 +95,30 @@ export const PizarraCardAcuerdo: React.FC<PizarraCardAcuerdoProps> = ({
             if (!isDraggingRef.current) return;
             const deltaX = (moveEvent.clientX - dragStartRef.current.mouseX) / zoom;
             const deltaY = (moveEvent.clientY - dragStartRef.current.mouseY) / zoom;
-            onUpdate({
+            const nextPos = {
                 x: Math.round(dragStartRef.current.elemX + deltaX),
                 y: Math.round(dragStartRef.current.elemY + deltaY),
-            });
+            };
+            setDragPos(nextPos);
+
+            const now = Date.now();
+            if (now - lastDragSyncRef.current >= 50) {
+                lastDragSyncRef.current = now;
+                onUpdate(nextPos);
+            }
         };
 
-        const handleMouseUp = () => {
+        const handleMouseUp = (upEvent: MouseEvent) => {
+            if (isDraggingRef.current) {
+                const deltaX = (upEvent.clientX - dragStartRef.current.mouseX) / zoom;
+                const deltaY = (upEvent.clientY - dragStartRef.current.mouseY) / zoom;
+                onUpdate({
+                    x: Math.round(dragStartRef.current.elemX + deltaX),
+                    y: Math.round(dragStartRef.current.elemY + deltaY),
+                });
+            }
             isDraggingRef.current = false;
+            setDragPos(null);
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
         };
@@ -134,17 +147,30 @@ export const PizarraCardAcuerdo: React.FC<PizarraCardAcuerdoProps> = ({
             const deltaX = (moveEvent.clientX - resizeStartRef.current.mouseX) / zoom;
             const deltaY = (moveEvent.clientY - resizeStartRef.current.mouseY) / zoom;
 
-            const nextW = Math.max(260, Math.round(resizeStartRef.current.startW + deltaX));
-            const nextH = Math.max(170, Math.round(resizeStartRef.current.startH + deltaY));
+            const nextSize = {
+                width: Math.max(260, Math.round(resizeStartRef.current.startW + deltaX)),
+                height: Math.max(170, Math.round(resizeStartRef.current.startH + deltaY)),
+            };
+            setResizeSize(nextSize);
 
-            onUpdate({
-                width: nextW,
-                height: nextH,
-            });
+            const now = Date.now();
+            if (now - lastResizeSyncRef.current >= 50) {
+                lastResizeSyncRef.current = now;
+                onUpdate(nextSize);
+            }
         };
 
-        const handleMouseUp = () => {
+        const handleMouseUp = (upEvent: MouseEvent) => {
+            if (isResizingRef.current) {
+                const deltaX = (upEvent.clientX - resizeStartRef.current.mouseX) / zoom;
+                const deltaY = (upEvent.clientY - resizeStartRef.current.mouseY) / zoom;
+                onUpdate({
+                    width: Math.max(260, Math.round(resizeStartRef.current.startW + deltaX)),
+                    height: Math.max(170, Math.round(resizeStartRef.current.startH + deltaY)),
+                });
+            }
             isResizingRef.current = false;
+            setResizeSize(null);
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
         };
@@ -153,11 +179,10 @@ export const PizarraCardAcuerdo: React.FC<PizarraCardAcuerdoProps> = ({
         window.addEventListener('mouseup', handleMouseUp);
     };
 
-    const handleBlur = () => {
-        if (localTitle !== element.title || localContent !== element.content) {
-            onUpdate({ title: localTitle, content: localContent });
-        }
-    };
+    const renderX = dragPos ? dragPos.x : element.x;
+    const renderY = dragPos ? dragPos.y : element.y;
+    const renderW = resizeSize ? resizeSize.width : (element.width || 320);
+    const renderH = resizeSize ? resizeSize.height : (element.height || 210);
 
     const initials = element.authorInitials || (element.authorName ? element.authorName.substring(0, 2).toUpperCase() : 'DO');
 
@@ -166,9 +191,9 @@ export const PizarraCardAcuerdo: React.FC<PizarraCardAcuerdoProps> = ({
             id={`card-${element.id}`}
             onMouseDown={handleMouseDown}
             style={{
-                transform: `translate3d(${element.x}px, ${element.y}px, 0)`,
-                width: element.width || 320,
-                minHeight: element.height || 210,
+                transform: `translate3d(${renderX}px, ${renderY}px, 0)`,
+                width: renderW,
+                minHeight: renderH,
                 zIndex: element.zIndex || 1,
             }}
             className={`group absolute rounded-2xl border border-border-thin bg-surface px-3.5 pt-2.5 pb-2 flex flex-col justify-between transition-shadow select-none ${
@@ -231,9 +256,8 @@ export const PizarraCardAcuerdo: React.FC<PizarraCardAcuerdoProps> = ({
 
                 <input
                     type="text"
-                    value={localTitle}
-                    onChange={(e) => setLocalTitle(e.target.value)}
-                    onBlur={handleBlur}
+                    value={element.title || ''}
+                    onChange={(e) => onUpdate({ title: e.target.value })}
                     onFocus={onSelect}
                     placeholder="Título del acuerdo o compromiso de la materia..."
                     className="pizarra-input w-full bg-transparent border-0 border-b border-transparent focus:border-border-thin pb-0.5 text-xs font-semibold text-text-main placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none"
@@ -242,9 +266,8 @@ export const PizarraCardAcuerdo: React.FC<PizarraCardAcuerdoProps> = ({
 
                 <textarea
                     ref={textareaRef}
-                    value={localContent}
-                    onChange={(e) => setLocalContent(e.target.value)}
-                    onBlur={handleBlur}
+                    value={element.content || ''}
+                    onChange={(e) => onUpdate({ content: e.target.value })}
                     onFocus={onSelect}
                     placeholder="Detalles y consensos acordados entre los docentes para el PEA..."
                     style={{ outline: 'none', border: 'none', boxShadow: 'none' }}

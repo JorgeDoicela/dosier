@@ -390,8 +390,6 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     const [trazabilidad, setTrazabilidad] = useState<any[]>([]);
     const [isLoadingTrazabilidad, setIsLoadingTrazabilidad] = useState(false);
     const [projectDeadline, setProjectDeadline] = useState<string | null>(null);
-    const [subsanandoObsId, setSubsanandoObsId] = useState<number | null>(null);
-    const [subsanacionTextMap, setSubsanacionTextMap] = useState<Record<number, string>>({});
     const [submittingObsId, setSubmittingObsId] = useState<number | null>(null);
 
     const resolveObservationTarget = useCallback((rawSection?: string): { label: string; sectionId?: string } => {
@@ -590,14 +588,12 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
     const handleSubsanarObs = async (idObs: number) => {
         if (!idObs) return;
-        const customReply = (subsanacionTextMap[idObs] || '').trim() || 'Ajuste realizado y subsanado en la sección correspondiente del PEA.';
         setSubmittingObsId(idObs);
         try {
-            await subsanarObservacionPea(idObs, customReply);
+            await subsanarObservacionPea(idObs, '');
             setPeaObservaciones(prev =>
-                prev.map(o => o.id === idObs ? { ...o, estado: 'Subsanada', respuestaDocente: customReply, fechaResolucion: new Date().toISOString() } : o)
+                prev.map(o => o.id === idObs ? { ...o, estado: 'Subsanada', fechaResolucion: new Date().toISOString() } : o)
             );
-            setSubsanandoObsId(null);
             window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
         } catch (err) {
             console.error('[DOSIER] Error al subsanar observación:', err);
@@ -666,7 +662,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         if (peaObservaciones.length > 0) {
             if (rawText.includes('\n\nDetalle por Sección:')) {
                 rawText = rawText.split('\n\nDetalle por Sección:')[0].trim();
-            } else if (rawText.startsWith('Correcciones requeridas:\n•')) {
+            } else if (/^Correcciones requeridas(?:\s+con plazo hasta [^:\n]+)?:\s*\n•/i.test(rawText)) {
                 return null;
             }
         }
@@ -1682,11 +1678,11 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                             const cleaned = cleanSectionTitle(rawLabel);
                                                             const title = `${idx + 1}. ${toSentenceCase(cleaned || rawLabel)}`;
 
-                                                            const badgeStyle = st === 'Completado'
-                                                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                                            const statusTextClass = st === 'Completado'
+                                                                ? 'text-emerald-600 dark:text-emerald-400'
                                                                 : st === 'Por revisar'
-                                                                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                                                                    : 'bg-surface text-text-dim border-border-thin';
+                                                                    ? 'text-amber-600 dark:text-amber-400'
+                                                                    : 'text-text-dim';
 
                                                             return (
                                                                 <button
@@ -1706,7 +1702,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                                             {title}
                                                                         </span>
                                                                     </div>
-                                                                    <span className={`text-[8px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full border shrink-0 font-bold ${badgeStyle}`}>
+                                                                    <span className={`text-[11px] font-medium shrink-0 ${statusTextClass}`}>
                                                                         {st}
                                                                     </span>
                                                                 </button>
@@ -1814,13 +1810,28 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                     }
 
                                     return (
-                                        <div className="flex flex-col space-y-1">
-                                            {deadlineBadge && (
-                                                <div className="flex items-center justify-end gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 px-1 pb-1">
-                                                    <Clock size={11} className="shrink-0" />
-                                                    <span>{deadlineBadge.text}</span>
+                                        <div className="flex flex-col space-y-2">
+                                            {/* Resumen claro y accionable para el docente */}
+                                            <div className="px-1 pb-2 border-b border-slate-200 dark:border-zinc-800 space-y-1">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="text-xs font-semibold text-text-main">
+                                                        {pendingObsCount > 0
+                                                            ? `${pendingObsCount} ${pendingObsCount === 1 ? 'observación pendiente' : 'observaciones pendientes'}`
+                                                            : 'Observaciones subsanadas'}
+                                                    </span>
+                                                    {deadlineBadge && (
+                                                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 shrink-0">
+                                                            <Clock size={11} className="shrink-0" />
+                                                            <span>{deadlineBadge.text}</span>
+                                                        </span>
+                                                    )}
                                                 </div>
-                                            )}
+                                                {pendingObsCount > 0 && (
+                                                    <p className="text-[11px] text-text-dim leading-snug">
+                                                        Abre cada sección observada, corrige el contenido en el editor y marca como subsanada.
+                                                    </p>
+                                                )}
+                                            </div>
 
                                             {/* 1. Observaciones Oficiales Estructuradas (doc_pea_observaciones) */}
                                             {peaObservaciones.map((obs, idx) => {
@@ -1829,7 +1840,6 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                     const obsDateStr = obs.fechaObservacion
                                                         ? new Date(obs.fechaObservacion).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })
                                                         : '';
-                                                    const isReplyingThis = subsanandoObsId === obs.id;
 
                                                     return (
                                                         <React.Fragment key={obs.id || obs.uuid || `pea-obs-${idx}`}>
@@ -1838,21 +1848,9 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                             )}
                                                             <div className="py-2.5 px-1 space-y-2">
                                                                 <div className="flex items-start justify-between gap-2">
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            if (target.sectionId && onSelectSection) {
-                                                                                onSelectSection(target.sectionId);
-                                                                            }
-                                                                        }}
-                                                                        className={`text-left text-xs font-semibold leading-snug ${target.sectionId && onSelectSection
-                                                                            ? 'text-[#0070f3] dark:text-blue-400 hover:underline cursor-pointer'
-                                                                            : 'text-text-main'
-                                                                        }`}
-                                                                        title={target.sectionId ? 'Haga clic para ir directamente a esta sección en el editor' : target.label}
-                                                                    >
+                                                                    <span className="text-left text-xs font-semibold text-text-main leading-snug">
                                                                         {target.label}
-                                                                    </button>
+                                                                    </span>
                                                                     <div className="flex items-center gap-2 shrink-0 text-[11px]">
                                                                         {obsDateStr && <span className="text-text-dim">{obsDateStr}</span>}
                                                                         <span
@@ -1866,57 +1864,41 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                                     </div>
                                                                 </div>
 
-                                                                <p className="text-xs text-text-main leading-relaxed whitespace-pre-wrap break-words">
-                                                                    <span className="text-text-dim font-medium">{formatRoleLabel(obs.rolObservador)}: </span>
-                                                                    {obs.textoObservacion}
-                                                                </p>
+                                                                <div className="space-y-0.5">
+                                                                    <span className="text-[11px] font-medium text-text-dim block">
+                                                                        {obs.nombreObservador ? `${obs.nombreObservador} · ${formatRoleLabel(obs.rolObservador)}` : formatRoleLabel(obs.rolObservador)}
+                                                                    </span>
+                                                                    <p className="text-xs text-text-main leading-relaxed whitespace-pre-wrap break-words">
+                                                                        {obs.textoObservacion}
+                                                                    </p>
+                                                                </div>
 
                                                                 {obs.respuestaDocente && (
                                                                     <div className="p-2.5 rounded-md bg-emerald-50/60 dark:bg-emerald-950/40 text-[11px] text-emerald-800 dark:text-emerald-300 space-y-0.5">
-                                                                        <span className="font-semibold block text-[10px] uppercase tracking-wider">Respuesta:</span>
+                                                                        <span className="font-semibold block text-[10px] uppercase tracking-wider">Respuesta del docente:</span>
                                                                         <p className="leading-relaxed break-words">{obs.respuestaDocente}</p>
                                                                     </div>
                                                                 )}
 
-                                                                {!isSubsanada && !readOnly && obs.id && !isReplyingThis && (
-                                                                    <div className="flex justify-end pt-1">
+                                                                {!isSubsanada && !readOnly && obs.id && (
+                                                                    <div className="flex items-center justify-between gap-2 pt-1">
+                                                                        {target.sectionId && onSelectSection ? (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => onSelectSection(target.sectionId!)}
+                                                                                className="text-xs font-medium text-[#0070f3] dark:text-blue-400 hover:underline cursor-pointer"
+                                                                            >
+                                                                                Ir a la sección
+                                                                            </button>
+                                                                        ) : <span />}
                                                                         <button
                                                                             type="button"
-                                                                            onClick={() => setSubsanandoObsId(obs.id)}
-                                                                            className="px-3 py-1 rounded-md text-xs font-semibold bg-[#0070f3] hover:bg-[#005bb5] text-white transition-colors cursor-pointer"
+                                                                            onClick={() => handleSubsanarObs(obs.id)}
+                                                                            disabled={submittingObsId === obs.id}
+                                                                            className="px-3 py-1 rounded-md text-xs font-semibold bg-[#0070f3] hover:bg-[#005bb5] text-white transition-colors cursor-pointer disabled:opacity-50"
                                                                         >
-                                                                            Marcar subsanada
+                                                                            {submittingObsId === obs.id ? 'Guardando...' : 'Marcar subsanada'}
                                                                         </button>
-                                                                    </div>
-                                                                )}
-
-                                                                {isReplyingThis && !readOnly && (
-                                                                    <div className="pt-2 space-y-2">
-                                                                        <textarea
-                                                                            value={subsanacionTextMap[obs.id] || ''}
-                                                                            onChange={e => setSubsanacionTextMap(prev => ({ ...prev, [obs.id]: e.target.value }))}
-                                                                            placeholder="Detalle brevemente el ajuste realizado (opcional)..."
-                                                                            rows={2}
-                                                                            className="w-full p-2 text-xs rounded-md border border-border-thin bg-surface text-text-main focus:outline-none focus:border-[#0070f3] resize-none"
-                                                                        />
-                                                                        <div className="flex items-center justify-end gap-2">
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => setSubsanandoObsId(null)}
-                                                                                disabled={submittingObsId === obs.id}
-                                                                                className="px-2.5 py-1 rounded-md text-xs font-medium border border-border-thin text-text-dim hover:text-text-main hover:bg-surface/50 cursor-pointer"
-                                                                            >
-                                                                                Cancelar
-                                                                            </button>
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => handleSubsanarObs(obs.id)}
-                                                                                disabled={submittingObsId === obs.id}
-                                                                                className="px-3 py-1 rounded-md text-xs font-semibold bg-[#0070f3] hover:bg-[#005bb5] text-white transition-colors cursor-pointer disabled:opacity-50"
-                                                                            >
-                                                                                {submittingObsId === obs.id ? 'Guardando...' : 'Confirmar subsanación'}
-                                                                            </button>
-                                                                        </div>
                                                                     </div>
                                                                 )}
                                                             </div>

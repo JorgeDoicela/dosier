@@ -84,8 +84,9 @@ namespace dosier_infrastructure.Common.Notifications
             {
                 "[[action_url]]",
                 "[[url_accion]]",
-                "[[proyecto_workspace_url]]",
-                "[[convocatoria_bases_url]]"
+                "[[pea_workspace_url]]",
+                "[[pea_revision_url]]",
+                "[[proyecto_workspace_url]]"
             };
 
             foreach (var key in priorityKeys)

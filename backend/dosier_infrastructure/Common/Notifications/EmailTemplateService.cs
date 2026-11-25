@@ -87,10 +87,26 @@ namespace dosier_infrastructure.Common.Notifications
             }
         }
 
-        public async Task<IEnumerable<EmailHistorialDto>> GetEmailHistoryAsync(int limit = 100)
+        public async Task<IEnumerable<EmailHistorialDto>> GetEmailHistoryAsync(int limit = 100, int? filterBySenderUserId = null)
         {
-            var list = await _context.DocEmailHistorials
+            var query = _context.DocEmailHistorials
+                .AsNoTracking()
                 .Include(h => h.IdUsuarioDestinatarioNavigation)
+                .AsQueryable();
+
+            if (filterBySenderUserId.HasValue)
+            {
+                if (filterBySenderUserId.Value <= 0)
+                    return Enumerable.Empty<EmailHistorialDto>();
+
+                var uid = filterBySenderUserId.Value;
+                var markerComma = $"\"senderUserId\":{uid},";
+                var markerBrace = $"\"senderUserId\":{uid}}}";
+                query = query.Where(h => h.MetadataJson != null &&
+                    (h.MetadataJson.Contains(markerComma) || h.MetadataJson.Contains(markerBrace)));
+            }
+
+            var list = await query
                 .OrderByDescending(h => h.FechaEnvio)
                 .Take(limit)
                 .ToListAsync();

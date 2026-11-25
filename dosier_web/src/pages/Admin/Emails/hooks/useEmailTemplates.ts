@@ -62,7 +62,7 @@ export const useEmailTemplates = ({ setTemplates }: UseEmailTemplatesProps): Use
             nombre: '',
             descripcion: '',
             asunto: '',
-            cuerpoHtml: '<p style="color:#444;font-size:14px;line-height:1.6;">Mensaje principal de la plantilla. El diseño institucional (logos y pie de página) se aplica automáticamente al enviar.</p>\n<p style="color:#444;font-size:14px;line-height:1.6;">Puede usar datos dinámicos como [[proyecto_titulo]] o [[convocatoria_titulo]].</p>',
+            cuerpoHtml: '<p style="color:#444;font-size:14px;line-height:1.6;">Mensaje principal de la plantilla curricular. El encabezado institucional SISTEMA DOSIER y el pie LOPDP se aplican automáticamente al enviar.</p>\n<p style="color:#444;font-size:14px;line-height:1.6;">Puede usar variables dinámicas como [[pea_asignatura]], [[pea_carrera]] o [[periodo_nombre]].</p>',
             activo: true
         });
         setTemplateError('');

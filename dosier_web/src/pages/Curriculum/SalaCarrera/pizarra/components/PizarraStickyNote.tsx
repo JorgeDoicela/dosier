@@ -24,10 +24,13 @@ export const PizarraStickyNote: React.FC<PizarraStickyNoteProps> = ({
     onDuplicate,
     onBringToFront,
 }) => {
-    const [localContent, setLocalContent] = useState(element.content);
+    const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
+    const [resizeSize, setResizeSize] = useState<{ width: number; height: number } | null>(null);
     const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
     const colorPickerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const lastDragSyncRef = useRef<number>(0);
+    const lastResizeSyncRef = useRef<number>(0);
     const isDraggingRef = useRef(false);
     const dragStartRef = useRef<{ mouseX: number; mouseY: number; elemX: number; elemY: number }>({
         mouseX: 0,
@@ -43,10 +46,6 @@ export const PizarraStickyNote: React.FC<PizarraStickyNoteProps> = ({
         startW: element.width || 280,
         startH: element.height || 200,
     });
-
-    useEffect(() => {
-        setLocalContent(element.content);
-    }, [element.content]);
 
     // Cerrar selector de color al hacer clic fuera o deseleccionar la nota
     useEffect(() => {
@@ -74,7 +73,7 @@ export const PizarraStickyNote: React.FC<PizarraStickyNoteProps> = ({
             textareaRef.current.style.height = 'auto';
             textareaRef.current.style.height = `${Math.max(80, textareaRef.current.scrollHeight)}px`;
         }
-    }, [localContent]);
+    }, [element.content]);
 
     const colorConfig = PIZARRA_COLORS[element.color] || PIZARRA_COLORS.yellow;
 
@@ -103,14 +102,30 @@ export const PizarraStickyNote: React.FC<PizarraStickyNoteProps> = ({
             if (!isDraggingRef.current) return;
             const deltaX = (moveEvent.clientX - dragStartRef.current.mouseX) / zoom;
             const deltaY = (moveEvent.clientY - dragStartRef.current.mouseY) / zoom;
-            onUpdate({
+            const nextPos = {
                 x: Math.round(dragStartRef.current.elemX + deltaX),
                 y: Math.round(dragStartRef.current.elemY + deltaY),
-            });
+            };
+            setDragPos(nextPos);
+
+            const now = Date.now();
+            if (now - lastDragSyncRef.current >= 50) {
+                lastDragSyncRef.current = now;
+                onUpdate(nextPos);
+            }
         };
 
-        const handleMouseUp = () => {
+        const handleMouseUp = (upEvent: MouseEvent) => {
+            if (isDraggingRef.current) {
+                const deltaX = (upEvent.clientX - dragStartRef.current.mouseX) / zoom;
+                const deltaY = (upEvent.clientY - dragStartRef.current.mouseY) / zoom;
+                onUpdate({
+                    x: Math.round(dragStartRef.current.elemX + deltaX),
+                    y: Math.round(dragStartRef.current.elemY + deltaY),
+                });
+            }
             isDraggingRef.current = false;
+            setDragPos(null);
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
         };
@@ -139,17 +154,30 @@ export const PizarraStickyNote: React.FC<PizarraStickyNoteProps> = ({
             const deltaX = (moveEvent.clientX - resizeStartRef.current.mouseX) / zoom;
             const deltaY = (moveEvent.clientY - resizeStartRef.current.mouseY) / zoom;
 
-            const nextW = Math.max(220, Math.round(resizeStartRef.current.startW + deltaX));
-            const nextH = Math.max(160, Math.round(resizeStartRef.current.startH + deltaY));
+            const nextSize = {
+                width: Math.max(220, Math.round(resizeStartRef.current.startW + deltaX)),
+                height: Math.max(160, Math.round(resizeStartRef.current.startH + deltaY)),
+            };
+            setResizeSize(nextSize);
 
-            onUpdate({
-                width: nextW,
-                height: nextH,
-            });
+            const now = Date.now();
+            if (now - lastResizeSyncRef.current >= 50) {
+                lastResizeSyncRef.current = now;
+                onUpdate(nextSize);
+            }
         };
 
-        const handleMouseUp = () => {
+        const handleMouseUp = (upEvent: MouseEvent) => {
+            if (isResizingRef.current) {
+                const deltaX = (upEvent.clientX - resizeStartRef.current.mouseX) / zoom;
+                const deltaY = (upEvent.clientY - resizeStartRef.current.mouseY) / zoom;
+                onUpdate({
+                    width: Math.max(220, Math.round(resizeStartRef.current.startW + deltaX)),
+                    height: Math.max(160, Math.round(resizeStartRef.current.startH + deltaY)),
+                });
+            }
             isResizingRef.current = false;
+            setResizeSize(null);
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
         };
@@ -158,16 +186,15 @@ export const PizarraStickyNote: React.FC<PizarraStickyNoteProps> = ({
         window.addEventListener('mouseup', handleMouseUp);
     };
 
-    const handleContentBlur = () => {
-        if (localContent !== element.content) {
-            onUpdate({ content: localContent });
-        }
-    };
-
     const handleColorChange = (newColor: PizarraColor) => {
         onUpdate({ color: newColor });
         setIsColorPickerOpen(false);
     };
+
+    const renderX = dragPos ? dragPos.x : element.x;
+    const renderY = dragPos ? dragPos.y : element.y;
+    const renderW = resizeSize ? resizeSize.width : (element.width || 280);
+    const renderH = resizeSize ? resizeSize.height : (element.height || 200);
 
     const initials = element.authorInitials || (element.authorName ? element.authorName.substring(0, 2).toUpperCase() : 'DO');
 
@@ -176,9 +203,9 @@ export const PizarraStickyNote: React.FC<PizarraStickyNoteProps> = ({
             id={`note-${element.id}`}
             onMouseDown={handleMouseDown}
             style={{
-                transform: `translate3d(${element.x}px, ${element.y}px, 0)`,
-                width: element.width || 280,
-                minHeight: element.height || 200,
+                transform: `translate3d(${renderX}px, ${renderY}px, 0)`,
+                width: renderW,
+                minHeight: renderH,
                 zIndex: element.zIndex || 1,
             }}
             className={`group absolute rounded-2xl border px-3.5 pt-2 pb-2 flex flex-col justify-between transition-shadow select-none ${colorConfig.bg} ${colorConfig.border} ${
@@ -273,9 +300,8 @@ export const PizarraStickyNote: React.FC<PizarraStickyNoteProps> = ({
             <div className="flex-1 py-0 flex flex-col justify-start">
                 <textarea
                     ref={textareaRef}
-                    value={localContent}
-                    onChange={(e) => setLocalContent(e.target.value)}
-                    onBlur={handleContentBlur}
+                    value={element.content || ''}
+                    onChange={(e) => onUpdate({ content: e.target.value })}
                     onFocus={onSelect}
                     placeholder="Escribe un acuerdo, observación o idea curricular..."
                     style={{ outline: 'none', border: 'none', boxShadow: 'none' }}

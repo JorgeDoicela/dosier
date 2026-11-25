@@ -203,7 +203,7 @@ namespace dosier_api.Services
                         await notifService.NotifyByRoleCodesAsync(
                             title: notifTitle,
                             body: notifBody,
-                            roleCodes: new[] { "DOSIER_ADMIN", "ADMINISTRADOR" },
+                            roleCodes: new[] { "DOSIER_ADMIN" },
                             url: notifUrl,
                             extraData: extraData
                         );

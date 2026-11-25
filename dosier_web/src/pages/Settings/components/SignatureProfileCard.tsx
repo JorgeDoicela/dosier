@@ -52,25 +52,23 @@ export const SignatureProfileCard: React.FC = () => {
     return (
         <div className="signature-profile-container bg-surface p-6 rounded-lg border border-slate-200/90 dark:border-zinc-800 space-y-6" id="perfil-firma">
             {/* Cabecera de la Sección */}
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pb-4 border-b border-slate-200/90 dark:border-zinc-800">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                        <h2 className="text-xs font-semibold uppercase tracking-wider text-text-main flex items-center gap-2 font-mono">
-                            Firma Digital Institucional
-                        </h2>
-                        {sig.profile?.esConfigurado && (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                <span>Perfil Activo</span>
-                            </span>
-                        )}
-                    </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-text-main flex items-center gap-2 font-mono">
+                        Firma Digital Institucional
+                    </h2>
+                    {sig.profile?.esConfigurado && (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            <span>Perfil Activo</span>
+                        </span>
+                    )}
                 </div>
                 {!sig.isEditing && sig.profile?.esConfigurado && (
                     <button
                         type="button"
                         onClick={() => sig.setIsEditing(true)}
-                        className="btn-vercel-secondary text-xs inline-flex items-center gap-1.5 shrink-0"
+                        className="btn-vercel-secondary text-xs inline-flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
                     >
                         <PenLine size={13} className="text-[#0070f3]" />
                         <span>Editar Perfil</span>
@@ -117,51 +115,58 @@ export const SignatureProfileCard: React.FC = () => {
 
             {/* ── VISTA DE DETALLE (READ-ONLY) CON PREVISUALIZACIÓN DUAL ─────────────────────────── */}
             {!sig.isEditing && sig.profile?.esConfigurado && (
-                <div className="space-y-6">
-                    {/* Metadatos en línea sin cajas ni bordes */}
-                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
-                        <div className="flex items-center gap-2">
-                            <span className="text-text-dim font-medium">Cargo Institucional:</span>
-                            <span className="font-semibold text-text-main">{sig.profile?.cargo || 'Docente Titular'}</span>
+                <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 items-center">
+                    {/* Ficha técnica clave-valor */}
+                    <dl className="space-y-3 text-xs">
+                        <div className="flex flex-col gap-0.5">
+                            <dt className="font-mono text-[11px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                                Cargo Institucional
+                            </dt>
+                            <dd className="font-semibold text-text-main">
+                                {sig.profile?.cargo || 'Docente Titular'}
+                            </dd>
                         </div>
-                        <span className="text-slate-300 dark:text-zinc-700 hidden sm:inline">•</span>
-                        <div className="flex items-center gap-2">
-                            <span className="text-text-dim font-medium">Departamento / Área:</span>
-                            <span className="font-semibold text-text-main">{sig.profile?.departamento || 'ISTPET'}</span>
+                        <div className="flex flex-col gap-0.5">
+                            <dt className="font-mono text-[11px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                                Departamento / Área
+                            </dt>
+                            <dd className="font-semibold text-text-main">
+                                {sig.profile?.departamento || 'ISTPET'}
+                            </dd>
                         </div>
-                    </div>
-
-                    {/* Instrumento Registrado Según Elección */}
-                    <div className="space-y-3 pt-1">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-xs font-semibold uppercase tracking-wider text-text-main font-mono">
+                        <div className="flex flex-col gap-0.5">
+                            <dt className="font-mono text-[11px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                                Instrumento Registrado
+                            </dt>
+                            <dd className="font-semibold text-text-main">
                                 {(() => {
                                     const tipo = sig.profile?.tipoSello || (sig.profile as any)?.tipo_sello;
-                                    if (tipo === 'solo_sello') return 'Solo Sello Oficial Registrado';
-                                    if (tipo === 'solo_firma') return 'Firma Personal Registrada';
-                                    if (tipo === 'sello_y_firma' || tipo === 'sello_institucional') return 'Firma y Sello Oficial Registrados';
-                                    return 'Sello Criptográfico Completo Registrado';
+                                    if (tipo === 'solo_sello') return 'Solo Sello Oficial';
+                                    if (tipo === 'solo_firma') return 'Solo Firma Personal';
+                                    if (tipo === 'sello_y_firma' || tipo === 'sello_institucional') return 'Firma y Sello Oficial';
+                                    return 'Sello Criptográfico Completo (QR)';
                                 })()}
-                            </h3>
+                            </dd>
                         </div>
+                    </dl>
 
-                        <div className="w-full">
-                            <DocumentStampPreview
-                                nombreFirmante={userName}
-                                cargo={sig.profile?.cargo || 'Docente'}
-                                departamento={sig.profile?.departamento || ''}
-                                cedula={userCi}
-                                firmaImagenB64={sig.profile?.firmaImagenB64 || (sig.profile as any)?.firma_imagen_b64 || sig.firmaImagenB64}
-                                tipoPresentacion={(() => {
-                                    const tipo = sig.profile?.tipoSello || (sig.profile as any)?.tipo_sello;
-                                    if (tipo === 'solo_sello') return 'solo_sello';
-                                    if (tipo === 'solo_firma') return 'solo_firma';
-                                    if (tipo === 'sello_y_firma' || tipo === 'sello_institucional') return 'sello_y_firma';
-                                    return 'completo';
-                                })()}
-                                firmadoEn={sig.profile?.actualizadoEn ? `${new Date(sig.profile.actualizadoEn).toLocaleDateString('es-EC')} UTC` : undefined}
-                            />
-                        </div>
+                    {/* Previsualización del instrumento */}
+                    <div className="w-full flex items-center justify-center">
+                        <DocumentStampPreview
+                            nombreFirmante={userName}
+                            cargo={sig.profile?.cargo || 'Docente'}
+                            departamento={sig.profile?.departamento || ''}
+                            cedula={userCi}
+                            firmaImagenB64={sig.profile?.firmaImagenB64 || (sig.profile as any)?.firma_imagen_b64 || sig.firmaImagenB64}
+                            tipoPresentacion={(() => {
+                                const tipo = sig.profile?.tipoSello || (sig.profile as any)?.tipo_sello;
+                                if (tipo === 'solo_sello') return 'solo_sello';
+                                if (tipo === 'solo_firma') return 'solo_firma';
+                                if (tipo === 'sello_y_firma' || tipo === 'sello_institucional') return 'sello_y_firma';
+                                return 'completo';
+                            })()}
+                            firmadoEn={sig.profile?.actualizadoEn ? `${new Date(sig.profile.actualizadoEn).toLocaleDateString('es-EC')} UTC` : undefined}
+                        />
                     </div>
                 </div>
             )}
@@ -170,32 +175,27 @@ export const SignatureProfileCard: React.FC = () => {
             {sig.isEditing && (
                 <form onSubmit={handleSaveProfile} className="space-y-6">
                     {/* Selector de modo sobre riel plano centrado */}
-                    <div className="space-y-3">
-                        <span className="text-xs font-bold text-text-main uppercase tracking-wider block text-center">
-                            Método de Generación del Trazo
-                        </span>
-                        <div className="border-b border-border-thin">
-                            <nav className="-mb-px flex items-center justify-center gap-6 sm:gap-10 overflow-x-auto overflow-y-hidden no-scrollbar">
-                                {(['auto', 'upload', 'draw'] as const).map((mode) => (
-                                    <button
-                                        key={mode}
-                                        type="button"
-                                        onClick={() => sig.selectMode(mode)}
-                                        className={`py-3 px-2 border-b-[3px] text-sm sm:text-[15px] tracking-tight transition-colors whitespace-nowrap cursor-pointer ${sig.activeMode === mode
-                                            ? 'border-[#0070f3] text-[#0070f3] dark:border-blue-400 dark:text-blue-400 font-bold'
-                                            : 'border-transparent text-slate-700 dark:text-zinc-300 hover:text-slate-950 dark:hover:text-white font-semibold'
-                                            }`}
-                                    >
-                                        {mode === 'auto' ? 'Generación Automática' : mode === 'upload' ? 'Cargar Imagen (Foto)' : 'Dibujo Manual (Lienzo)'}
-                                    </button>
-                                ))}
-                            </nav>
-                        </div>
+                    <div className="border-b border-border-thin">
+                        <nav className="-mb-px flex items-center justify-center gap-6 sm:gap-10 overflow-x-auto overflow-y-hidden no-scrollbar">
+                            {(['auto', 'upload', 'draw'] as const).map((mode) => (
+                                <button
+                                    key={mode}
+                                    type="button"
+                                    onClick={() => sig.selectMode(mode)}
+                                    className={`py-3 px-2 border-b-[3px] text-sm sm:text-[15px] tracking-tight transition-colors whitespace-nowrap cursor-pointer ${sig.activeMode === mode
+                                        ? 'border-[#0070f3] text-[#0070f3] dark:border-blue-400 dark:text-blue-400 font-bold'
+                                        : 'border-transparent text-slate-700 dark:text-zinc-300 hover:text-slate-950 dark:hover:text-white font-semibold'
+                                        }`}
+                                >
+                                    {mode === 'auto' ? 'Generación Automática' : mode === 'upload' ? 'Cargar Imagen (Foto)' : 'Dibujo Manual (Lienzo)'}
+                                </button>
+                            ))}
+                        </nav>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                            <label htmlFor="sig-cargo" className="text-xs font-bold text-text-main uppercase tracking-wider block">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="space-y-1 text-center">
+                            <label htmlFor="sig-cargo" className="text-xs font-bold text-text-main uppercase tracking-wider block text-center">
                                 Cargo Institucional <span className="text-rose-500">*</span>
                             </label>
                             <input
@@ -204,11 +204,11 @@ export const SignatureProfileCard: React.FC = () => {
                                 value={sig.cargo}
                                 onChange={(e) => sig.setCargo(e.target.value)}
                                 placeholder="Ej. Docente Titular"
-                                className="w-full bg-bg-deep border border-border-thin rounded-xl px-4 py-3 text-xs sm:text-sm font-semibold text-text-main focus:border-[#0070f3] outline-none transition-all shadow-2xs"
+                                className="w-full bg-transparent border-0 border-b border-slate-300 dark:border-zinc-700 rounded-none px-1 py-2.5 text-center text-xs sm:text-sm font-semibold text-text-main placeholder:text-slate-400 focus:border-[#0070f3] dark:focus:border-blue-400 outline-none transition-colors"
                             />
                         </div>
-                        <div className="space-y-1.5">
-                            <label htmlFor="sig-dept" className="text-xs font-bold text-text-main uppercase tracking-wider block">
+                        <div className="space-y-1 text-center">
+                            <label htmlFor="sig-dept" className="text-xs font-bold text-text-main uppercase tracking-wider block text-center">
                                 Departamento o Unidad Académica <span className="text-rose-500">*</span>
                             </label>
                             <input
@@ -217,7 +217,7 @@ export const SignatureProfileCard: React.FC = () => {
                                 value={sig.departamento}
                                 onChange={(e) => sig.setDepartamento(e.target.value)}
                                 placeholder="Ej. Tecnología Superior en Desarrollo de Software"
-                                className="w-full bg-bg-deep border border-border-thin rounded-xl px-4 py-3 text-xs sm:text-sm text-text-main focus:border-[#0070f3] outline-none transition-all shadow-2xs"
+                                className="w-full bg-transparent border-0 border-b border-slate-300 dark:border-zinc-700 rounded-none px-1 py-2.5 text-center text-xs sm:text-sm text-text-main placeholder:text-slate-400 focus:border-[#0070f3] dark:focus:border-blue-400 outline-none transition-colors"
                             />
                         </div>
                     </div>
@@ -376,16 +376,7 @@ export const SignatureProfileCard: React.FC = () => {
                     </div>
 
                     {/* Previsualización en Tiempo Real del Sello Institucional */}
-                    <div className="border-t border-border-thin pt-5 space-y-3">
-                        <span className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wider block">
-                            Previsualización en Tiempo Real ({(() => {
-                                if (sig.tipoSello === 'sello_y_firma') return 'Firma y Sello Oficial Combinados';
-                                if (sig.tipoSello === 'solo_firma') return 'Solo Firma Personal';
-                                if (sig.tipoSello === 'solo_sello') return 'Solo Sello Departamental';
-                                return 'Sello Criptográfico con QR';
-                            })()})
-                        </span>
-
+                    <div className="pt-2">
                         <DocumentStampPreview
                             nombreFirmante={sig.autoText || userName}
                             cargo={sig.cargo.trim() || 'Docente Titular'}
@@ -396,7 +387,7 @@ export const SignatureProfileCard: React.FC = () => {
                         />
                     </div>
 
-                    <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200/90 dark:border-zinc-800">
+                    <div className="flex items-center justify-end gap-3 pt-2">
                         <button
                             type="button"
                             onClick={sig.cancelEdit}
@@ -436,17 +427,14 @@ export const SignatureProfileCard: React.FC = () => {
                         onClick={e => e.stopPropagation()}
                     >
                         {/* Cabecera Institucional Sobria */}
-                        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
-                            <div className="flex items-center gap-3">
-                                <ShieldCheck className="w-5 h-5 text-[#0070f3] dark:text-blue-400 shrink-0" />
-                                <div>
-                                    <h2 className="text-sm font-bold text-zinc-900 dark:text-white">
-                                        Confirmar Firma y Sello Institucional
-                                    </h2>
-                                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                        Verifique el estampado oficial para la firma de PEA y actas del ISTPET
-                                    </p>
-                                </div>
+                        <div className="flex items-center justify-between px-6 pt-6 pb-2 bg-white dark:bg-zinc-950">
+                            <div>
+                                <h2 className="text-sm font-bold text-zinc-900 dark:text-white">
+                                    Confirmar Firma y Sello Institucional
+                                </h2>
+                                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                                    Verifique el estampado oficial para la firma de PEA y actas del ISTPET
+                                </p>
                             </div>
                             <button
                                 type="button"
@@ -458,7 +446,7 @@ export const SignatureProfileCard: React.FC = () => {
                         </div>
 
                         {/* Contenido: Previsualización Directa y Fiel del Sello */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white dark:bg-zinc-950 text-left">
+                        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-white dark:bg-zinc-950 text-left">
                             <DocumentStampPreview
                                 nombreFirmante={sig.autoText || userName}
                                 cargo={sig.cargo.trim()}
@@ -470,7 +458,7 @@ export const SignatureProfileCard: React.FC = () => {
                         </div>
 
                         {/* Pie de página con botones */}
-                        <div className="px-6 py-4 border-t border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-end gap-3">
+                        <div className="px-6 pt-2 pb-6 bg-white dark:bg-zinc-950 flex items-center justify-end gap-3">
                             <button
                                 type="button"
                                 onClick={() => setShowConfirmModal(false)}

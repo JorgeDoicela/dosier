@@ -72,32 +72,6 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
     const isHorasBalanced = totalHoras > 0 && Math.abs(diffHoras) < 0.01;
     const horasSemanales = Number(formData?.HorasSemanales ?? formData?.horas_semanales ?? 0);
 
-    const aplicarDistribucionNormativa = () => {
-        const total = totalHoras > 0 ? totalHoras : (Number(formData?.Creditos) || 1) * 48;
-        let cd = 0;
-        let ape = 0;
-        let ta = 0;
-
-        // Si existen horas semanales asignadas en distributivo (ej. 2h/sem * 16 semanas = 32h docencia)
-        if (horasSemanales > 0 && (horasSemanales * 16) < total) {
-            cd = horasSemanales * 16;
-            const restante = total - cd;
-            ape = Math.floor(restante / 2);
-            ta = total - cd - ape;
-        } else {
-            cd = Math.floor(total / 3);
-            ape = Math.floor(total / 3);
-            ta = total - cd - ape;
-        }
-
-        if (totalHoras <= 0) {
-            onUpdate('TotalHorasAsignatura', total);
-        }
-        onUpdate('HorasContactoDocente', cd);
-        onUpdate('HorasPracticoExperimental', ape);
-        onUpdate('HorasAutonomo', ta);
-    };
-
     return (
         <div className="space-y-6 sm:space-y-8 animate-fade-in font-sans">
             {/* 1. Nombre de la asignatura (Dato Maestro Oficial de SIGAFI / Malla) */}
@@ -381,16 +355,6 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                                 <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-border-thin">
                                     Distributivo: {horasSemanales}h/sem
                                 </span>
-                            )}
-                            {!readOnly && (!isHorasBalanced || totalHoras <= 0) && (
-                                <button
-                                    type="button"
-                                    onClick={aplicarDistribucionNormativa}
-                                    className="text-xs font-medium px-2.5 py-1 rounded bg-[#0070f3] text-white hover:bg-blue-600 active:scale-95 transition-all cursor-pointer shadow-xs"
-                                    title="Aplica la distribución de horas según distributivo semanal o tercios"
-                                >
-                                    Distribuir horas
-                                </button>
                             )}
                         </div>
                     </div>

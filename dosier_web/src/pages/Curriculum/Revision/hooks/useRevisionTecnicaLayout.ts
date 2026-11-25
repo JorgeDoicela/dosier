@@ -6,7 +6,6 @@ export const useRevisionTecnicaLayout = () => {
     const [activeSection, setActiveSection] = useState<string>('pea_general_section');
     const [activeCommentField, setActiveCommentField] = useState<string>('NombreAsignatura');
     const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState(false);
-    const [generalFeedback, setGeneralFeedback] = useState('');
 
     // Hook desacoplado de Smart Header
     const smartHeader = useSmartHeader({ threshold: 10, topOffset: 60 });
@@ -338,8 +337,6 @@ export const useRevisionTecnicaLayout = () => {
         setActiveCommentField,
         isFinalizeModalOpen,
         setIsFinalizeModalOpen,
-        generalFeedback,
-        setGeneralFeedback,
         isDraggingLeft: isDraggingLeftRef.current,
         isDraggingRight: isDraggingRightRef.current,
         leftSidebarWidth,

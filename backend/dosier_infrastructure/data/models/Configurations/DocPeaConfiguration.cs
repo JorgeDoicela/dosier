@@ -188,8 +188,9 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.Property(e => e.Uuid).HasColumnName("uuid").IsRequired().HasMaxLength(36);
             builder.Property(e => e.IdPea).HasColumnName("idPea");
             builder.Property(e => e.IdUnidad).HasColumnName("idUnidad");
+            builder.Property(e => e.UnidadesReferencia).HasColumnName("unidadesReferencia").HasMaxLength(50);
             builder.Property(e => e.NumeroPractica).HasColumnName("numeroPractica");
-            builder.Property(e => e.NombrePractica).HasColumnName("nombrePractica").IsRequired().HasMaxLength(255);
+            builder.Property(e => e.NombrePractica).HasColumnName("nombrePractica").IsRequired().HasColumnType("text");
             builder.Property(e => e.Caracterizacion).HasColumnName("caracterizacion").HasColumnType("text");
             builder.Property(e => e.DuracionHoras).HasPrecision(6, 2).HasColumnName("duracionHoras");
             builder.Property(e => e.Orden).HasColumnName("orden");

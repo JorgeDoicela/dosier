@@ -132,6 +132,51 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-8 space-y-5 bg-white dark:bg-zinc-950">
+                    {(carrerasUsuario.length > 0 || canPublishInstituto) && (
+                        <div className="space-y-1.5">
+                            <label className="section-label block">Alcance de visibilidad</label>
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => aplicarAlcanceDefaults('personal')}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer ${
+                                        formAlcance === 'personal'
+                                            ? 'bg-[#0070f3] text-white border-[#0070f3] font-semibold'
+                                            : 'bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800'
+                                    }`}
+                                >
+                                    Personal
+                                </button>
+                                {carrerasUsuario.length > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => aplicarAlcanceDefaults('carrera')}
+                                        className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer ${
+                                            formAlcance === 'carrera'
+                                                ? 'bg-[#0070f3] text-white border-[#0070f3] font-semibold'
+                                                : 'bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800'
+                                        }`}
+                                    >
+                                        Toda la carrera
+                                    </button>
+                                )}
+                                {canPublishInstituto && (
+                                    <button
+                                        type="button"
+                                        onClick={() => aplicarAlcanceDefaults('instituto')}
+                                        className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer ${
+                                            formAlcance === 'instituto'
+                                                ? 'bg-[#0070f3] text-white border-[#0070f3] font-semibold'
+                                                : 'bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800'
+                                        }`}
+                                    >
+                                        Todo el instituto
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {formAlcance === 'carrera' && carrerasUsuario.length > 1 && (
                         <div>
                             <label className="section-label mb-1.5 block">Carrera *</label>
@@ -200,6 +245,7 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
                             <label className="section-label mb-1.5 block">Fecha de Fin (opcional)</label>
                             <input
                                 type="date"
+                                min={formFechaInicio || undefined}
                                 value={formFechaFin || ''}
                                 onChange={(e) => setFormFechaFin(e.target.value)}
                                 className="input-vercel text-sm"

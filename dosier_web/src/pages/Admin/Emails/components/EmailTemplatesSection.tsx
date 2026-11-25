@@ -4,6 +4,8 @@ import type { EmailTemplate } from '../emailEngineTypes';
 
 export interface EmailTemplatesSectionProps {
     templates: EmailTemplate[];
+    canManageTemplates: boolean;
+    canDeleteTemplates: boolean;
     openCreateTemplateModal: () => void;
     openEditTemplateModal: (t: EmailTemplate) => void;
     handleDeleteTemplate: (id: number) => Promise<void>;
@@ -11,6 +13,8 @@ export interface EmailTemplatesSectionProps {
 
 export const EmailTemplatesSection: React.FC<EmailTemplatesSectionProps> = ({
     templates,
+    canManageTemplates,
+    canDeleteTemplates,
     openCreateTemplateModal,
     openEditTemplateModal,
     handleDeleteTemplate
@@ -19,12 +23,14 @@ export const EmailTemplatesSection: React.FC<EmailTemplatesSectionProps> = ({
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h3 className="text-sm font-bold text-text-main uppercase tracking-widest">Plantillas del Sistema</h3>
-                <button
-                    onClick={openCreateTemplateModal}
-                    className="btn-vercel-primary text-xs !py-2 flex items-center gap-2 cursor-pointer"
-                >
-                    <Plus size={14} /> Nueva Plantilla
-                </button>
+                {canManageTemplates && (
+                    <button
+                        onClick={openCreateTemplateModal}
+                        className="btn-vercel-primary text-xs !py-2 flex items-center gap-2 cursor-pointer"
+                    >
+                        <Plus size={14} /> Nueva Plantilla
+                    </button>
+                )}
             </div>
 
             <div className="bento-card static overflow-hidden">
@@ -73,22 +79,28 @@ export const EmailTemplatesSection: React.FC<EmailTemplatesSectionProps> = ({
                                             )}
                                         </td>
                                         <td className="p-4 text-right">
-                                            <div className="flex justify-end gap-1.5">
-                                                <button
-                                                    onClick={() => openEditTemplateModal(t)}
-                                                    className="p-1.5 rounded-lg border border-border-thin text-text-dim hover:text-text-main hover:bg-surface-hover/50 transition-all cursor-pointer"
-                                                    title="Editar Plantilla"
-                                                >
-                                                    <Edit2 size={13} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteTemplate(t.idEmailTemplate)}
-                                                    className="p-1.5 rounded-lg border border-border-thin text-text-dim hover:text-error hover:bg-error-subtle transition-all cursor-pointer"
-                                                    title="Eliminar Plantilla"
-                                                >
-                                                    <Trash2 size={13} />
-                                                </button>
-                                            </div>
+                                            {canManageTemplates ? (
+                                                <div className="flex justify-end gap-1.5">
+                                                    <button
+                                                        onClick={() => openEditTemplateModal(t)}
+                                                        className="p-1.5 rounded-lg border border-border-thin text-text-dim hover:text-text-main hover:bg-surface-hover/50 transition-all cursor-pointer"
+                                                        title="Editar Plantilla"
+                                                    >
+                                                        <Edit2 size={13} />
+                                                    </button>
+                                                    {canDeleteTemplates && (
+                                                        <button
+                                                            onClick={() => handleDeleteTemplate(t.idEmailTemplate)}
+                                                            className="p-1.5 rounded-lg border border-border-thin text-text-dim hover:text-error hover:bg-error-subtle transition-all cursor-pointer"
+                                                            title="Eliminar Plantilla"
+                                                        >
+                                                            <Trash2 size={13} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs text-text-dim">Solo lectura</span>
+                                            )}
                                         </td>
                                     </tr>
                                 ))

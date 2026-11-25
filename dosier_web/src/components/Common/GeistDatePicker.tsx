@@ -11,6 +11,7 @@ export interface GeistDatePickerProps {
     disabled?: boolean;
     readOnly?: boolean;
     inputReadOnly?: boolean;
+    hideCalendarIcon?: boolean;
     minDate?: string;
     maxDate?: string;
     className?: string;
@@ -26,6 +27,7 @@ export const GeistDatePicker: React.FC<GeistDatePickerProps> = ({
     disabled = false,
     readOnly = false,
     inputReadOnly = false,
+    hideCalendarIcon = false,
     minDate,
     maxDate,
     className = '',
@@ -120,10 +122,11 @@ export const GeistDatePicker: React.FC<GeistDatePickerProps> = ({
                     placeholder={placeholder}
                     disabled={disabled}
                     readOnly={readOnly || inputReadOnly}
+                    inputMode={inputReadOnly ? 'none' : undefined}
                     maxLength={10}
                     className={`w-full bg-bg-deep border rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-bold text-text-main placeholder:text-text-dim/30 focus:ring-2 focus:ring-text-main/20 outline-none transition-all pr-10 ${
                         error ? 'border-red-500/60 focus:border-red-500' : 'border-border-thin focus:border-text-main'
-                    } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${inputReadOnly && !disabled && !readOnly ? 'cursor-pointer select-none' : ''} ${className}`}
+                    } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${inputReadOnly && !disabled && !readOnly ? 'cursor-pointer select-none caret-transparent' : ''} ${className}`}
                 />
 
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
@@ -137,17 +140,19 @@ export const GeistDatePicker: React.FC<GeistDatePickerProps> = ({
                             <X className="w-3.5 h-3.5" />
                         </button>
                     )}
-                    <button
-                        type="button"
-                        disabled={disabled || readOnly}
-                        onClick={() => setIsOpen(!isOpen)}
-                        className={`p-1.5 rounded-lg text-text-dim hover:text-text-main hover:bg-surface-hover transition-colors cursor-pointer ${
-                            isOpen ? 'text-text-main bg-surface-hover' : ''
-                        }`}
-                        title="Seleccionar fecha en calendario"
-                    >
-                        <CalendarIcon className="w-4 h-4" />
-                    </button>
+                    {!hideCalendarIcon && (
+                        <button
+                            type="button"
+                            disabled={disabled || readOnly}
+                            onClick={() => setIsOpen(!isOpen)}
+                            className={`p-1.5 rounded-lg text-text-dim hover:text-text-main hover:bg-surface-hover transition-colors cursor-pointer ${
+                                isOpen ? 'text-text-main bg-surface-hover' : ''
+                            }`}
+                            title="Seleccionar fecha en calendario"
+                        >
+                            <CalendarIcon className="w-4 h-4" />
+                        </button>
+                    )}
                 </div>
             </div>
 

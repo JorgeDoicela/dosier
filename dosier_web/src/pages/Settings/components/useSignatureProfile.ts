@@ -93,6 +93,14 @@ export function useSignatureProfile(): SignatureProfileState {
         return () => { active = false; };
     }, [user]);
 
+    useEffect(() => {
+        if (!message) return;
+        const timer = setTimeout(() => {
+            setMessage(null);
+        }, message.type === 'success' ? 4000 : 6000);
+        return () => clearTimeout(timer);
+    }, [message]);
+
     // Activar modo edición y scroll si se navegó mediante el botón de la notificación
     useEffect(() => {
         if (searchParams.get('editFirma') === 'true' || window.location.hash === '#perfil-firma') {

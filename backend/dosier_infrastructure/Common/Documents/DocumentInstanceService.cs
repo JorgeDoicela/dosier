@@ -888,6 +888,8 @@ namespace Dosier.Infrastructure.Common.Documents
                         }).ToList(),
                         ["ActividadesPracticas"] = pea.ActividadesPracticas.OrderBy(p => p.Orden).Select(p => new Dictionary<string, object?>
                         {
+                            ["Unidad"] = !string.IsNullOrWhiteSpace(p.UnidadesReferencia) ? p.UnidadesReferencia : $"Unidad {p.NumeroPractica}",
+                            ["UnidadesReferencia"] = p.UnidadesReferencia ?? "",
                             ["NumeroPractica"] = p.NumeroPractica,
                             ["NombrePractica"] = p.NombrePractica ?? "",
                             ["Caracterizacion"] = p.Caracterizacion ?? "",

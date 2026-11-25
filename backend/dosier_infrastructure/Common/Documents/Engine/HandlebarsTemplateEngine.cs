@@ -880,6 +880,9 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
 
                         string unidad = pDict.GetValueOrDefault("unidad")?.ToString()
                             ?? pDict.GetValueOrDefault("Unidad")?.ToString()
+                            ?? pDict.GetValueOrDefault("unidadesReferencia")?.ToString()
+                            ?? pDict.GetValueOrDefault("UnidadesReferencia")?.ToString()
+                            ?? pDict.GetValueOrDefault("unidades_referencia")?.ToString()
                             ?? $"Unidad {prIdx}";
 
                         string nombre = pDict.GetValueOrDefault("nombre")?.ToString()
@@ -946,14 +949,24 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                         string tipo = eDict.GetValueOrDefault("tipo")?.ToString()
                             ?? eDict.GetValueOrDefault("Tipo")?.ToString()
                             ?? eDict.GetValueOrDefault("TipoEvaluacion")?.ToString()
+                            ?? eDict.GetValueOrDefault("tipoEvaluacion")?.ToString()
                             ?? eDict.GetValueOrDefault("tipo_evaluacion")?.ToString()
                             ?? "";
 
-                        string calif = eDict.GetValueOrDefault("calificacion")?.ToString()
+                        string rawCalif = eDict.GetValueOrDefault("calificacion")?.ToString()
                             ?? eDict.GetValueOrDefault("Calificacion")?.ToString()
                             ?? eDict.GetValueOrDefault("CalificacionMaxima")?.ToString()
+                            ?? eDict.GetValueOrDefault("calificacionMaxima")?.ToString()
                             ?? eDict.GetValueOrDefault("calificacion_maxima")?.ToString()
                             ?? "10,00";
+
+                        string calif = decimal.TryParse(
+                            rawCalif.Replace(',', '.'),
+                            System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            out decimal parsedCalif)
+                            ? parsedCalif.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture).Replace('.', ',')
+                            : rawCalif;
 
                         var normE = CreateCaseInsensitiveDictionary(eDict);
                         normE["Nota"] = nota;

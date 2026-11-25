@@ -1,19 +1,20 @@
 /**
  * Vista previa del correo con el mismo layout institucional que MasterLayout.html (backend).
  */
-import { escapeHtml } from './emailEngineConfig';
+import { escapeHtml, getTokenLabel } from './emailEngineConfig';
 
 const SKIP_EXTRA_KEYS = new Set([
     '[[destinatario_nombre]]',
     '[[destinatario_email]]',
     '[[anio_actual]]',
     '[[institucion_nombre]]',
-    '[[sistema_url]]'
+    '[[sistema_url]]',
+    '[[mensaje_adicional]]'
 ]);
 
 const CONTEXT_TOKEN_PREFIXES: Record<string, string[]> = {
-    Proyecto: ['proyecto_', 'linea_investigacion', 'nombre_hito', 'fecha_limite_hito', 'fecha_postulacion'],
-    Convocatoria: ['convocatoria_']
+    PEA: ['pea_'],
+    Periodo: ['periodo_']
 };
 
 export function clearContextTokenValues(
@@ -24,7 +25,7 @@ export function clearContextTokenValues(
     const next = { ...prev };
     Object.keys(next).forEach(tok => {
         const inner = tok.replace(/\[\[|\]\]/g, '').toLowerCase();
-        if (prefixes.some(p => inner.includes(p))) {
+        if (prefixes.some(p => inner.startsWith(p))) {
             next[tok] = '';
         }
     });
@@ -52,31 +53,14 @@ export function extractInnerContent(html: string): string {
         ''
     );
 
-    slice = slice.replace(
-        /<div[^>]*max-width:\s*600px[\s\S]*?<h2/i,
-        '<h2'
-    );
-    slice = slice.replace(
-        /<div[^>]*text-align:\s*center[\s\S]*?Departamento de Investigación[\s\S]*?<\/div>\s*/i,
-        ''
-    );
-    slice = slice.replace(
-        /<div[^>]*border-top:\s*1px\s+solid\s+#eaeaea[\s\S]*?correo automático[\s\S]*?<\/div>\s*<\/div>\s*$/i,
-        ''
-    );
-
     return slice.trim() || '<p></p>';
 }
 
-/** Elimina bloques embebidos de detalles (proyecto, convocatoria, etc.) sin instancia vinculada. */
+/** Elimina bloques embebidos de detalles cuando no hay instancia vinculada. */
 export function stripEmbeddedContextBlocks(html: string): string {
     let result = html;
     result = result.replace(
         /<div[^>]*background-color:\s*#fafafa[^>]*>[\s\S]*?<\/table>\s*<\/div>/gi,
-        ''
-    );
-    result = result.replace(
-        /<div[^>]*>[\s\S]*?<h3[^>]*>[\s\S]*?Detalles del (?:Proyecto|Convocatoria)[\s\S]*?<\/table>\s*<\/div>/gi,
         ''
     );
     return result;
@@ -90,10 +74,7 @@ export function buildExtraDataForPreview(
         if (SKIP_EXTRA_KEYS.has(key)) return;
         if (!value?.trim()) return;
         if (key.toLowerCase().includes('url') && value.startsWith('http')) return;
-        const label = key
-            .replace(/\[\[|\]\]/g, '')
-            .replace(/_/g, ' ')
-            .replace(/^\w/, c => c.toUpperCase());
+        const label = getTokenLabel(key);
         rows[label] = value.trim();
     });
     return Object.keys(rows).length > 0 ? rows : undefined;
@@ -105,8 +86,10 @@ export function resolveActionUrlForPreview(
     origin: string
 ): string | undefined {
     const priorityKeys = [
-        '[[proyecto_workspace_url]]',
-        '[[convocatoria_bases_url]]'
+        '[[action_url]]',
+        '[[url_accion]]',
+        '[[pea_workspace_url]]',
+        '[[pea_revision_url]]'
     ];
     for (const key of priorityKeys) {
         const val = replacements[key]?.trim();
@@ -154,14 +137,14 @@ export function renderMasterLayoutPreview(params: MasterPreviewParams): string {
 
     const extraRows = extraData
         ? Object.entries(extraData)
-              .map(
-                  ([key, value]) => `
+            .map(
+                ([key, value]) => `
             <tr>
                 <td style="padding: 8px 0; color: #666666; width: 35%; vertical-align: top; border-bottom: 1px solid #fafafa; font-family: Segoe UI, Arial, sans-serif; font-size: 13px;">${escapeAttr(key)}:</td>
                 <td style="padding: 8px 0; color: #000000; font-weight: 500; vertical-align: top; border-bottom: 1px solid #fafafa; font-family: Segoe UI, Arial, sans-serif; font-size: 13px;">${escapeHtml(value)}</td>
             </tr>`
-              )
-              .join('')
+            )
+            .join('')
         : '';
 
     const extraBlock =
@@ -203,7 +186,7 @@ body, table, td, p, a, div, span, h1, h2, h3 { font-family: Segoe UI, Arial, san
 </tr></table>
 <div style="height:6px;">&nbsp;</div>
 <p style="color:#000;margin:0;font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-align:center;">SISTEMA DOSIER</p>
-<p style="color:#666;margin:6px 0 0;font-size:10px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;text-align:center;">Sistema de Portafolio Docente ISTPET</p>
+<p style="color:#666;margin:6px 0 0;font-size:10px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;text-align:center;">Sistema de Gestión Curricular · ISTPET</p>
 </td>
 </tr>
 <tr>
@@ -218,7 +201,7 @@ ${actionBlock}
 <p style="color:#888;font-size:11px;margin:0;">Excelencia Académica y Tecnológica · ISTPET ${anio}</p>
 </div>
 <div style="margin-top:20px;background:#fafafa;border-radius:8px;padding:14px;border:1px solid #eaeaea;">
-<p style="color:#666;font-size:10.5px;line-height:1.6;margin:0;">Este mensaje ha sido generado automáticamente por el Sistema DOSIER. La información contenida está protegida bajo la Ley Orgánica de Protección de Datos Personales (LOPDP) del Ecuador.</p>
+<p style="color:#666;font-size:10.5px;line-height:1.6;margin:0;">Aviso de Protección de Datos (LOPDP): Sus datos personales son tratados exclusivamente para gestionar procesos curriculares y Programas de Estudio de Asignatura (PEA) en el sistema DOSIER del ISTPET.</p>
 </div>
 </td>
 </tr>

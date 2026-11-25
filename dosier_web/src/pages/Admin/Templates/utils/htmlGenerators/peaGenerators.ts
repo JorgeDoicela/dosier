@@ -381,6 +381,20 @@ export const generatePeaEvaluationHtml = (block: DocumentBlock): string => {
     const fg = getContrastFg(headerBg);
     const borderCss = 'border: 1px solid #000000;';
 
+    const fallbackRows = Array.isArray(c.evaluaciones) && c.evaluaciones.length > 0
+        ? c.evaluaciones
+        : [
+            { nota: 'NOTA PARCIAL 1', tipo: c.parcial1Desc || 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)', calificacion: c.parcial1Nota || '10,00' },
+            { nota: 'NOTA PARCIAL 2', tipo: c.parcial2Desc || 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)', calificacion: c.parcial2Nota || '10,00' },
+            { nota: 'EVALUACIÓN', tipo: c.finalDesc || 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)', calificacion: c.finalNota || '10,00' }
+        ];
+
+    const fallbackRowsHtml = fallbackRows.map((row: any) => `      <tr>
+        <td style="${borderCss} padding: 5px 6px; font-weight: bold; text-align: left;">${row.nota || ''}</td>
+        <td style="${borderCss} padding: 5px 6px; text-align: left;">${row.tipo || ''}</td>
+        <td style="${borderCss} padding: 5px 6px; text-align: center; font-weight: bold;">${row.calificacion || '10,00'}</td>
+      </tr>`).join('\n');
+
     return `
 <div class="pea-section-evaluation" style="margin-bottom: 0; font-family: inherit;">
   <div style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss} border-top: none;">
@@ -395,21 +409,17 @@ export const generatePeaEvaluationHtml = (block: DocumentBlock): string => {
       </tr>
     </thead>
     <tbody>
+      {{#if Evaluaciones}}
+      {{#each Evaluaciones}}
       <tr>
-        <td style="${borderCss} padding: 5px 6px; font-weight: bold;">NOTA PARCIAL 1</td>
-        <td style="${borderCss} padding: 5px 6px;">${c.parcial1Desc || 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)'}</td>
-        <td style="${borderCss} padding: 5px 6px; text-align: center; font-weight: bold;">${c.parcial1Nota || '10,00'}</td>
+        <td style="${borderCss} padding: 5px 6px; font-weight: bold; text-align: left;">{{default this.Nota (default this.nota (default this.Denominacion (default this.denominacion "---")))}}</td>
+        <td style="${borderCss} padding: 5px 6px; text-align: left;">{{default this.Tipo (default this.tipo (default this.TipoEvaluacion (default this.tipo_evaluacion "---")))}}</td>
+        <td style="${borderCss} padding: 5px 6px; text-align: center; font-weight: bold;">{{default this.Calificacion (default this.calificacion (default this.CalificacionMaxima (default this.calificacion_maxima "10,00")))}}</td>
       </tr>
-      <tr>
-        <td style="${borderCss} padding: 5px 6px; font-weight: bold;">NOTA PARCIAL 2</td>
-        <td style="${borderCss} padding: 5px 6px;">${c.parcial2Desc || 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)'}</td>
-        <td style="${borderCss} padding: 5px 6px; text-align: center; font-weight: bold;">${c.parcial2Nota || '10,00'}</td>
-      </tr>
-      <tr>
-        <td style="${borderCss} padding: 5px 6px; font-weight: bold;">EVALUACIÓN FINAL</td>
-        <td style="${borderCss} padding: 5px 6px;">${c.finalDesc || 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)'}</td>
-        <td style="${borderCss} padding: 5px 6px; text-align: center; font-weight: bold;">${c.finalNota || '10,00'}</td>
-      </tr>
+      {{/each}}
+      {{else}}
+${fallbackRowsHtml}
+      {{/if}}
     </tbody>
   </table>
 </div>`;

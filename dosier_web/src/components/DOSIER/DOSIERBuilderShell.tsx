@@ -17,6 +17,7 @@ import {
     generatePeaAiDraft,
     getPeaAiConfig,
     convertDraftToEditorFields,
+    extractPeaAiErrorMessage,
     type PeaStructuredDraft
 } from '../../services/peaAiService';
 import { useNotifications } from '../../api/NotificationsContext';
@@ -154,14 +155,37 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                 return;
             }
 
+            const parseSafeNum = (val: unknown, fallback: number): number => {
+                if (typeof val === 'number' && Number.isFinite(val)) return val;
+                if (typeof val === 'string') {
+                    const normalized = val.replace(',', '.').trim();
+                    const parsed = Number(normalized);
+                    if (Number.isFinite(parsed)) return parsed;
+                }
+                return fallback;
+            };
+
+            const parseUnitNum = (val: unknown, fallback: number): number => {
+                const direct = parseSafeNum(val, NaN);
+                if (Number.isFinite(direct) && direct >= 1) return Math.trunc(direct);
+                if (typeof val === 'string') {
+                    const match = val.match(/\d+/);
+                    if (match) {
+                        const extracted = Number(match[0]);
+                        if (Number.isFinite(extracted) && extracted >= 1) return Math.trunc(extracted);
+                    }
+                }
+                return fallback;
+            };
+
             const rawUnits: any[] = Array.isArray(formData?.Unidades) ? formData.Unidades : [];
             const currentUnidades = rawUnits.map((u, idx) => ({
-                num: Number(u.num ?? u.Numero ?? idx + 1),
+                num: parseUnitNum(u.num ?? u.Numero, idx + 1),
                 titulo: String(u.titulo ?? u.Titulo ?? u.NombreUnidad ?? ''),
                 contenidos: String(u.contenidos ?? u.Contenidos ?? ''),
-                horasCD: Number(u.horasCD ?? u.HorasCD ?? 0),
-                horasAPE: Number(u.horasAPE ?? u.HorasAPE ?? 0),
-                horasTA: Number(u.horasTA ?? u.HorasTA ?? 0)
+                horasCD: Math.max(0, parseSafeNum(u.horasCD ?? u.HorasCD, 0)),
+                horasAPE: Math.max(0, parseSafeNum(u.horasAPE ?? u.HorasAPE, 0)),
+                horasTA: Math.max(0, parseSafeNum(u.horasTA ?? u.HorasTA, 0))
             })).filter(u => u.titulo || u.contenidos);
 
             // Snapshot completo del estado actual del PEA en el editor
@@ -191,11 +215,12 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
             const rawPracticas: any[] = Array.isArray(formData?.ActividadesPracticas) ? formData.ActividadesPracticas : [];
             const currentActividadesPracticas = rawPracticas
                 .map((p: any, idx: number) => ({
-                    unidad: Number(p.unidad ?? p.Unidad ?? idx + 1),
+                    unidad: parseUnitNum(p.unidad ?? p.Unidad, idx + 1),
                     nombre: String(p.nombre ?? p.Nombre ?? p.nombre_practica ?? '').trim(),
-                    horas: Number(p.horas ?? p.Horas ?? 0),
+                    horas: Math.max(0, parseSafeNum(p.horas ?? p.Horas, 0)),
                     escenario: String(p.escenario ?? p.Escenario ?? '').trim(),
-                    producto: String(p.producto ?? p.Producto ?? '').trim()
+                    producto: String(p.producto ?? p.Producto ?? '').trim(),
+                    caracterizacion: String(p.caracterizacion ?? p.Caracterizacion ?? '').trim()
                 }))
                 .filter(p => p.nombre);
 
@@ -204,7 +229,7 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                 .map((e: any) => ({
                     nota: String(e.nota ?? e.Nota ?? '').trim(),
                     tipo: String(e.tipo ?? e.Tipo ?? '').trim(),
-                    calificacion: Number(e.calificacion ?? e.Calificacion ?? 10)
+                    calificacion: Math.max(0, parseSafeNum(e.calificacion ?? e.Calificacion, 10))
                 }))
                 .filter(e => e.nota || e.tipo);
 
@@ -262,8 +287,8 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
             setAiGeneratedDraft(draft);
             return draft;
         } catch (err: any) {
-            const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'No se pudo generar el borrador curricular.';
-            addToast('Error en Generación IA', typeof msg === 'string' ? msg : 'Verifique su API Key y conexión.', 'error');
+            const msg = extractPeaAiErrorMessage(err, 'No se pudo generar el borrador curricular.');
+            addToast('Error en Generación IA', msg, 'error');
             throw err;
         } finally {
             setIsGeneratingAi(false);

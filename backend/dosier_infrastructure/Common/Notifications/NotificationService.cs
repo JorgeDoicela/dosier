@@ -88,7 +88,7 @@ namespace dosier_infrastructure.Common.Notifications
                 Destinatario = u.IdUsuario,
                 Titulo = title,
                 Mensaje = body,
-                Categoria = "INVESTIGACION",
+                Categoria = "CURRICULAR",
                 UrlAccion = url,
                 FechaEnvio = DateTime.UtcNow,
                 Leido = false
@@ -164,7 +164,7 @@ namespace dosier_infrastructure.Common.Notifications
                 Destinatario = u.IdUsuario,
                 Titulo = title,
                 Mensaje = body,
-                Categoria = "INVESTIGACION",
+                Categoria = "CURRICULAR",
                 UrlAccion = url,
                 FechaEnvio = DateTime.UtcNow,
                 Leido = false

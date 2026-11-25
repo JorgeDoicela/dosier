@@ -22,6 +22,7 @@ interface CalendarioSidebarProps {
     stickyNotes: EventoCalendario[];
     draggingUuid: string | null;
     draggingType?: 'note' | 'kanban' | null;
+    draggingCanReturnToInbox?: boolean;
     handleNoteDragStart: (e: React.DragEvent, note: EventoCalendario) => void;
     handleGlobalDragEnd: () => void;
     handleEditEventClick: (note: EventoCalendario) => void;
@@ -37,6 +38,7 @@ export const CalendarioSidebar: React.FC<CalendarioSidebarProps> = ({
     stickyNotes,
     draggingUuid,
     draggingType,
+    draggingCanReturnToInbox = true,
     handleNoteDragStart,
     handleGlobalDragEnd,
     handleEditEventClick,
@@ -88,6 +90,7 @@ export const CalendarioSidebar: React.FC<CalendarioSidebarProps> = ({
                 <div
                     className={`sidebar-section sticky-notes-section ${isOverInboxDropZone ? 'drop-target-active' : ''}`}
                     onDragOver={(e) => {
+                        if (!draggingCanReturnToInbox) return;
                         const hasType = draggingType === 'kanban' ||
                             Array.from(e.dataTransfer.types || []).includes('dosier/kanban-event') ||
                             Array.from(e.dataTransfer.types || []).includes('text/plain');

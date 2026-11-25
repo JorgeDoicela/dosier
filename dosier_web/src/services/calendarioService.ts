@@ -35,10 +35,10 @@ export interface EventoCalendario {
     id_carrera?: number | null;
     nombre_carrera?: string | null;
     nombre_docente?: string | null;
+    puede_gestionar?: boolean;
     // Notas Rápidas — campos extendidos
     nota_detalle?: string | null;
     orden_bandeja?: number | null;
-    id_carrera?: number | null;
 }
 
 export interface EventoPayload {
@@ -153,6 +153,7 @@ export const reordenarBandeja = (items: { uuid: string; orden: number }[]): Prom
 
 export const CATEGORIAS_CONFIG: Record<string, { label: string; color: string }> = {
     Normativo:   { label: 'CACES / Normativa',            color: '#1E3A8A' },
+    Carrera:     { label: 'Evento de Carrera',            color: '#0070f3' },
     Curricular:  { label: 'Instrumento Curricular (PEA)', color: '#3B82F6' },
     EntregaPea:  { label: 'Entrega PEA Docente',          color: '#2563EB' },
     Revision:    { label: 'Revisión Coordinación',        color: '#8B5CF6' },
@@ -233,9 +234,12 @@ export const EVENTO_CONTEXTO_HELP: Record<string, string> = {
 /** Retorna la explicación conceptual del origen de un hito */
 export const getContextDescription = (ev: EventoCalendario): string | null => {
     if (ev.tipo_entidad_origen === 'CALENDARIO_NORMATIVO') {
+        if (ev.categoria_global === 'Carrera' || (!ev.es_privado && ev.id_carrera)) {
+            return 'Evento compartido con los docentes y la coordinación de esta carrera.';
+        }
         return ev.categoria_global === 'Normativo'
             ? 'Hito o plazo normativo de carácter institucional o externo (ej. CACES, autoevaluaciones, etc.). Su cumplimiento es auditado.'
-            : 'Tarea o evento personal programado en la agenda del usuario.';
+            : 'Tarea o evento personal programado únicamente en tu agenda.';
     }
     return EVENTO_CONTEXTO_HELP[ev.tipo_entidad_origen || ''] || null;
 };

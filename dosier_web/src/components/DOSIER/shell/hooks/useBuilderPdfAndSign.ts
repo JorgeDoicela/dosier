@@ -82,8 +82,9 @@ export const useBuilderPdfAndSign = ({
     const isPea = templateCode === 'PEA_OFICIAL';
 
     const getPeaRol = (): { codigo: string; label: string } => {
-        const currentEstado = formData?.estado || formData?.status || localStatus || '';
-        const esEtapaElaboracion = ['Borrador', 'Observado', 'Corregido'].includes(currentEstado);
+        const currentEstado = String(formData?.estado || formData?.Estado || formData?.status || localStatus || '').trim();
+        const estadoLower = currentEstado.toLowerCase();
+        const esEtapaElaboracion = !estadoLower || ['borrador', 'observado', 'corregido', 'noiniciado'].includes(estadoLower);
 
         // Si el PEA está en estado de formulación/elaboración (Borrador, Observado, Corregido), 
         // la firma corresponde siempre a la Elaboración del Docente Titular, incluso si el usuario

@@ -28,8 +28,7 @@ const DnDCalendar = withDragAndDrop(Calendar as any);
 const isPersonalTask = (ev?: any): boolean => {
     if (!ev) return false;
     return Boolean(
-        ev.categoria_global === 'Personal' ||
-        ev.subcategoria === 'Personal' ||
+        (ev.es_privado && ev.categoria_global === 'Personal') ||
         ev.estado === 'Inbox' ||
         ev.estado === 'inbox' ||
         (!ev.id_entidad_origen && !ev.tipo_entidad_origen)
@@ -38,7 +37,8 @@ const isPersonalTask = (ev?: any): boolean => {
 
 const isResizable = (event: object): boolean => {
     const ev = (event as CalendarEventExtended)?.resource;
-    return isPersonalTask(ev);
+    if (!ev) return false;
+    return Boolean(isPersonalTask(ev) || (ev.categoria_global === 'Carrera' && ev.puede_gestionar));
 };
 
 const EventoEnCelda: React.FC<{
@@ -235,6 +235,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                                         <div className="agenda-event-badge-content">
                                             <span className="agenda-event-dot" style={{ backgroundColor: color }} />
                                             <span className="agenda-event-title">{ev.titulo}</span>
+                                            {ev.nombre_carrera && (
+                                                <span className="agenda-event-desc">· {ev.nombre_carrera}</span>
+                                            )}
                                             {ev.descripcion && (
                                                 <span className="agenda-event-desc">— {ev.descripcion}</span>
                                             )}
@@ -285,9 +288,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     event: EventoEnAgenda as any
                 }
             }}
-            tooltipAccessor={(event: CalendarEventExtended) =>
-                `${event.title}${event.resource.descripcion ? '\n' + event.resource.descripcion : ''}`
-            }
+            tooltipAccessor={(event: CalendarEventExtended) => {
+                const ev = event.resource;
+                const scopeTag = ev.es_privado
+                    ? 'Personal'
+                    : ev.nombre_carrera
+                        ? `Carrera: ${ev.nombre_carrera}`
+                        : ev.tipo_entidad_origen === 'CALENDARIO_NORMATIVO'
+                            ? 'Institucional'
+                            : ev.categoria_global;
+                return `[${scopeTag}] ${event.title}${ev.descripcion ? '\n' + ev.descripcion : ''}`;
+            }}
             messages={{
                 next: "Sig. >",
                 previous: "< Ant.",

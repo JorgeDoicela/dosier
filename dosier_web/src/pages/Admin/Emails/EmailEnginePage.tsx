@@ -50,13 +50,13 @@ const EmailEnginePage: React.FC = () => {
 
     // 1. Data Orchestration Hook
     const dataHook = useEmailEngineData();
-    const { templates, setTemplates, carreras, projects, convocatorias, loading } = dataHook;
+    const { scope, templates, setTemplates, carreras, peas, periodos, loading } = dataHook;
 
     // 2. Email Composer Hook
     const composerHook = useEmailComposer({
         templates,
-        projects,
-        convocatorias
+        peas,
+        periodos
     });
 
     // 3. Templates CRUD Hook
@@ -85,11 +85,27 @@ const EmailEnginePage: React.FC = () => {
             <div className="max-w-[1600px] mx-auto">
                 {/* Brand Header */}
                 <PageHeader
-                    kicker="Comunicaciones de Investigación"
+                    kicker="Gestión Curricular Institucional"
                     icon={Mail}
                     title="Correos DOSIER"
-                    description="Comunicaciones guiadas por plantillas del sistema: el contenido se arma automáticamente según el contexto que seleccione."
+                    description={
+                        scope.isGlobalScope
+                            ? "Comunicaciones guiadas por plantillas curriculares del sistema: el contenido se completa automáticamente según el PEA o período seleccionado."
+                            : "Comunicaciones curriculares dirigidas a docentes y PEAs de sus carreras coordinadas."
+                    }
                 />
+
+                {!loading && !scope.isGlobalScope && (
+                    <div className="mb-5 flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-zinc-400">
+                        <span className="w-2 h-2 rounded-full bg-[#0070f3] shrink-0" />
+                        <span className="font-semibold text-slate-800 dark:text-zinc-200">Alcance de Coordinación de Carrera:</span>
+                        <span>
+                            {scope.allowedCarreras.length > 0
+                                ? scope.allowedCarreras.map(c => c.carrera1).join(', ')
+                                : 'Sin carreras activas asignadas'}
+                        </span>
+                    </div>
+                )}
 
                 {/* Pestañas sobre Riel Plano Modern Enterprise Docs */}
                 <div className="border-b border-slate-200 dark:border-zinc-800 mb-6">
@@ -144,10 +160,11 @@ const EmailEnginePage: React.FC = () => {
                             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                                 <EmailComposerSection
                                     composer={composerHook}
+                                    scope={scope}
                                     templates={templates}
                                     carreras={carreras}
-                                    projects={projects}
-                                    convocatorias={convocatorias}
+                                    peas={peas}
+                                    periodos={periodos}
                                 />
                                 <EmailPreviewSection
                                     parsedPreview={composerHook.parsedPreview}
@@ -166,6 +183,8 @@ const EmailEnginePage: React.FC = () => {
                         {activeTab === 'templates' && (
                             <EmailTemplatesSection
                                 templates={templates}
+                                canManageTemplates={scope.canManageTemplates}
+                                canDeleteTemplates={scope.canDeleteTemplates}
                                 openCreateTemplateModal={templatesHook.openCreateTemplateModal}
                                 openEditTemplateModal={templatesHook.openEditTemplateModal}
                                 handleDeleteTemplate={templatesHook.handleDeleteTemplate}
@@ -174,7 +193,10 @@ const EmailEnginePage: React.FC = () => {
 
                         {/* TAB 3: HISTORIAL DE ENVÍOS */}
                         {activeTab === 'history' && (
-                            <EmailHistorySection historyHook={historyHook} />
+                            <EmailHistorySection
+                                historyHook={historyHook}
+                                canViewAllHistory={scope.canViewAllHistory}
+                            />
                         )}
                     </div>
                 )}

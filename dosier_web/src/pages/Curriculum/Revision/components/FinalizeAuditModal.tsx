@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Scale,
@@ -6,20 +6,17 @@ import {
     Loader2,
     CheckCircle2,
     RotateCcw,
-    Clock,
-    KeyRound,
     FileCheck2,
     ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../../../../api/AuthContext';
 import { getSignatureProfile, type UserSignatureProfileDto } from '../../../../services/signaturesService';
 import { GeistDatePicker } from '../../../../components/Common/GeistDatePicker';
+import { FIELD_LABELS, type SectionComment } from '../types/revisionTecnicaTypes';
 
 interface FinalizeAuditModalProps {
     isOpen: boolean;
     onClose: () => void;
-    generalFeedback: string;
-    setGeneralFeedback: (val: string) => void;
     submitting: boolean;
     onAprobar: (
         motivo: string,
@@ -29,6 +26,7 @@ interface FinalizeAuditModalProps {
         contraseniaP12?: string
     ) => Promise<boolean>;
     onDevolver: (fechaLimite?: string) => Promise<boolean>;
+    comments?: Record<string, SectionComment[]>;
     pendingObservationsCount?: number;
     projectTitle?: string;
 }
@@ -36,17 +34,23 @@ interface FinalizeAuditModalProps {
 export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
     isOpen,
     onClose,
-    generalFeedback,
-    setGeneralFeedback,
     submitting,
     onAprobar,
     onDevolver,
-    pendingObservationsCount = 0,
-    projectTitle
+    comments = {},
+    pendingObservationsCount = 0
 }) => {
     const navigate = useNavigate();
     const { isCoordCarrera, isCoordAcad, isVicerrector, isAdmin, user } = useAuth();
-    const [activeTab, setActiveTab] = useState<'avalar' | 'devolver'>('avalar');
+    const [activeTab, setActiveTab] = useState<'avalar' | 'devolver'>(
+        pendingObservationsCount > 0 ? 'devolver' : 'avalar'
+    );
+
+    // Seleccionar pestaña inicial al abrir el modal según si existen observaciones pendientes
+    useEffect(() => {
+        if (!isOpen) return;
+        setActiveTab(pendingObservationsCount > 0 ? 'devolver' : 'avalar');
+    }, [isOpen, pendingObservationsCount]);
 
     // Perfil de firma digital configurado del usuario
     const [loadingProfile, setLoadingProfile] = useState<boolean>(true);
@@ -112,6 +116,18 @@ export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
 
     const [fechaLimite, setFechaLimite] = useState<string>(getFutureDate(2));
     const [selectedDays, setSelectedDays] = useState<number>(2);
+
+    const pendingSectionItems = useMemo(() => {
+        return Object.entries(comments)
+            .map(([sectionKey, list]) => ({
+                sectionKey,
+                label: FIELD_LABELS[sectionKey] || sectionKey,
+                items: (list || []).filter((c) => c.status === 'Pendiente')
+            }))
+            .filter((entry) => entry.items.length > 0);
+    }, [comments]);
+
+    const hasPendingObservations = pendingSectionItems.length > 0 || pendingObservationsCount > 0;
 
     if (!isOpen) return null;
 
@@ -284,54 +300,81 @@ export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
                 {/* ── PESTAÑA 2: DEVOLVER AL DOCENTE ── */}
                 {activeTab === 'devolver' && (
                     <div className="space-y-4 pt-3">
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-medium text-slate-700 dark:text-zinc-300 block">
-                                Instrucciones y observaciones generales de subsanación
-                            </label>
-                            <textarea
-                                value={generalFeedback}
-                                onChange={(e) => setGeneralFeedback(e.target.value)}
-                                rows={4}
-                                placeholder="Escriba las observaciones generales, motivos de la devolución o requerimientos que el docente debe subsanar..."
-                                className="w-full rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 text-xs text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-amber-500 transition-all custom-scrollbar resize-y"
-                            />
-                            <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                                Esta indicación será visible de inmediato para el docente en el panel de revisiones curriculares.
-                            </p>
-                        </div>
+                        {hasPendingObservations ? (
+                            <>
+                                {pendingSectionItems.length > 0 && (
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-medium text-slate-700 dark:text-zinc-300 block">
+                                            Observaciones registradas por sección
+                                        </label>
+                                        <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 divide-y divide-slate-100 dark:divide-zinc-800 max-h-48 overflow-y-auto custom-scrollbar">
+                                            {pendingSectionItems.map(({ sectionKey, label, items }) => (
+                                                <div key={sectionKey} className="px-3.5 py-2.5 space-y-1">
+                                                    <p className="text-xs font-semibold text-slate-900 dark:text-zinc-100">
+                                                        {label}
+                                                    </p>
+                                                    <ul className="space-y-1">
+                                                        {items.map((obs) => (
+                                                            <li
+                                                                key={obs.id}
+                                                                className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed flex items-start gap-2"
+                                                            >
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
+                                                                <span>{obs.text}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
-                        <div className="space-y-2">
-                            <label className="text-xs font-medium text-slate-700 dark:text-zinc-300 block">
-                                Plazo límite de entrega
-                            </label>
-                            <div className="flex items-center gap-2">
-                                {[2, 5, 10].map((days) => (
-                                    <button
-                                        key={days}
-                                        type="button"
-                                        onClick={() => handlePresetClick(days)}
-                                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
-                                            selectedDays === days
-                                                ? 'bg-amber-500 text-white'
-                                                : 'bg-slate-100 dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
-                                        }`}
-                                    >
-                                        +{days} {days === 2 ? 'días (48h)' : 'días'}
-                                    </button>
-                                ))}
-                                <GeistDatePicker
-                                    value={fechaLimite}
-                                    onChange={(val) => {
-                                        setFechaLimite(val);
-                                        setSelectedDays(0);
-                                    }}
-                                    minDate={todayStr}
-                                    placeholder="dd/mm/aaaa"
-                                    containerClassName="flex-1 min-w-[140px]"
-                                    className="!py-1.5 !px-3 !text-xs !rounded-lg !border-slate-200 dark:!border-zinc-800 !bg-slate-100 dark:!bg-zinc-900 !text-slate-900 dark:!text-zinc-100 font-mono"
-                                />
+                                <div className="space-y-2">
+                                    <label className="text-xs font-medium text-slate-700 dark:text-zinc-300 block">
+                                        Plazo límite de entrega
+                                    </label>
+                                    <div className="flex items-center gap-2">
+                                        {[2, 5, 10].map((days) => (
+                                            <button
+                                                key={days}
+                                                type="button"
+                                                onClick={() => handlePresetClick(days)}
+                                                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+                                                    selectedDays === days
+                                                        ? 'bg-amber-500 text-white'
+                                                        : 'bg-slate-100 dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+                                                }`}
+                                            >
+                                                +{days} {days === 2 ? 'días (48h)' : 'días'}
+                                            </button>
+                                        ))}
+                                        <GeistDatePicker
+                                            value={fechaLimite}
+                                            onChange={(val) => {
+                                                setFechaLimite(val);
+                                                setSelectedDays(0);
+                                            }}
+                                            inputReadOnly
+                                            hideCalendarIcon
+                                            minDate={todayStr}
+                                            placeholder="dd/mm/aaaa"
+                                            containerClassName="flex-1 min-w-[140px]"
+                                            className="!py-1.5 !px-3 !text-xs !rounded-lg !border-slate-200 dark:!border-zinc-800 !bg-slate-100 dark:!bg-zinc-900 !text-slate-900 dark:!text-zinc-100 font-mono"
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="py-2 space-y-1.5">
+                                <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                                    No hay observaciones registradas por sección.
+                                </p>
+                                <p className="text-xs text-slate-500 dark:text-zinc-400">
+                                    Agregue al menos una observación directamente en la sección correspondiente del PEA antes de devolver el documento.
+                                </p>
                             </div>
-                        </div>
+                        )}
 
                         <div className="pt-2 flex justify-end gap-2">
                             <button
@@ -345,7 +388,8 @@ export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
                             <button
                                 type="button"
                                 onClick={handleConfirmDevolver}
-                                disabled={submitting}
+                                disabled={submitting || !hasPendingObservations}
+                                title={!hasPendingObservations ? 'Debe registrar al menos una observación en alguna sección del PEA' : undefined}
                                 className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold uppercase tracking-wider disabled:opacity-40 cursor-pointer shadow-sm active:scale-95 transition-all"
                             >
                                 {submitting ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />}

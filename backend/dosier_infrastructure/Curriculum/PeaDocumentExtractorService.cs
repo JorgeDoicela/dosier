@@ -498,6 +498,7 @@ namespace dosier_infrastructure.Curriculum
             sb.AppendLine("9. ESTRUCTURA DE METODOLOGÍA Y RECURSOS: En 'metodologia_ensenanza', conserva la estructura de párrafos separando con saltos de línea y destacando subtítulos de metodologías activas (ej. 'Aprendizaje Basado en Problemas (ABP):', 'Aula Invertida:'). En 'recursos_didacticos', si el documento presenta una tabla o lista de recursos (ej. Office 365, Node.js, EVA, Visual Studio, etc.), extrae cada recurso como una línea individual o elemento de lista (ej. <ul><li>Office 365</li><li>Node Js</li>...</ul>). Queda terminantemente PROHIBIDO unir o apelmazar todos los recursos en una sola frase continua.");
             sb.AppendLine("10. TABLA OFICIAL DE ACTIVIDADES PRÁCTICAS: En 'actividades_practicas', extrae fielmente las filas de la tabla institucional de dos columnas ('Unidad' | 'Nombre de la práctica y caracterización de la actividad'). En 'unidad', conserva exactamente el valor del documento, ya sea un número o unidades compuestas/múltiples (ej. \"1,2,3\"). En 'nombre' y 'caracterizacion', extrae la descripción íntegra de la práctica redactada en la segunda columna, sin truncar texto ni inventar campos adicionales.");
             sb.AppendLine("11. DATOS GENERALES EDITABLES: Extrae en 'modalidad' la modalidad de estudio ('Presencial', 'Semipresencial', 'En Línea', 'Híbrida', 'Dual'). En 'unidad_organizacion' extrae y normaliza la unidad curricular ('Unidad Básica', 'Unidad Profesional', o 'Unidad de Integración Curricular'; ej. si dice 'Profesional' mapea a 'Unidad Profesional', si dice 'Básica' a 'Unidad Básica'). En 'semestre' extrae el semestre o nivel (ej. 'Cuarto', 'Segundo'). En 'creditos' extrae el número de créditos (ej. 2). En 'codigo_carrera' extrae el código (ej. 'DS').");
+            sb.AppendLine("12. TABLA OFICIAL DE EVALUACIÓN DEL APRENDIZAJE (SECCIÓN i): La tabla tiene exactamente 3 columnas en este orden estricto: Columna 1 'Notas' -> clave JSON 'nota' (ej. 'NOTA PARCIAL 1', 'NOTA PARCIAL 2', 'EVALUACIÓN' o 'EVALUACIÓN FINAL'); Columna 2 'TIPO DE EVALUACIÓN' -> clave JSON 'tipo' (descripción de actividades, ej. 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)', 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)', 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)'); Columna 3 'CALIFICACION' -> clave JSON 'calificacion' (ej. 10.00). QUEDA TERMINANTEMENTE PROHIBIDO invertir 'nota' y 'tipo'.");
             return sb.ToString();
         }
 
@@ -575,10 +576,9 @@ namespace dosier_infrastructure.Curriculum
     }
   ],
   ""evaluaciones"": [
-    { ""nota"": ""Actividades de Aprendizaje en Contacto con el Docente"", ""tipo"": ""Evaluación Formativa y Continua"", ""calificacion"": 10 },
-    { ""nota"": ""Aplicación y Experimentación de los Aprendizajes (APE)"", ""tipo"": ""Rúbrica de Informes y Prácticas de Laboratorio"", ""calificacion"": 10 },
-    { ""nota"": ""Trabajo Autónomo e Investigación"", ""tipo"": ""Control de Lectura y Proyectos"", ""calificacion"": 10 },
-    { ""nota"": ""Evaluación Sumativa Parcial / Final"", ""tipo"": ""Reactivos Teórico-Prácticos"", ""calificacion"": 10 }
+    { ""nota"": ""NOTA PARCIAL 1"", ""tipo"": ""ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)"", ""calificacion"": 10.00 },
+    { ""nota"": ""NOTA PARCIAL 2"", ""tipo"": ""EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)"", ""calificacion"": 10.00 },
+    { ""nota"": ""EVALUACIÓN"", ""tipo"": ""EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)"", ""calificacion"": 10.00 }
   ],
   ""bibliografias"": [
     {
@@ -1057,12 +1057,41 @@ namespace dosier_infrastructure.Curriculum
             return FinalizeAndNormalizeDraft(result, ctx, provider, model);
         }
 
+        private static readonly System.Text.RegularExpressions.Regex CanonicalNotaLabelRegex =
+            new(@"^(?:NOTA\s+PARCIAL\s*\d*|NOTA\s+EXAMEN(?:\s+FINAL)?|EVALUACI[ÓO]N(?:\s+FINAL)?|EXAMEN(?:\s+FINAL)?|FRECUENTE|PARCIAL(?:\s*\d+)?|FINAL)$",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        internal static void NormalizeEvaluacionColumns(List<PeaDraftEvaluacionDto>? evaluaciones)
+        {
+            if (evaluaciones == null || evaluaciones.Count == 0) return;
+
+            foreach (var ev in evaluaciones)
+            {
+                string nota = (ev.Nota ?? string.Empty).Trim();
+                string tipo = (ev.Tipo ?? string.Empty).Trim();
+
+                if (string.IsNullOrWhiteSpace(nota) || string.IsNullOrWhiteSpace(tipo)) continue;
+
+                bool notaIsCanonicalLabel = CanonicalNotaLabelRegex.IsMatch(nota);
+                bool tipoIsCanonicalLabel = CanonicalNotaLabelRegex.IsMatch(tipo);
+
+                if (tipoIsCanonicalLabel && !notaIsCanonicalLabel)
+                {
+                    ev.Nota = tipo;
+                    ev.Tipo = nota;
+                }
+            }
+        }
+
         internal static PeaStructuredDraftDto FinalizeAndNormalizeDraft(
             PeaStructuredDraftDto result,
             AcademicPromptContext ctx,
             string provider,
             string model)
         {
+            // Garantizar orientación correcta de columnas en Sección i (Notas vs Tipo de Evaluación)
+            NormalizeEvaluacionColumns(result.Evaluaciones);
+
             // Reconciliación matemática determinista de horas con SIGAFI o con datos generales del documento
             if (result.Unidades.Count > 0)
             {

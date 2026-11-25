@@ -30,36 +30,63 @@ export interface Carrera {
     idCarrera: number;
     carrera1: string;
     aliasCarrera?: string;
+    modalidadIds?: number[];
 }
 
-export interface Proyecto {
-    id_proyecto: number;
-    uuid: string;
-    titulo: string;
-    codigo_institucional?: string;
-    linea_investigacion?: string;
-    descripcion?: string;
-    estado?: string;
+export interface ModalidadOption {
+    idModalidad: number;
+    nombre: string;
+    carreraIds: number[];
 }
 
-export interface Convocatoria {
+export interface PeaContextItem {
     uuid: string;
-    titulo: string;
-    codigoConvocatoria: string;
-    anio: number;
-    presupuestoTotal?: number;
-    montoMaximoProyecto?: number;
-    fechaApertura?: string;
-    fechaCierre?: string;
-    urlBases?: string;
+    nombreAsignatura: string;
+    codigoAsignatura?: string;
+    carrera?: string;
+    idCarrera?: number;
+    periodo?: string;
     estado: string;
+    docenteElaborador?: string;
+    semestreNivel?: string;
+    modalidad?: string;
+    totalHoras?: number;
+    creditos?: number;
 }
 
-
+export interface PeriodoAcademicoItem {
+    idPeriodo: string;
+    detalle: string;
+    fechaInicial?: string;
+    fechaFinal?: string;
+    activo: boolean;
+    cerrado?: boolean;
+}
 
 export interface AttachmentFile {
     name: string;
     size: number;
     type: string;
     base64: string;
+}
+
+export interface EmailEngineScope {
+    primaryRole: string;
+    isGlobalScope: boolean;
+    canManageTemplates: boolean;
+    canDeleteTemplates: boolean;
+    canViewAllHistory: boolean;
+    allowedBroadcastRoles: string[];
+    allowedCarreraIds: number[];
+    allowedCarreras: Carrera[];
+    availableModalidades: ModalidadOption[];
+}
+
+export interface AudiencePreviewResult {
+    totalRecipients: number;
+    sample: Array<{
+        idUsuario: number;
+        nombreCompleto: string;
+        email: string;
+    }>;
 }

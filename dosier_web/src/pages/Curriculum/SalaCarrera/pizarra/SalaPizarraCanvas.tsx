@@ -63,25 +63,36 @@ export const SalaPizarraCanvas: React.FC<SalaPizarraCanvasProps> = ({
         zoom: 1,
     });
 
-    // Lista unificada de colaboradores en tiempo real (Local + Remotos vía Awareness)
+    // Lista unificada de colaboradores en tiempo real (usando presencia oficial de CoWork Awareness)
     const activeUsersList = useMemo(() => {
-        const list: { id: string | number; name: string; color: string; initials: string }[] = [];
-        list.push({
-            id: 'local',
-            name: userName || 'Docente',
-            color: userColor || '#0070f3',
-            initials: userInitials || (userName ? userName.substring(0, 2).toUpperCase() : 'DO'),
-        });
+        const connected = cowork.session.connectedUsers || [];
+        if (connected.length > 0) {
+            return connected.map((u, idx) => ({
+                id: `${u.id}-${u.tabId || idx}`,
+                name: u.name || 'Docente',
+                color: u.color || '#0070f3',
+                initials: u.initials || (u.name ? u.name.substring(0, 2).toUpperCase() : 'DO'),
+            }));
+        }
+
+        const list: { id: string | number; name: string; color: string; initials: string }[] = [
+            {
+                id: 'local',
+                name: userName || 'Docente',
+                color: userColor || '#0070f3',
+                initials: userInitials || (userName ? userName.substring(0, 2).toUpperCase() : 'DO'),
+            },
+        ];
         remoteCursors.forEach((c, clientId) => {
             list.push({
                 id: clientId,
-                name: c.name || 'Docente',
-                color: c.color || '#10b981',
-                initials: c.initials || (c.name ? c.name.substring(0, 2).toUpperCase() : 'DO'),
+                name: c.userName || 'Docente',
+                color: c.userColor || '#10b981',
+                initials: c.userInitials || (c.userName ? c.userName.substring(0, 2).toUpperCase() : 'DO'),
             });
         });
         return list;
-    }, [userName, userColor, userInitials, remoteCursors]);
+    }, [cowork.session.connectedUsers, userName, userColor, userInitials, remoteCursors]);
 
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isPanning, setIsPanning] = useState(false);

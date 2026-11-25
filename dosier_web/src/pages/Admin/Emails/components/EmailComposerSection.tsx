@@ -4,24 +4,26 @@ import {
     AlertTriangle, X, Loader2
 } from 'lucide-react';
 import type { UseEmailComposerResult } from '../hooks/useEmailComposer';
-import type { Carrera, Proyecto, Convocatoria, EmailTemplate } from '../emailEngineTypes';
+import type { Carrera, PeaContextItem, PeriodoAcademicoItem, EmailTemplate, EmailEngineScope } from '../emailEngineTypes';
 import RecipientPicker from './RecipientPicker';
 import { TEMPLATE_RECOMMENDED_CONTEXT, getTokenLabel } from '../emailEngineConfig';
 
 export interface EmailComposerSectionProps {
     composer: UseEmailComposerResult;
+    scope: EmailEngineScope;
     templates: EmailTemplate[];
     carreras: Carrera[];
-    projects: Proyecto[];
-    convocatorias: Convocatoria[];
+    peas: PeaContextItem[];
+    periodos: PeriodoAcademicoItem[];
 }
 
 export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
     composer,
+    scope,
     templates,
     carreras,
-    projects,
-    convocatorias
+    peas,
+    periodos
 }) => {
     const {
         selectedTemplateId,
@@ -33,6 +35,14 @@ export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
         setSelectedRole,
         selectedCarreraId,
         setSelectedCarreraId,
+        selectedCarreraIds,
+        setSelectedCarreraIds,
+        selectedModalidadIds,
+        setSelectedModalidadIds,
+        selectedPeaEstado,
+        setSelectedPeaEstado,
+        selectedPeriodoFiltro,
+        setSelectedPeriodoFiltro,
         contextType,
         setContextType,
         selectedEntityUuid,
@@ -94,15 +104,25 @@ export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
                     )}
                 </div>
 
-                {/* Selector inteligente de destinatarios */}
+                {/* Selector inteligente de destinatarios y grupos */}
                 <RecipientPicker
+                    scope={scope}
                     carreras={carreras}
+                    periodos={periodos}
                     selected={selectedPeople}
                     onSelected={setSelectedPeople}
                     broadcastRole={selectedRole}
                     onBroadcastRole={setSelectedRole}
                     broadcastCarreraId={selectedCarreraId}
                     onBroadcastCarreraId={setSelectedCarreraId}
+                    selectedCarreraIds={selectedCarreraIds}
+                    onSelectedCarreraIds={setSelectedCarreraIds}
+                    selectedModalidadIds={selectedModalidadIds}
+                    onSelectedModalidadIds={setSelectedModalidadIds}
+                    selectedPeaEstado={selectedPeaEstado}
+                    onSelectedPeaEstado={setSelectedPeaEstado}
+                    selectedPeriodoFiltro={selectedPeriodoFiltro}
+                    onSelectedPeriodoFiltro={setSelectedPeriodoFiltro}
                 />
 
                 {/* Dual System Context Selection */}
@@ -131,8 +151,8 @@ export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
                                 }}
                             >
                                 <option value="">-- Sin Contexto --</option>
-                                <option value="Proyecto">Proyecto de Investigación</option>
-                                <option value="Convocatoria">Convocatoria Oficial</option>
+                                <option value="PEA">Programa de Estudio (PEA)</option>
+                                <option value="Periodo">Período Académico</option>
                             </select>
                         </div>
 
@@ -146,20 +166,20 @@ export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
                                 onChange={e => setSelectedEntityUuid(e.target.value)}
                             >
                                 <option value="">
-                                    {contextType === 'Proyecto'
-                                        ? '— Ningún proyecto (sin detalles) —'
-                                        : contextType === 'Convocatoria'
-                                            ? '— Ninguna convocatoria —'
+                                    {contextType === 'PEA'
+                                        ? '— Ningún PEA seleccionado —'
+                                        : contextType === 'Periodo'
+                                            ? '— Ningún período seleccionado —'
                                             : '— Sin instancia —'}
                                 </option>
-                                {contextType === 'Proyecto' && projects.map(p => (
+                                {contextType === 'PEA' && peas.map(p => (
                                     <option key={p.uuid} value={p.uuid}>
-                                        {p.codigo_institucional ? `[${p.codigo_institucional}] ` : ''}{p.titulo}
+                                        {p.codigoAsignatura ? `[${p.codigoAsignatura}] ` : ''}{p.nombreAsignatura}{p.carrera ? ` — ${p.carrera}` : ''}
                                     </option>
                                 ))}
-                                {contextType === 'Convocatoria' && convocatorias.map(c => (
-                                    <option key={c.uuid} value={c.uuid}>
-                                        {c.codigoConvocatoria ? `[${c.codigoConvocatoria}] ` : ''}{c.titulo}
+                                {contextType === 'Periodo' && periodos.map(per => (
+                                    <option key={per.idPeriodo} value={per.idPeriodo}>
+                                        [{per.idPeriodo}] {per.detalle}{per.activo ? ' (Activo)' : ''}
                                     </option>
                                 ))}
                             </select>
@@ -239,7 +259,7 @@ export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
                             </h5>
                         </div>
                         <p className="text-[9px] text-text-dim leading-relaxed">
-                            Revise o complete estos campos. Si eligió un proyecto, convocatoria o revisión arriba, muchos se llenan automáticamente.
+                            Revise o complete estos campos. Si vinculó un PEA o un período académico arriba, se completarán automáticamente.
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {userFacingTokens.map(tok => {
@@ -279,15 +299,15 @@ export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
                         <div className="flex items-center gap-2">
                             <input
                                 type="checkbox"
-                                id="sys-protocolo"
-                                disabled={!selectedEntityUuid}
+                                id="sys-pea-oficial"
+                                disabled={contextType !== 'PEA' || !selectedEntityUuid}
                                 checked={systemAttachments['PEA_OFICIAL']}
                                 onChange={e => setSystemAttachments(prev => ({ ...prev, 'PEA_OFICIAL': e.target.checked }))}
                                 className="rounded border-border-thin text-brand focus:ring-brand shrink-0 cursor-pointer disabled:opacity-50"
                             />
-                            <label htmlFor="sys-protocolo" className={`text-xs font-bold select-none cursor-pointer ${!selectedEntityUuid ? 'text-text-dim/40' : 'text-text-main hover:text-brand transition-colors'} flex items-center gap-1.5`}>
-                                Generar Programa de Estudio de la Asignatura (PEA Oficial)
-                                {!selectedEntityUuid && <span className="text-[9px] text-text-dim font-normal italic">(Requiere seleccionar un contexto)</span>}
+                            <label htmlFor="sys-pea-oficial" className={`text-xs font-bold select-none cursor-pointer ${contextType !== 'PEA' || !selectedEntityUuid ? 'text-text-dim/40' : 'text-text-main hover:text-brand transition-colors'} flex items-center gap-1.5`}>
+                                Adjuntar Programa de Estudio de la Asignatura (PEA Oficial PDF)
+                                {(contextType !== 'PEA' || !selectedEntityUuid) && <span className="text-[9px] text-text-dim font-normal italic">(Requiere vincular un PEA)</span>}
                             </label>
                         </div>
                     </div>
@@ -298,7 +318,7 @@ export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
                             <span className="text-[9px] font-bold text-text-main uppercase tracking-wider flex items-center gap-1">
                                 <Shield size={11} className="text-brand" /> Firma Electrónica (.p12)
                             </span>
-                            <span className="text-[8px] text-text-dim uppercase tracking-wider">Opcional para Actas/Rúbricas</span>
+                            <span className="text-[8px] text-text-dim uppercase tracking-wider">Opcional para PEA Oficial</span>
                         </div>
 
                         {Object.values(systemAttachments).some(v => v) ? (

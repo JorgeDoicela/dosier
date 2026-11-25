@@ -82,12 +82,8 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
         if (setIsSignedModalOpen) {
             setIsSignedModalOpen(false);
         }
-        if (isSupervisor) {
-            navigate('/documentacion');
-        } else {
-            navigate('/documentacion/mis-proyectos');
-        }
-    }, [setIsSignedModalOpen, isSupervisor, navigate]);
+        navigate('/documentacion/mis-proyectos');
+    }, [setIsSignedModalOpen, navigate]);
     const [signatures, setSignatures] = React.useState<any[]>([]);
     const [isProtocoloSigned, setIsProtocoloSigned] = React.useState<boolean | null>(null);
     const [signatureProfile, setSignatureProfile] = React.useState<UserSignatureProfileDto | null>(null);
@@ -257,53 +253,34 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                         </button>
                                     )}
 
-                                    {/* Botones de navegación contextual: las autoridades van a Supervisión Curricular */}
-                                    {isSupervisor ? (
-                                        <>
-                                            <button
-                                                type="button"
-                                                onClick={() => navigate('/documentacion')}
-                                                className="w-full py-2.5 px-3 bg-[#0070f3] hover:bg-[#005bb5] text-white text-xs font-semibold rounded-xl transition-all flex items-center justify-center cursor-pointer shadow-xs"
-                                            >
-                                                <span>Ir a Supervisión Curricular</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => navigate('/documentacion/mis-proyectos')}
-                                                className="w-full py-2.5 px-3 btn-vercel-secondary text-xs font-semibold rounded-xl transition-all flex items-center justify-center cursor-pointer"
-                                            >
-                                                <span>Volver a Mis Asignaturas</span>
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const params = new URLSearchParams(window.location.search);
-                                                if (params.get('from') === 'revision') {
-                                                    const pId = projectUuid || documentUuid;
-                                                    if (pId) {
-                                                        navigate(`/documentacion/revision-tecnica/${pId}`);
-                                                        return;
-                                                    }
-                                                }
-                                                if (params.get('from') === 'sala') {
-                                                    const carreraId = params.get('carrera');
-                                                    const perId = params.get('periodo');
-                                                    if (carreraId) {
-                                                        navigate(`/documentacion/carrera/${carreraId}/sala-curricular${perId ? `?periodo=${encodeURIComponent(perId)}` : ''}`);
-                                                        return;
-                                                    }
-                                                    navigate('/salas-curriculares');
+                                    {/* Botón de navegación de retorno a Mis Asignaturas */}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const params = new URLSearchParams(window.location.search);
+                                            if (params.get('from') === 'revision') {
+                                                const pId = projectUuid || documentUuid;
+                                                if (pId) {
+                                                    navigate(`/documentacion/revision-tecnica/${pId}`);
                                                     return;
                                                 }
-                                                navigate('/documentacion/mis-proyectos');
-                                            }}
-                                            className="w-full py-2.5 px-3 bg-[#0070f3] hover:bg-[#005bb5] text-white text-xs font-semibold rounded-xl transition-all flex items-center justify-center cursor-pointer shadow-xs"
-                                        >
-                                            <span>Volver a Mis Asignaturas</span>
-                                        </button>
-                                    )}
+                                            }
+                                            if (params.get('from') === 'sala') {
+                                                const carreraId = params.get('carrera');
+                                                const perId = params.get('periodo');
+                                                if (carreraId) {
+                                                    navigate(`/documentacion/carrera/${carreraId}/sala-curricular${perId ? `?periodo=${encodeURIComponent(perId)}` : ''}`);
+                                                    return;
+                                                }
+                                                navigate('/salas-curriculares');
+                                                return;
+                                            }
+                                            navigate('/documentacion/mis-proyectos');
+                                        }}
+                                        className="w-full py-2.5 px-3 bg-[#0070f3] hover:bg-[#005bb5] text-white text-xs font-semibold rounded-xl transition-all flex items-center justify-center cursor-pointer shadow-xs"
+                                    >
+                                        <span>Volver a Mis Asignaturas</span>
+                                    </button>
                                 </div>
                             </div>
                         ) : (
@@ -622,12 +599,9 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                     onClose={handlePostSignNavigation}
                     onPrimaryClick={handlePostSignNavigation}
                     durationMs={4500}
-                    primaryButtonText={isSupervisor ? 'Ir a Supervisión Curricular' : 'Volver a Mis Asignaturas'}
+                    primaryButtonText="Volver a Mis Asignaturas"
                     title="¡Documento firmado exitosamente!"
-                    subtitle={isSupervisor
-                        ? 'Su firma como docente elaborador ha sido certificada. El documento ha sido remitido a Supervisión Curricular en estado En Revisión.'
-                        : 'Su firma como docente elaborador ha sido certificada. El documento oficial ha sido remitido a revisión institucional.'
-                    }
+                    subtitle="Su firma como docente elaborador ha sido certificada. El documento oficial ha sido remitido a revisión institucional."
                     badgeText="Firma electrónica certificada"
                     details={[
                         { label: 'Documento', value: signedModalData?.documentTitle || title },

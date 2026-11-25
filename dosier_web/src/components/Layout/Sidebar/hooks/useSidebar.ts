@@ -361,7 +361,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         ...(canEditTemplates ? [
             { name: 'Plantillas', icon: FileCode2, path: '/plantillas', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 3 }
         ] : []),
-        { name: 'Correos', icon: Mail, path: '/emails', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 3 },
+        { name: 'Correos', icon: Mail, path: '/emails', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR', 'DOSIER_COORD_CARRERA'], group: 3 },
         { name: 'Auditoría', icon: Activity, path: '/auditoria', roles: ['DOSIER_ADMIN'], group: 3 },
     ];
 

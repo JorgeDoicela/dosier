@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using dosier_application.Academico;
 using dosier_application.Calendario;
 using dosier_application.Common.Notifications;
 using dosier_infrastructure.data.models;
@@ -14,15 +15,18 @@ public class CalendarioService : ICalendarioService
 {
     private readonly DosierContext _context;
     private readonly IEmailEngineService _emailEngine;
+    private readonly IPeriodoInstitucionalResolver _periodoResolver;
     private readonly ILogger<CalendarioService> _logger;
 
     public CalendarioService(
         DosierContext context,
         IEmailEngineService emailEngine,
+        IPeriodoInstitucionalResolver periodoResolver,
         ILogger<CalendarioService> logger)
     {
         _context = context;
         _emailEngine = emailEngine;
+        _periodoResolver = periodoResolver;
         _logger = logger;
     }
 
@@ -67,6 +71,9 @@ public class CalendarioService : ICalendarioService
         }
         else if (user != null && !string.IsNullOrEmpty(user.IdSigafi))
         {
+            var idPeriodoActivo = await _periodoResolver.GetIdPeriodoActivoAsync();
+            bool hasPeriodoActivo = !string.IsNullOrWhiteSpace(idPeriodoActivo);
+
             if (isCoordCarrera)
             {
                 carrerasCoordinadas = await _context.DocAutoridadesCurriculares.AsNoTracking()
@@ -76,16 +83,21 @@ public class CalendarioService : ICalendarioService
                 foreach (var id in carrerasCoordinadas) carreraIds.Add(id);
             }
 
-            // Carreras donde el docente tiene carga asignada en SIGAFI (solo lectura)
+            // Carreras donde el docente tiene carga asignada en el período activo de SIGAFI (solo lectura)
             var carrerasProfPeriodo = await _context.ProfesoresCarrerasPeriodos.AsNoTracking()
-                .Where(pc => pc.IdProfesor == user.IdSigafi && pc.IdCarrera != null)
+                .Where(pc => pc.IdProfesor == user.IdSigafi
+                    && pc.IdCarrera != null
+                    && pc.EsActivo == 1
+                    && (!hasPeriodoActivo || pc.IdPeriodo == idPeriodoActivo))
                 .Select(pc => pc.IdCarrera!.Value)
                 .Distinct()
                 .ToListAsync();
             foreach (var id in carrerasProfPeriodo) carreraIds.Add(id);
 
             var nivelIds = await _context.AsignacionesProfesores.AsNoTracking()
-                .Where(am => am.IdProfesor == user.IdSigafi && am.Activo == 1)
+                .Where(am => am.IdProfesor == user.IdSigafi
+                    && am.Activo == 1
+                    && (!hasPeriodoActivo || am.IdPeriodo == idPeriodoActivo))
                 .Select(am => am.IdNivel)
                 .Distinct()
                 .ToListAsync();
@@ -100,9 +112,11 @@ public class CalendarioService : ICalendarioService
                 foreach (var id in carrerasAsignadas) carreraIds.Add(id);
             }
 
-            // Carreras donde tiene PEAs elaborados
+            // Carreras donde tiene PEAs elaborados en el período activo
             var carrerasPeas = await _context.DocPeas.AsNoTracking()
-                .Where(p => p.Activo && p.IdDocenteElaborador == user.IdSigafi)
+                .Where(p => p.Activo
+                    && p.IdDocenteElaborador == user.IdSigafi
+                    && (!hasPeriodoActivo || p.IdPeriodo == idPeriodoActivo))
                 .Select(p => p.IdCarrera)
                 .Distinct()
                 .ToListAsync();
@@ -576,6 +590,10 @@ public class CalendarioService : ICalendarioService
             var nombreCarreraNorm = norm.IdCarrera.HasValue && normCarrerasMap.TryGetValue(norm.IdCarrera.Value, out var nc)
                 ? nc
                 : null;
+            var categoriaGlobal = ResolveCategoriaGlobal(norm);
+            var puedeGestionar = norm.CreadoPor == idUsuario ||
+                (!norm.EsPrivado && (isAutoridadSuperior ||
+                    (norm.IdCarrera.HasValue && scope.CarreraIds.Contains(norm.IdCarrera.Value))));
 
             if (norm.RecurrenciaAnual)
             {
@@ -590,7 +608,7 @@ public class CalendarioService : ICalendarioService
                     var idCompuesto = $"NORM-{norm.IdEvento}-{año}";
                     resultado.Add(new CalendarioEventoDto(
                         idCompuesto, norm.Uuid, norm.Titulo, norm.Descripcion,
-                        "Normativo", norm.TipoEvento,
+                        categoriaGlobal, norm.TipoEvento,
                         fechaOcurrencia, norm.FechaFin.HasValue
                             ? new DateOnly(año, norm.FechaFin.Value.Month, norm.FechaFin.Value.Day)
                             : null,
@@ -599,7 +617,7 @@ public class CalendarioService : ICalendarioService
                         norm.UrlAccion, norm.RolesVisibles,
                         norm.EsPrivado, norm.Prioridad, norm.Estado, norm.CreadoPor,
                         norm.AlertaDias, norm.RecurrenciaAnual,
-                        norm.IdCarrera, nombreCarreraNorm
+                        norm.IdCarrera, nombreCarreraNorm, null, puedeGestionar
                     ));
                 }
             }
@@ -609,7 +627,6 @@ public class CalendarioService : ICalendarioService
                 var fFin = norm.FechaFin ?? fInicio;
                 if (fInicio <= hasta && fFin >= desde)
                 {
-                    var categoriaGlobal = (norm.TipoEvento is "Normativo" or "Academico" or "Institucional" or "Feriado") ? "Normativo" : "Personal";
                     resultado.Add(new CalendarioEventoDto(
                         $"NORM-{norm.IdEvento}", norm.Uuid, norm.Titulo, norm.Descripcion,
                         categoriaGlobal, norm.TipoEvento,
@@ -619,7 +636,7 @@ public class CalendarioService : ICalendarioService
                         norm.UrlAccion, norm.RolesVisibles,
                         norm.EsPrivado, norm.Prioridad, norm.Estado, norm.CreadoPor,
                         norm.AlertaDias, norm.RecurrenciaAnual,
-                        norm.IdCarrera, nombreCarreraNorm
+                        norm.IdCarrera, nombreCarreraNorm, null, puedeGestionar
                     ));
                 }
             }
@@ -732,28 +749,32 @@ public class CalendarioService : ICalendarioService
 
         foreach (var usuario in usuarios)
         {
-            var userRole = await _context.UserRoles
-                .Include(ur => ur.Role)
-                .Where(ur => ur.IdUsuario == usuario.IdUsuario && (ur.EsActivo ?? true))
-                .FirstOrDefaultAsync();
-            var rol = userRole?.Role?.CodigoRol ?? "DOSIER_DOCENTE";
-
             try
             {
+                var userScope = await ResolveUserScopeAsync(usuario.IdUsuario, "");
+                var rolesEfectivos = userScope.Roles.Count > 0
+                    ? userScope.Roles
+                    : new List<string> { "DOSIER_DOCENTE" };
+                bool isAutoridadSuperior = userScope.IsAdmin || userScope.IsVicerrector || userScope.IsCoordAcad;
+
                 foreach (var evento in eventos)
                 {
                     if (!evento.FechaInicio.HasValue) continue;
 
                     if (evento.EsPrivado && evento.CreadoPor != usuario.IdUsuario) continue;
 
-                    if (!evento.EsPrivado &&
-                        !string.IsNullOrEmpty(evento.RolesVisibles) &&
-                        !evento.RolesVisibles.Split(',').Select(r => r.Trim()).Contains(rol)) continue;
+                    if (!evento.EsPrivado && !string.IsNullOrEmpty(evento.RolesVisibles))
+                    {
+                        var targetRoles = evento.RolesVisibles
+                            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(r => r.Trim())
+                            .ToList();
+                        if (!rolesEfectivos.Any(r => targetRoles.Contains(r))) continue;
+                    }
 
                     if (!evento.EsPrivado && evento.IdCarrera.HasValue)
                     {
-                        var userScope = await ResolveUserScopeAsync(usuario.IdUsuario, rol);
-                        if (!userScope.IsAdmin && !userScope.IsVicerrector && !userScope.IsCoordAcad && !userScope.CarreraIds.Contains(evento.IdCarrera.Value))
+                        if (!isAutoridadSuperior && !userScope.CarreraIds.Contains(evento.IdCarrera.Value))
                             continue;
                     }
 
@@ -775,13 +796,13 @@ public class CalendarioService : ICalendarioService
                         .AnyAsync(a =>
                             a.IdEventoCalendario == idCompuesto &&
                             a.IdUsuario == usuario.IdUsuario &&
-                            a.FechaEvento == evento.FechaInicio.Value);
+                            a.FechaEvento == fechaInicioOcurrencia);
 
                     if (yaEnviada) continue;
 
                     try
                     {
-                        var diasRestantes = evento.FechaInicio.Value.DayNumber - hoy.DayNumber;
+                        var diasRestantes = fechaInicioOcurrencia.DayNumber - hoy.DayNumber;
                         var sendRequest = new EmailSendRequest
                         {
                             TemplateCodigo = "CALENDARIO_ALERTA_EVENTO",
@@ -790,7 +811,7 @@ public class CalendarioService : ICalendarioService
                             {
                                 ["[[titulo_evento]]"]      = evento.Titulo,
                                 ["[[dias_restantes]]"]     = diasRestantes.ToString(),
-                                ["[[fecha_evento]]"]       = evento.FechaInicio.Value.ToString("dd 'de' MMMM 'de' yyyy"),
+                                ["[[fecha_evento]]"]       = fechaInicioOcurrencia.ToString("dd 'de' MMMM 'de' yyyy"),
                                 ["[[descripcion_evento]]"] = evento.Descripcion ?? "",
                                 ["[[url_accion]]"]         = evento.UrlAccion ?? "/calendario",
                                 ["[[nombre_usuario]]"]     = usuario.Nombre ?? usuario.EmailInstitucional ?? ""
@@ -803,7 +824,7 @@ public class CalendarioService : ICalendarioService
                         {
                             IdEventoCalendario = idCompuesto,
                             IdUsuario          = usuario.IdUsuario,
-                            FechaEvento        = evento.FechaInicio.Value,
+                            FechaEvento        = fechaInicioOcurrencia,
                             FechaEnvio         = DateTime.UtcNow
                         });
                     }
@@ -873,27 +894,48 @@ public class CalendarioService : ICalendarioService
         return user?.IdUsuario;
     }
 
-    public async Task<(string? Uuid, bool Forbidden)> CreateUsuarioEventoAsync(EventoNormativoDto dto, int idUsuario, string rolUsuario)
+    private static string ResolveCategoriaGlobal(DocCalendarioEventoNormativo norm)
     {
-        if (!dto.EsPrivado)
-        {
-            var scope = await ResolveUserScopeAsync(idUsuario, rolUsuario);
-            bool isAutoridadSuperior = scope.IsAdmin || scope.IsVicerrector || scope.IsCoordAcad;
+        if (norm.EsPrivado) return "Personal";
+        if (norm.IdCarrera.HasValue) return "Carrera";
+        return (norm.TipoEvento is "Normativo" or "Academico" or "Institucional" or "Feriado")
+            ? "Normativo"
+            : "Personal";
+    }
 
-            if (!dto.IdCarrera.HasValue)
-            {
-                // Evento para todo el instituto: solo autoridades superiores / admin
-                if (!isAutoridadSuperior) return (null, true);
-            }
-            else
-            {
-                // Evento para toda la carrera: docentes y coordinadores dentro de sus carreras asignadas, o autoridades superiores
-                if (!isAutoridadSuperior && !scope.CarreraIds.Contains(dto.IdCarrera.Value))
-                    return (null, true);
-            }
+    private static EventoNormativoDto NormalizeEventoDto(EventoNormativoDto dto)
+    {
+        var fechaFin = (dto.FechaInicio.HasValue && dto.FechaFin.HasValue && dto.FechaFin.Value < dto.FechaInicio.Value)
+            ? dto.FechaInicio
+            : dto.FechaFin;
+        var idCarrera = dto.EsPrivado ? null : dto.IdCarrera;
+        return dto with { FechaFin = fechaFin, IdCarrera = idCarrera };
+    }
+
+    private async Task<bool> CanPublishWithScopeAsync(EventoNormativoDto dto, int idUsuario, string rolUsuario)
+    {
+        if (dto.EsPrivado) return true;
+
+        var scope = await ResolveUserScopeAsync(idUsuario, rolUsuario);
+        bool isAutoridadSuperior = scope.IsAdmin || scope.IsVicerrector || scope.IsCoordAcad;
+
+        if (!dto.IdCarrera.HasValue)
+        {
+            // Evento para todo el instituto: solo autoridades superiores / admin
+            return isAutoridadSuperior;
         }
 
-        var uuid = await CreateNormativoAsync(dto, idUsuario);
+        // Evento para toda la carrera: docentes y coordinadores dentro de sus carreras asignadas, o autoridades superiores
+        return isAutoridadSuperior || scope.CarreraIds.Contains(dto.IdCarrera.Value);
+    }
+
+    public async Task<(string? Uuid, bool Forbidden)> CreateUsuarioEventoAsync(EventoNormativoDto dto, int idUsuario, string rolUsuario)
+    {
+        var normalized = NormalizeEventoDto(dto);
+        if (!await CanPublishWithScopeAsync(normalized, idUsuario, rolUsuario))
+            return (null, true);
+
+        var uuid = await CreateNormativoAsync(normalized, idUsuario);
         return (uuid, false);
     }
 
@@ -904,7 +946,7 @@ public class CalendarioService : ICalendarioService
 
         var scope = await ResolveUserScopeAsync(idUsuario, rolUsuario);
         if (scope.IsAdmin || scope.IsVicerrector || scope.IsCoordAcad) return true;
-        if (scope.IsCoordCarrera && existing.IdCarrera.HasValue && scope.CarrerasCoordinadas.Contains(existing.IdCarrera.Value))
+        if (existing.IdCarrera.HasValue && scope.CarreraIds.Contains(existing.IdCarrera.Value))
             return true;
 
         return false;
@@ -916,7 +958,10 @@ public class CalendarioService : ICalendarioService
         if (existing == null) return null;
         if (!await CanManageEventoAsync(existing, idUsuario, rolUsuario)) return false;
 
-        return await UpdateNormativoAsync(uuid, dto);
+        var normalized = NormalizeEventoDto(dto);
+        if (!await CanPublishWithScopeAsync(normalized, idUsuario, rolUsuario)) return false;
+
+        return await UpdateNormativoAsync(uuid, normalized);
     }
 
     public async Task<bool?> DeleteUsuarioEventoAsync(string uuid, int idUsuario, string rolUsuario = "")

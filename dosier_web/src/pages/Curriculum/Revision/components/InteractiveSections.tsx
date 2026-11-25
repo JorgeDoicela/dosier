@@ -354,12 +354,16 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
             }));
             setEditActividadesPracticas(arr.length > 0 ? arr : [{ tema: '', horas: 0, escenario: 'Laboratorio', descripcion: '' }]);
         } else if (key === 'Evaluaciones') {
-            const arr = getSafeArray(snap.Evaluaciones).map((ev: any) => ({
-                criterio: ev.criterio || ev.Criterio || ev.nota || ev.Nota || ev.denominacion || ev.Denominacion || ev.nombre || ev['0'] || '',
-                porcentaje: String(ev.porcentaje ?? ev.Porcentaje ?? ev.calificacion ?? ev.Calificacion ?? ev.calificacionMaxima ?? ev.CalificacionMaxima ?? ev.calificacion_maxima ?? ev.peso ?? ev['1'] ?? ''),
-                descripcion: ev.descripcion || ev.Descripcion || ev.tipo || ev.Tipo || ev.tipoEvaluacion || ev.TipoEvaluacion || ev.tipo_evaluacion || ev['2'] || ''
-            }));
-            setEditEvaluaciones(arr.length > 0 ? arr : [{ criterio: '', porcentaje: '', descripcion: '' }]);
+            const arr = getSafeArray(snap.Evaluaciones).map((ev: any) => {
+                const rawCalif = ev.calificacion ?? ev.Calificacion ?? ev.calificacionMaxima ?? ev.CalificacionMaxima ?? ev.calificacion_maxima ?? ev.porcentaje ?? ev.Porcentaje ?? ev['2'] ?? 10;
+                const parsedCalif = Number(String(rawCalif).replace(',', '.'));
+                return {
+                    nota: String(ev.nota || ev.Nota || ev.denominacion || ev.Denominacion || ev.criterio || ev.Criterio || ev['0'] || '').trim(),
+                    tipo: String(ev.tipo || ev.Tipo || ev.tipoEvaluacion || ev.TipoEvaluacion || ev.tipo_evaluacion || ev.descripcion || ev.Descripcion || ev['1'] || '').trim(),
+                    calificacion: Number.isFinite(parsedCalif) ? parsedCalif : 10
+                };
+            });
+            setEditEvaluaciones(arr.length > 0 ? arr : [{ nota: '', tipo: '', calificacion: 10 }]);
         } else if (key === 'Bibliografia') {
             setEditBioBasica(stripHtml(snap.BibliografiaBasica || ''));
             setEditBioConsulta(stripHtml(snap.BibliografiaConsulta || ''));
@@ -422,8 +426,22 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                     'Las actividades prácticas fueron guardadas.'
                 );
             } else if (key === 'Evaluaciones') {
+                const normalized = editEvaluaciones
+                    .filter(ev => (ev.nota || '').trim() || (ev.tipo || '').trim())
+                    .map(ev => {
+                        const califNum = Number(String(ev.calificacion ?? 10).replace(',', '.'));
+                        const finalCalif = Number.isFinite(califNum) && califNum > 0 ? califNum : 10;
+                        return {
+                            nota: (ev.nota || '').trim(),
+                            Nota: (ev.nota || '').trim(),
+                            tipo: (ev.tipo || '').trim(),
+                            Tipo: (ev.tipo || '').trim(),
+                            calificacion: finalCalif,
+                            Calificacion: finalCalif
+                        };
+                    });
                 ok = await onUpdateSection(
-                    { Evaluaciones: editEvaluaciones },
+                    { Evaluaciones: normalized },
                     'Criterios de Evaluación Actualizados',
                     'Los criterios de evaluación fueron guardados.'
                 );
@@ -1683,36 +1701,37 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                             <div key={idx} className="flex items-center gap-2">
                                                 <input
                                                     type="text"
-                                                    value={ev.criterio || ''}
+                                                    value={ev.nota || ''}
                                                     onChange={(e) => {
                                                         const copy = [...editEvaluaciones];
-                                                        copy[idx] = { ...copy[idx], criterio: e.target.value };
+                                                        copy[idx] = { ...copy[idx], nota: e.target.value };
                                                         setEditEvaluaciones(copy);
                                                     }}
-                                                    placeholder="Criterio (ej. Evaluación Parcial)..."
-                                                    className="w-48 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100"
+                                                    placeholder="Ej. NOTA PARCIAL 1"
+                                                    className="w-48 px-3 py-1.5 text-xs sm:text-sm font-semibold uppercase rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100"
                                                 />
                                                 <input
                                                     type="text"
-                                                    value={ev.porcentaje || ''}
+                                                    value={ev.tipo || ''}
                                                     onChange={(e) => {
                                                         const copy = [...editEvaluaciones];
-                                                        copy[idx] = { ...copy[idx], porcentaje: e.target.value };
+                                                        copy[idx] = { ...copy[idx], tipo: e.target.value };
                                                         setEditEvaluaciones(copy);
                                                     }}
-                                                    placeholder="Puntaje / Ponderación..."
-                                                    className="w-28 px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-mono text-center"
+                                                    placeholder="Tipo de evaluación..."
+                                                    className="flex-1 px-3 py-1.5 text-xs sm:text-sm uppercase rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100"
                                                 />
                                                 <input
                                                     type="text"
-                                                    value={ev.descripcion || ''}
+                                                    inputMode="decimal"
+                                                    value={ev.calificacion ?? 10}
                                                     onChange={(e) => {
                                                         const copy = [...editEvaluaciones];
-                                                        copy[idx] = { ...copy[idx], descripcion: e.target.value };
+                                                        copy[idx] = { ...copy[idx], calificacion: e.target.value };
                                                         setEditEvaluaciones(copy);
                                                     }}
-                                                    placeholder="Tipo de Actividad / Criterio..."
-                                                    className="flex-1 px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100"
+                                                    placeholder="10,00"
+                                                    className="w-24 px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-mono text-center"
                                                 />
                                                 <button
                                                     type="button"
@@ -1727,7 +1746,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() => setEditEvaluaciones([...editEvaluaciones, { criterio: '', porcentaje: '', descripcion: '' }])}
+                                        onClick={() => setEditEvaluaciones([...editEvaluaciones, { nota: '', tipo: '', calificacion: 10 }])}
                                         className="text-xs font-semibold text-[#0070f3] dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer pt-1"
                                     >
                                         <Plus size={13} />
@@ -1740,16 +1759,18 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                         <table className="w-full text-left">
                                             <thead className="border-b border-slate-200 dark:border-zinc-800 text-xs font-mono uppercase text-slate-500 dark:text-zinc-400 font-semibold tracking-wider">
                                                 <tr>
-                                                    <th className="py-3 pr-4 font-semibold">Evaluación</th>
-                                                    <th className="py-3 px-4 font-semibold">Tipo de Actividad / Criterio</th>
-                                                    <th className="py-3 pl-4 text-right font-semibold">Puntaje</th>
+                                                    <th className="py-3 pr-4 font-semibold">Notas</th>
+                                                    <th className="py-3 px-4 font-semibold">Tipo de Evaluación</th>
+                                                    <th className="py-3 pl-4 text-right font-semibold">Calificación</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-sm sm:text-base">
                                                 {getSafeArray(snap.Evaluaciones).map((ev: any, idx: number) => {
-                                                    const nota = ev.nota || ev.Nota || ev['0'] || ev.denominacion || ev.Denominacion || '-';
-                                                    const tipo = ev.tipo || ev.Tipo || ev['1'] || ev.tipoEvaluacion || ev.TipoEvaluacion || '-';
-                                                    const calif = ev.calificacion ?? ev.Calificacion ?? ev['2'] ?? ev.calificacionMaxima ?? ev.CalificacionMaxima;
+                                                    const nota = ev.nota || ev.Nota || ev.denominacion || ev.Denominacion || ev.criterio || ev.Criterio || ev['0'] || '-';
+                                                    const tipo = ev.tipo || ev.Tipo || ev.tipoEvaluacion || ev.TipoEvaluacion || ev.tipo_evaluacion || ev.descripcion || ev.Descripcion || ev['1'] || '-';
+                                                    const rawCalif = ev.calificacion ?? ev.Calificacion ?? ev.calificacionMaxima ?? ev.CalificacionMaxima ?? ev.calificacion_maxima ?? ev.porcentaje ?? ev.Porcentaje ?? ev['2'];
+                                                    const parsedCalif = rawCalif !== undefined && rawCalif !== null && rawCalif !== '' ? Number(String(rawCalif).replace(',', '.')) : NaN;
+                                                    const califDisplay = Number.isFinite(parsedCalif) ? parsedCalif.toFixed(2).replace('.', ',') : (rawCalif || '-');
                                                     return (
                                                         <tr key={idx}>
                                                             <td className="py-3 pr-4 font-bold text-slate-900 dark:text-zinc-100">
@@ -1759,7 +1780,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                                                 {tipo}
                                                             </td>
                                                             <td className="py-3 pl-4 text-right font-mono font-bold text-base text-[#0070f3] dark:text-blue-400">
-                                                                {calif !== undefined && calif !== null && calif !== '' ? calif : '-'}
+                                                                {califDisplay}
                                                             </td>
                                                         </tr>
                                                     );

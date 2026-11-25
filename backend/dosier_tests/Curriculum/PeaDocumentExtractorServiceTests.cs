@@ -336,6 +336,65 @@ Página 3 de 3
             Assert.Contains("cabecera PDF válida", pdfEx.Message);
         }
 
+        [Fact]
+        public void DeterministicParser_EvaluacionOficialIstpet_MapeaNotaEnColumnaNotasYTipoEnColumnaTipo()
+        {
+            string raw = @"
+i) EVALUACIÓN DEL APRENDIZAJE
+Notas | TIPO DE EVALUACIÓN | CALIFICACION
+NOTA PARCIAL 1 | ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES) | 10,00
+NOTA PARCIAL 2 | EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL) | 10,00
+EVALUACIÓN | EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN) | 10,00
+";
+            var draft = DeterministicPeaDocumentParser.Parse(raw);
+
+            Assert.Equal(3, draft.Evaluaciones.Count);
+            Assert.Equal("NOTA PARCIAL 1", draft.Evaluaciones[0].Nota);
+            Assert.Equal("ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)", draft.Evaluaciones[0].Tipo);
+            Assert.Equal(10.00m, draft.Evaluaciones[0].Calificacion);
+
+            Assert.Equal("NOTA PARCIAL 2", draft.Evaluaciones[1].Nota);
+            Assert.Equal("EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)", draft.Evaluaciones[1].Tipo);
+
+            Assert.Equal("EVALUACIÓN", draft.Evaluaciones[2].Nota);
+            Assert.Equal("EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)", draft.Evaluaciones[2].Tipo);
+
+            // También validar formato PDF de una sola línea sin separadores de columna
+            string singleLinePdf = @"
+i) EVALUACIÓN DEL APRENDIZAJE
+NOTA PARCIAL 1 ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES) 10,00
+NOTA PARCIAL 2 EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL) 10,00
+EVALUACIÓN EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN) 10,00
+";
+            var draftPdf = DeterministicPeaDocumentParser.Parse(singleLinePdf);
+
+            Assert.Equal(3, draftPdf.Evaluaciones.Count);
+            Assert.Equal("NOTA PARCIAL 1", draftPdf.Evaluaciones[0].Nota);
+            Assert.Equal("ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)", draftPdf.Evaluaciones[0].Tipo);
+            Assert.Equal("NOTA PARCIAL 2", draftPdf.Evaluaciones[1].Nota);
+            Assert.Equal("EVALUACIÓN", draftPdf.Evaluaciones[2].Nota);
+        }
+
+        [Fact]
+        public void NormalizeEvaluacionColumns_CuandoLlmInvierteNotaYTipo_CorrigeOrdenCanonicamente()
+        {
+            var inverted = new List<PeaDraftEvaluacionDto>
+            {
+                new() { Nota = "ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)", Tipo = "NOTA PARCIAL 1", Calificacion = 10m },
+                new() { Nota = "EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)", Tipo = "NOTA PARCIAL 2", Calificacion = 10m },
+                new() { Nota = "EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)", Tipo = "EVALUACIÓN", Calificacion = 10m }
+            };
+
+            PeaDocumentExtractorService.NormalizeEvaluacionColumns(inverted);
+
+            Assert.Equal("NOTA PARCIAL 1", inverted[0].Nota);
+            Assert.Equal("ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)", inverted[0].Tipo);
+            Assert.Equal("NOTA PARCIAL 2", inverted[1].Nota);
+            Assert.Equal("EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)", inverted[1].Tipo);
+            Assert.Equal("EVALUACIÓN", inverted[2].Nota);
+            Assert.Equal("EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)", inverted[2].Tipo);
+        }
+
         private static byte[] BuildMinimalDocx(string bodyInnerXml)
         {
             using var ms = new MemoryStream();

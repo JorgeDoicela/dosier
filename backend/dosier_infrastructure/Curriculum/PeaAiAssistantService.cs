@@ -581,7 +581,7 @@ namespace dosier_infrastructure.Curriculum
             sb.AppendLine("4. En 'unidades', genera unidades temáticas coherentes (por defecto 4, a menos que el docente solicite expresamente otra cantidad en sus instrucciones). En 'titulo' escribe SOLO el nombre temático de la unidad (sin el prefijo 'Unidad 1:'). La suma de 'horas_cd' de todas las unidades DEBE ser exactamente " + ctx.HorasCD + " (> 0 en cada unidad). La suma de 'horas_ape' DEBE ser exactamente " + ctx.HorasAPE + " (> 0 en cada unidad). La suma de 'horas_ta' DEBE ser exactamente " + ctx.HorasTA + " (> 0 en cada unidad). NUNCA dejes componentes de horas en cero.");
             sb.AppendLine("5. En cada unidad, el campo 'contenidos' debe listar los temas y subtemas numerados separados por saltos de línea (ej: '1.1 Conceptos fundamentales\\n1.2 Técnicas aplicadas\\n1.3 Procesos experimentales').");
             sb.AppendLine("6. En 'actividades_practicas', genera al menos 1 práctica experimental por cada unidad temática, especificando unidad (número), nombre descriptivo de la práctica, horas, escenario (taller/laboratorio/cocina experimental) y producto verificable.");
-            sb.AppendLine("7. En 'evaluaciones', incluye los 4 componentes normativos sobre 10 puntos (Gestión Formativa / Docencia, Gestión Práctica y Experimental, Trabajo Autónomo, Evaluación Sumativa).");
+            sb.AppendLine("7. En 'evaluaciones', sigue la matriz oficial del ISTPET de 3 columnas ('Notas' -> 'nota', 'TIPO DE EVALUACIÓN' -> 'tipo', 'CALIFICACION' -> 'calificacion' sobre 10.00): 'NOTA PARCIAL 1' -> 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)' (10.00), 'NOTA PARCIAL 2' -> 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)' (10.00), y 'EVALUACIÓN' -> 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)' (10.00). NUNCA inviertas 'nota' y 'tipo'.");
             sb.AppendLine("8. En 'bibliografias', incluye al menos 3 obras de tipo 'Basica' y 3 de tipo 'Consulta' reales y vigentes en formato APA 7ma edición.");
             
             if (isAllSections)
@@ -752,10 +752,9 @@ namespace dosier_infrastructure.Curriculum
     }
   ],
   ""evaluaciones"": [
-    { ""nota"": ""Actividades de Aprendizaje en Contacto con el Docente"", ""tipo"": ""Evaluación Formativa y Continua"", ""calificacion"": 10 },
-    { ""nota"": ""Aplicación y Experimentación de los Aprendizajes (APE)"", ""tipo"": ""Rúbrica de Informes y Prácticas de Laboratorio"", ""calificacion"": 10 },
-    { ""nota"": ""Trabajo Autónomo e Investigación"", ""tipo"": ""Control de Lectura y Proyectos"", ""calificacion"": 10 },
-    { ""nota"": ""Evaluación Sumativa Parcial / Final"", ""tipo"": ""Reactivos Teórico-Prácticos"", ""calificacion"": 10 }
+    { ""nota"": ""NOTA PARCIAL 1"", ""tipo"": ""ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)"", ""calificacion"": 10.00 },
+    { ""nota"": ""NOTA PARCIAL 2"", ""tipo"": ""EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)"", ""calificacion"": 10.00 },
+    { ""nota"": ""EVALUACIÓN"", ""tipo"": ""EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)"", ""calificacion"": 10.00 }
   ],
   ""bibliografias"": [
     {
@@ -1289,6 +1288,7 @@ namespace dosier_infrastructure.Curriculum
                         });
                     }
                 }
+                PeaDocumentExtractorService.NormalizeEvaluacionColumns(result.Evaluaciones);
             }
 
             // Bibliografías
@@ -2671,7 +2671,7 @@ namespace dosier_infrastructure.Curriculum
             sb.AppendLine("3. REGLA SECCIÓN 1 (NombreAsignatura): Si en la Sección 1 los créditos y horas cuadran matemáticamente (1 crédito = 48h y CD + APE + TA = Total), marca la Sección 1 como 'cumple' y NO generes ninguna observación en 'suggested_observations' para 'NombreAsignatura' por falta de horas en unidades o prácticas. El desfase de horas en unidades o prácticas debe observarse exclusivamente en 'Unidades' (Sección 6) y 'ActividadesPracticas' (Sección 8).");
             sb.AppendLine("4. REGLA SECCIÓN 3 (Prerrequisitos): Si SIGAFI indica que no existen prerrequisitos obligatorios en la malla y el PEA tampoco registra prerrequisitos, marca la Sección 3 como 'cumple' (coherencia total con la malla oficial) y NO generes alertas ni observaciones para 'Prerrequisitos'.");
             sb.AppendLine("5. REGLA SECCIÓN 5 (ResultadosAprendizaje): Si existen al menos 3 resultados de aprendizaje de la asignatura coherentes con las unidades temáticas y redactados con verbos de desempeño o acción (ej. Comprende, Aplica, Utiliza, Implementa, Diseña, Desarrolla), marca la Sección 5 como 'cumple' y NO generes observaciones exigiendo porcentajes numéricos artificiales.");
-            sb.AppendLine("6. REGLA SECCIÓN 9 (Evaluaciones): En el formato oficial del ISTPET / SIGAFI, los 4 componentes normativos (Contacto con el Docente, Práctico-Experimental APE, Trabajo Autónomo y Evaluación Sumativa) se califican cada uno sobre 10,0 puntos (que se promedian sobre 10 en el sistema académico). Si la Sección 9 registra los 4 componentes sobre 10 puntos cada uno (o sumando 10 o 100), marca la Sección 9 como 'cumple' y NO generes alertas ni observaciones cuestionando la suma de 40 puntos.");
+            sb.AppendLine("6. REGLA SECCIÓN 9 (Evaluaciones): En el formato oficial del ISTPET / SIGAFI, los componentes normativos (NOTA PARCIAL 1, NOTA PARCIAL 2, EVALUACIÓN FINAL — o esquema equivalente de 3 o 4 componentes) se califican cada uno sobre 10,00 puntos (que se promedian sobre 10 en el sistema académico). Si la Sección 9 registra sus componentes sobre 10 puntos cada uno (o sumando 10 o 100), marca la Sección 9 como 'cumple' y NO generes alertas ni observaciones cuestionando la suma de 30 o 40 puntos.");
             sb.AppendLine("7. REGLA SECCIÓN 10 (Bibliografia): Si existen al menos 3 obras de Bibliografía Básica y 3 de Consulta en formato APA 7ma edición vigentes, marca la Sección 10 como 'cumple'. En carreras tecnológicas como Desarrollo de Software es totalmente válido incluir literatura técnica de referencia en inglés o español; NO generes alertas ni observaciones por el idioma de los libros.");
             sb.AppendLine("8. Genera como máximo UNA (1) observación consolidada por cada 'section_key' que requiera subsanación real.");
 
@@ -2701,6 +2701,24 @@ namespace dosier_infrastructure.Curriculum
                    t.Contains("sin prerrequisito", StringComparison.OrdinalIgnoreCase) ||
                    t.Contains("nivel inicial", StringComparison.OrdinalIgnoreCase) ||
                    t.Contains("no aplica", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string ResolveEffectiveText(string? requestValue, string? contextValue)
+        {
+            return !string.IsNullOrWhiteSpace(requestValue) ? requestValue : (contextValue ?? string.Empty);
+        }
+
+        private static int CountBibliographyEntries(string? cleanText)
+        {
+            if (string.IsNullOrWhiteSpace(cleanText)) return 0;
+            // Contar por años en formato APA (ej. (2020), (2021a), (s.f.)) o por saltos/viñetas si no hay años
+            var apaYearMatches = System.Text.RegularExpressions.Regex.Matches(cleanText, @"\((?:19|20)\d{2}[a-z]?|s\.\s*f\.\)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (apaYearMatches.Count > 0) return apaYearMatches.Count;
+            var segments = cleanText
+                .Split(new[] { '\n', ';', '•' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(s => s.Length >= 15)
+                .ToList();
+            return segments.Count > 0 ? segments.Count : (cleanText.Length >= 20 ? 1 : 0);
         }
 
         private static string BuildReviewUserPrompt(AcademicPromptContext ctx, AnalyzePeaReviewRequestDto req)
@@ -2743,11 +2761,11 @@ namespace dosier_infrastructure.Curriculum
                 : ctx.ExistingPractices;
             decimal sumPracticasHoras = practicas.Sum(p => p.Horas);
 
-            string cleanObj = SanitizePromptField(!string.IsNullOrWhiteSpace(req.CurrentObjetivo) ? req.CurrentObjetivo : ctx.ExistingObjetivo);
-            string cleanRdaCarrera = SanitizePromptField(!string.IsNullOrWhiteSpace(req.CurrentRdaCarrera) ? req.CurrentRdaCarrera : ctx.ExistingRdaCarrera);
-            string cleanRdaAsig = SanitizePromptField(!string.IsNullOrWhiteSpace(req.CurrentResultadosAprendizaje) ? req.CurrentResultadosAprendizaje : ctx.ExistingResultadosAprendizaje);
-            string cleanMetod = SanitizePromptField(!string.IsNullOrWhiteSpace(req.CurrentMetodologiaEnsenanza) ? req.CurrentMetodologiaEnsenanza : ctx.ExistingMetodologia);
-            string cleanRec = SanitizePromptField(!string.IsNullOrWhiteSpace(req.CurrentRecursosDidacticos) ? req.CurrentRecursosDidacticos : ctx.ExistingRecursos);
+            string cleanObj = SanitizePromptField(ResolveEffectiveText(req.CurrentObjetivo, ctx.ExistingObjetivo));
+            string cleanRdaCarrera = SanitizePromptField(ResolveEffectiveText(req.CurrentRdaCarrera, ctx.ExistingRdaCarrera));
+            string cleanRdaAsig = SanitizePromptField(ResolveEffectiveText(req.CurrentResultadosAprendizaje, ctx.ExistingResultadosAprendizaje));
+            string cleanMetod = SanitizePromptField(ResolveEffectiveText(req.CurrentMetodologiaEnsenanza, ctx.ExistingMetodologia));
+            string cleanRec = SanitizePromptField(ResolveEffectiveText(req.CurrentRecursosDidacticos, ctx.ExistingRecursos));
 
             sb.AppendLine("### SNAPSHOT ACTUAL DEL PEA EN REVISIÓN:");
             sb.AppendLine($"1. DATOS GENERALES DECLARADOS: Créditos={creditos} (Equivalencia RRA: {creditos * 48}h) | Total={declTotal}h | CD={declCd}h | APE={declApe}h | TA={declTa}h | Suma Componentes={declCd + declApe + declTa}h");
@@ -2800,7 +2818,7 @@ namespace dosier_infrastructure.Curriculum
             var evals = (req.CurrentEvaluaciones != null && req.CurrentEvaluaciones.Count > 0)
                 ? req.CurrentEvaluaciones
                 : ctx.ExistingEvaluations;
-            bool isStandardIstpetEval = evals.Count >= 4 && evals.All(e => Math.Abs(e.Calificacion - 10m) < 0.01m && !string.IsNullOrWhiteSpace(SanitizePromptField(e.Nota)));
+            bool isStandardIstpetEval = evals.Count >= 3 && evals.All(e => Math.Abs(e.Calificacion - 10m) < 0.01m && !string.IsNullOrWhiteSpace(SanitizePromptField(e.Nota)));
             sb.AppendLine($"9. EVALUACIÓN (Sección 9) — Componentes={evals.Count}{(isStandardIstpetEval ? " (ESCALA INSTITUCIONAL ISTPET/SIGAFI: cada componente calificado sobre 10,0 puntos -> Estado: CUMPLE)" : $" | Suma={evals.Sum(e => e.Calificacion)} pts")}: {string.Join(" | ", evals.Select(e => $"{SanitizePromptField(e.Nota)}: {SanitizePromptField(e.Tipo)} ({e.Calificacion}/10 pts)"))}");
 
             string bibBasica = SanitizePromptField(req.CurrentBibliografiaBasica);
@@ -2811,33 +2829,47 @@ namespace dosier_infrastructure.Curriculum
             if (string.IsNullOrWhiteSpace(bibBasica) && bibsList.Count > 0)
             {
                 bibBasica = string.Join(" ; ", bibsList.Where(b => b.TipoBibliografia.Contains("Bas", StringComparison.OrdinalIgnoreCase)).Select(b => SanitizePromptField(b.CitaCompletaApa)));
+            }
+            if (string.IsNullOrWhiteSpace(bibConsulta) && bibsList.Count > 0)
+            {
                 bibConsulta = string.Join(" ; ", bibsList.Where(b => !b.TipoBibliografia.Contains("Bas", StringComparison.OrdinalIgnoreCase)).Select(b => SanitizePromptField(b.CitaCompletaApa)));
             }
-            int basCount = bibsList.Count(b => b.TipoBibliografia.Contains("Bas", StringComparison.OrdinalIgnoreCase));
-            int consCount = bibsList.Count(b => !b.TipoBibliografia.Contains("Bas", StringComparison.OrdinalIgnoreCase));
+            int basCount = bibsList.Count > 0
+                ? bibsList.Count(b => b.TipoBibliografia.Contains("Bas", StringComparison.OrdinalIgnoreCase))
+                : CountBibliographyEntries(bibBasica);
+            int consCount = bibsList.Count > 0
+                ? bibsList.Count(b => !b.TipoBibliografia.Contains("Bas", StringComparison.OrdinalIgnoreCase))
+                : CountBibliographyEntries(bibConsulta);
             bool isBibCompliant = basCount >= 3 && consCount >= 3;
             sb.AppendLine($"10. BIBLIOGRAFÍA APA (Sección 10){(isBibCompliant ? $" ({basCount} Básicas y {consCount} de Consulta en APA 7ma -> Estado: CUMPLE)" : "")}: Básica=[{(string.IsNullOrWhiteSpace(bibBasica) ? "VACÍA" : bibBasica)}] | Consulta=[{(string.IsNullOrWhiteSpace(bibConsulta) ? "VACÍA" : bibConsulta)}]");
 
             sb.AppendLine();
             sb.AppendLine("### TAREA SOLICITADA POR EL EVALUADOR CURRICULAR:");
-            if (!string.IsNullOrWhiteSpace(req.CustomQuestion))
+            if (focus == "custom" || (!string.IsNullOrWhiteSpace(req.CustomQuestion) && focus != "career_profile" && focus != "hours_audit" && focus != "overview"))
             {
-                sb.AppendLine($"Pregunta / Instrucción directa del revisor: \"{req.CustomQuestion.Trim()}\"");
-                sb.AppendLine("Responde directamente a la consulta del revisor en 'analysis_summary' y acompaña con la verificación curricular, perfil de carrera, horas y observaciones sugeridas si corresponden.");
+                sb.AppendLine($"Pregunta / Instrucción directa del revisor: \"{(req.CustomQuestion ?? string.Empty).Trim()}\"");
+                sb.AppendLine("Responde directamente a la consulta del revisor en 'analysis_summary' y acompaña con la verificación curricular y observaciones sugeridas estrictamente pertinentes a la consulta o hallazgos críticos.");
             }
             else
             {
                 switch (focus)
                 {
                     case "career_profile":
-                        sb.AppendLine("Enfócate en COMPARAR EL PEA CON EL PERFIL DE CARRERA Y LA MALLA CURRICULAR: Analiza si el Objetivo (Sección 2), los RDAs de Carrera y Asignatura (Secciones 4 y 5), los Prerrequisitos (Sección 3) y las Unidades (Sección 6) guardan coherencia real con la carrera, el semestre y los RDAs del Perfil de Egreso.");
+                        sb.AppendLine("Enfócate en COMPARAR EL PEA CON EL PERFIL DE CARRERA Y LA MALLA CURRICULAR: Analiza si el Objetivo (Sección 2), los Prerrequisitos (Sección 3), el Aporte al Perfil de Egreso (Sección 4), los RDAs de la Asignatura (Sección 5) y las Unidades Temáticas (Sección 6) guardan coherencia real con la carrera, el semestre y los RDAs del Perfil de Egreso.");
+                        sb.AppendLine("En 'suggested_observations' prioriza observaciones sobre esas secciones de alineación curricular (Secciones 2, 3, 4, 5 y 6), salvo que otras secciones estén completamente vacías e impidan la aprobación.");
                         break;
                     case "hours_audit":
                         sb.AppendLine("Enfócate en la AUDITORÍA DE HORAS, CRÉDITOS Y PRÁCTICAS (CACES / RRA Art. 21): Verifica si los créditos cuadran con las horas totales (48h por crédito), si CD + APE + TA en Sección 1 cuadra con el total, si la suma de horas por unidad en Sección 6 coincide con los componentes de Sección 1, y si las prácticas APE de Sección 8 justifican las horas práctico-experimentales.");
+                        sb.AppendLine("En 'suggested_observations' enfócate prioritariamente en hallazgos de carga horaria, unidades y prácticas APE (Secciones 1, 6 y 8). No incluyas observaciones de estilo sobre otras secciones que ya tengan contenido válido.");
                         break;
                     default:
                         sb.AppendLine("Realiza una EXPLICACIÓN INTEGRAL DEL PROYECTO PEA Y AUDITORÍA EJECUTIVA: Explica de qué trata el PEA, cómo está estructurado pedagógicamente, cómo se alinea con el perfil de la carrera, el estado de su distribución horaria y cuáles son los puntos fuertes o correcciones requeridas antes de emitir el aval.");
                         break;
+                }
+
+                if (!string.IsNullOrWhiteSpace(req.CustomQuestion))
+                {
+                    sb.AppendLine($"Nota adicional del evaluador: \"{req.CustomQuestion.Trim()}\"");
                 }
             }
 
@@ -2993,11 +3025,11 @@ namespace dosier_infrastructure.Curriculum
                      o.ObservationText.Contains("sección 8", StringComparison.OrdinalIgnoreCase)));
             }
 
-            // Corrección determinista de Sección 9 (Evaluación): en ISTPET los 4 componentes normativos se califican sobre 10,0 cada uno
+            // Corrección determinista de Sección 9 (Evaluación): en ISTPET los 3 o 4 componentes normativos se califican sobre 10,0 cada uno
             var evalsList = (req.CurrentEvaluaciones != null && req.CurrentEvaluaciones.Count > 0)
                 ? req.CurrentEvaluaciones
                 : ctx.ExistingEvaluations;
-            bool isStandardEval = evalsList.Count >= 4 &&
+            bool isStandardEval = evalsList.Count >= 3 &&
                 evalsList.All(e => Math.Abs(e.Calificacion - 10m) < 0.01m && !string.IsNullOrWhiteSpace(SanitizePromptField(e.Nota)));
             if (isStandardEval)
             {
@@ -3007,12 +3039,13 @@ namespace dosier_infrastructure.Curriculum
                         chk.Criterion.Contains("Sección 9", StringComparison.OrdinalIgnoreCase))
                     {
                         chk.Status = "cumple";
-                        chk.Detail = "Cumple con el esquema institucional del ISTPET (4 componentes normativos evaluados sobre base de 10,0 puntos cada uno).";
+                        chk.Detail = $"Cumple con el esquema institucional del ISTPET ({evalsList.Count} componentes normativos evaluados sobre base de 10,0 puntos cada uno).";
                     }
                 }
                 response.SuggestedObservations.RemoveAll(o =>
                     o.SectionKey == "Evaluaciones" &&
-                    (o.ObservationText.Contains("40", StringComparison.OrdinalIgnoreCase) ||
+                    (o.ObservationText.Contains("30", StringComparison.OrdinalIgnoreCase) ||
+                     o.ObservationText.Contains("40", StringComparison.OrdinalIgnoreCase) ||
                      o.ObservationText.Contains("escala", StringComparison.OrdinalIgnoreCase) ||
                      o.ObservationText.Contains("100", StringComparison.OrdinalIgnoreCase)));
             }
@@ -3021,8 +3054,13 @@ namespace dosier_infrastructure.Curriculum
             var bibsCheck = (req.CurrentBibliografias != null && req.CurrentBibliografias.Count > 0)
                 ? req.CurrentBibliografias
                 : ctx.ExistingBibliographies;
-            bool hasFullBib = bibsCheck.Count(b => b.TipoBibliografia.Contains("Bas", StringComparison.OrdinalIgnoreCase)) >= 3 &&
-                              bibsCheck.Count(b => !b.TipoBibliografia.Contains("Bas", StringComparison.OrdinalIgnoreCase)) >= 3;
+            int basCheckCount = bibsCheck.Count > 0
+                ? bibsCheck.Count(b => b.TipoBibliografia.Contains("Bas", StringComparison.OrdinalIgnoreCase))
+                : CountBibliographyEntries(SanitizePromptField(req.CurrentBibliografiaBasica));
+            int consCheckCount = bibsCheck.Count > 0
+                ? bibsCheck.Count(b => !b.TipoBibliografia.Contains("Bas", StringComparison.OrdinalIgnoreCase))
+                : CountBibliographyEntries(SanitizePromptField(req.CurrentBibliografiaConsulta));
+            bool hasFullBib = basCheckCount >= 3 && consCheckCount >= 3;
             if (hasFullBib)
             {
                 foreach (var chk in response.Checks)
@@ -3154,15 +3192,40 @@ namespace dosier_infrastructure.Curriculum
                 });
             }
 
-            bool hasObjAndRda = !string.IsNullOrWhiteSpace(SanitizePromptField(req.CurrentObjetivo ?? ctx.ExistingObjetivo)) &&
-                                !string.IsNullOrWhiteSpace(SanitizePromptField(req.CurrentResultadosAprendizaje ?? ctx.ExistingResultadosAprendizaje));
-            EnsureOrEnforceCheck(
-                "Alineación con el perfil de egreso de la carrera",
-                new[] { "perfil de egreso", "alineación", "alineacion" },
-                hasObjAndRda ? "cumple" : "alerta",
-                hasObjAndRda
-                    ? $"Objetivo y resultados de aprendizaje formulados para {ctx.NombreAsignatura} en la carrera {ctx.NombreCarrera}."
-                    : "Se recomienda verificar que el objetivo general y los resultados de aprendizaje estén completos y alineados al perfil de egreso.");
+            string effectiveObj = SanitizePromptField(ResolveEffectiveText(req.CurrentObjetivo, ctx.ExistingObjetivo));
+            string effectiveRdaCarrera = SanitizePromptField(ResolveEffectiveText(req.CurrentRdaCarrera, ctx.ExistingRdaCarrera));
+            string effectiveRdaAsig = SanitizePromptField(ResolveEffectiveText(req.CurrentResultadosAprendizaje, ctx.ExistingResultadosAprendizaje));
+            bool hasObj = !string.IsNullOrWhiteSpace(effectiveObj);
+            bool hasRdaCarrera = !string.IsNullOrWhiteSpace(effectiveRdaCarrera);
+            bool hasRdaAsig = !string.IsNullOrWhiteSpace(effectiveRdaAsig);
+            bool hasAllCoreAlignment = hasObj && hasRdaCarrera && hasRdaAsig;
+            bool isCompletelyEmptyAlignment = !hasObj && !hasRdaCarrera && !hasRdaAsig;
+
+            var existingAlignCheck = response.Checks.FirstOrDefault(c =>
+                new[] { "perfil de egreso", "alineación", "alineacion" }
+                    .Any(k => c.Criterion.Contains(k, StringComparison.OrdinalIgnoreCase)));
+
+            if (existingAlignCheck == null)
+            {
+                response.Checks.Add(new PeaReviewCheckItemDto
+                {
+                    Criterion = "Alineación con el perfil de egreso de la carrera",
+                    Status = hasAllCoreAlignment ? "cumple" : (isCompletelyEmptyAlignment ? "observado" : "alerta"),
+                    Detail = hasAllCoreAlignment
+                        ? $"Objetivo y resultados de aprendizaje formulados para {ctx.NombreAsignatura} en la carrera {ctx.NombreCarrera}."
+                        : (isCompletelyEmptyAlignment
+                            ? "Las secciones 2 (Objetivo), 4 (Aporte al perfil de egreso) y 5 (Resultados de aprendizaje) están vacías; no es posible verificar la alineación con el perfil de egreso."
+                            : "Se recomienda completar y verificar el objetivo general, el aporte al perfil de egreso y los resultados de aprendizaje de la asignatura.")
+                });
+            }
+            else if (!hasAllCoreAlignment && existingAlignCheck.Status == "cumple")
+            {
+                existingAlignCheck.Status = isCompletelyEmptyAlignment ? "observado" : "alerta";
+                if (isCompletelyEmptyAlignment)
+                {
+                    existingAlignCheck.Detail = "Las secciones 2 (Objetivo), 4 (Aporte al perfil de egreso) y 5 (Resultados de aprendizaje) están vacías; no es posible verificar la alineación con el perfil de egreso.";
+                }
+            }
 
             bool prereqCoherent = ctx.SigafiPrerequisites.Count == 0 ? !hasPeaPrereqs : hasPeaPrereqs;
             EnsureOrEnforceCheck(
@@ -3257,8 +3320,8 @@ namespace dosier_infrastructure.Curriculum
             if (lower.Contains("perfil") || lower.Contains("career") || lower.Contains("rdacarrera") || lower.Contains("aporte") || lower == "4") return "AportePerfilEgreso";
             if (lower.Contains("resultado") || lower.Contains("subject") || lower.Contains("rda") || lower == "5") return "ResultadosAprendizaje";
             if (lower.Contains("contenido") || lower.Contains("unidad") || lower.Contains("content") || lower == "6") return "Unidades";
-            if (lower.Contains("metodolog") || lower == "7") return "MetodologiaEnsenanza";
-            if (lower.Contains("practica") || lower.Contains("ape") || lower.Contains("actividad") || lower.Contains("recurso") || lower == "8") return "ActividadesPracticas";
+            if (lower.Contains("metodolog") || (lower.Contains("recurso") && !lower.Contains("pea_resources")) || lower == "7") return "MetodologiaEnsenanza";
+            if (lower.Contains("practica") || lower.Contains("ape") || lower.Contains("actividad") || lower.Contains("pea_resources") || lower == "8") return "ActividadesPracticas";
             if (lower.Contains("evaluac") || lower.Contains("criterio") || lower == "9") return "Evaluaciones";
             if (lower.Contains("bibliog") || lower == "10") return "Bibliografia";
 
@@ -3273,8 +3336,8 @@ namespace dosier_infrastructure.Curriculum
             "AportePerfilEgreso" => "4. Resultados de Aprendizaje de Carrera (Perfil de Egreso)",
             "ResultadosAprendizaje" => "5. Resultados de Aprendizaje de la Asignatura",
             "Unidades" or "ContenidosCurriculares" => "6. Contenidos de Enseñanza y Unidades Temáticas",
-            "MetodologiaEnsenanza" => "7. Metodología de Enseñanza y Recursos Didácticos",
-            "ActividadesPracticas" or "RecursosDidacticos" => "8. Actividades Prácticas y Experimentales (APE)",
+            "MetodologiaEnsenanza" or "RecursosDidacticos" => "7. Metodología de Enseñanza y Recursos Didácticos",
+            "ActividadesPracticas" => "8. Actividades Prácticas y Experimentales (APE)",
             "Evaluaciones" or "CriteriosEvaluacion" => "9. Evaluación del Aprendizaje",
             "Bibliografia" => "10. Bibliografía Institucional (Normas APA)",
             _ => "Sección del PEA"

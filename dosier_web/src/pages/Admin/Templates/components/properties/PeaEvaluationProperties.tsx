@@ -19,6 +19,24 @@ export const PeaEvaluationProperties: React.FC<PeaEvaluationPropertiesProps> = (
 }) => {
     const config = block.config || {};
 
+    const defaultRows = [
+        { nota: 'NOTA PARCIAL 1', tipo: 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)', calificacion: '10,00' },
+        { nota: 'NOTA PARCIAL 2', tipo: 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)', calificacion: '10,00' },
+        { nota: 'EVALUACIÓN', tipo: 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)', calificacion: '10,00' }
+    ];
+
+    const currentRows = Array.isArray(config.evaluaciones) && config.evaluaciones.length > 0
+        ? config.evaluaciones
+        : defaultRows;
+
+    const updateMatrixField = (rowIndex: number, field: 'nota' | 'tipo' | 'calificacion', value: string, legacyKey: string) => {
+        const nextRows = currentRows.map((row: any, idx: number) =>
+            idx === rowIndex ? { ...row, [field]: value } : row
+        );
+        onUpdateConfig(block.id, legacyKey, value);
+        onUpdateConfig(block.id, 'evaluaciones', nextRows);
+    };
+
     const handleResetDefaults = () => {
         onUpdateConfig(block.id, 'title', '9. EVALUACIÓN DEL APRENDIZAJE');
         onUpdateConfig(block.id, 'headerColor', '#1e2a4a');
@@ -26,12 +44,13 @@ export const PeaEvaluationProperties: React.FC<PeaEvaluationPropertiesProps> = (
         onUpdateConfig(block.id, 'colNotasLabel', 'Notas');
         onUpdateConfig(block.id, 'colTipoLabel', 'TIPO DE EVALUACIÓN');
         onUpdateConfig(block.id, 'colCalifLabel', 'CALIFICACION');
-        onUpdateConfig(block.id, 'parcial1Desc', 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)');
-        onUpdateConfig(block.id, 'parcial1Nota', '10,00');
-        onUpdateConfig(block.id, 'parcial2Desc', 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)');
-        onUpdateConfig(block.id, 'parcial2Nota', '10,00');
-        onUpdateConfig(block.id, 'finalDesc', 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)');
-        onUpdateConfig(block.id, 'finalNota', '10,00');
+        onUpdateConfig(block.id, 'parcial1Desc', defaultRows[0].tipo);
+        onUpdateConfig(block.id, 'parcial1Nota', defaultRows[0].calificacion);
+        onUpdateConfig(block.id, 'parcial2Desc', defaultRows[1].tipo);
+        onUpdateConfig(block.id, 'parcial2Nota', defaultRows[1].calificacion);
+        onUpdateConfig(block.id, 'finalDesc', defaultRows[2].tipo);
+        onUpdateConfig(block.id, 'finalNota', defaultRows[2].calificacion);
+        onUpdateConfig(block.id, 'evaluaciones', defaultRows);
     };
 
     return (
@@ -83,18 +102,18 @@ export const PeaEvaluationProperties: React.FC<PeaEvaluationPropertiesProps> = (
                 {/* NOTA PARCIAL 1 */}
                 <div className="p-2 rounded-lg border border-border-thin bg-surface space-y-1.5">
                     <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-text-main">NOTA PARCIAL 1</span>
+                        <span className="text-[10px] font-bold text-text-main">{currentRows[0]?.nota || 'NOTA PARCIAL 1'}</span>
                         <input
                             type="text"
-                            value={config.parcial1Nota || '10,00'}
-                            onChange={(e) => onUpdateConfig(block.id, 'parcial1Nota', e.target.value)}
+                            value={currentRows[0]?.calificacion || config.parcial1Nota || '10,00'}
+                            onChange={(e) => updateMatrixField(0, 'calificacion', e.target.value, 'parcial1Nota')}
                             className="w-16 bg-surface-hover/40 border border-border-thin rounded px-1.5 py-0.5 text-[10px] text-center font-bold text-text-main"
                         />
                     </div>
                     <input
                         type="text"
-                        value={config.parcial1Desc || 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)'}
-                        onChange={(e) => onUpdateConfig(block.id, 'parcial1Desc', e.target.value)}
+                        value={currentRows[0]?.tipo || config.parcial1Desc || 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)'}
+                        onChange={(e) => updateMatrixField(0, 'tipo', e.target.value, 'parcial1Desc')}
                         className="w-full bg-surface-hover/30 border border-border-thin rounded px-2 py-1 text-[9.5px] text-text-main"
                     />
                 </div>
@@ -102,18 +121,18 @@ export const PeaEvaluationProperties: React.FC<PeaEvaluationPropertiesProps> = (
                 {/* NOTA PARCIAL 2 */}
                 <div className="p-2 rounded-lg border border-border-thin bg-surface space-y-1.5">
                     <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-text-main">NOTA PARCIAL 2</span>
+                        <span className="text-[10px] font-bold text-text-main">{currentRows[1]?.nota || 'NOTA PARCIAL 2'}</span>
                         <input
                             type="text"
-                            value={config.parcial2Nota || '10,00'}
-                            onChange={(e) => onUpdateConfig(block.id, 'parcial2Nota', e.target.value)}
+                            value={currentRows[1]?.calificacion || config.parcial2Nota || '10,00'}
+                            onChange={(e) => updateMatrixField(1, 'calificacion', e.target.value, 'parcial2Nota')}
                             className="w-16 bg-surface-hover/40 border border-border-thin rounded px-1.5 py-0.5 text-[10px] text-center font-bold text-text-main"
                         />
                     </div>
                     <input
                         type="text"
-                        value={config.parcial2Desc || 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)'}
-                        onChange={(e) => onUpdateConfig(block.id, 'parcial2Desc', e.target.value)}
+                        value={currentRows[1]?.tipo || config.parcial2Desc || 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)'}
+                        onChange={(e) => updateMatrixField(1, 'tipo', e.target.value, 'parcial2Desc')}
                         className="w-full bg-surface-hover/30 border border-border-thin rounded px-2 py-1 text-[9.5px] text-text-main"
                     />
                 </div>
@@ -121,18 +140,18 @@ export const PeaEvaluationProperties: React.FC<PeaEvaluationPropertiesProps> = (
                 {/* EVALUACIÓN FINAL */}
                 <div className="p-2 rounded-lg border border-border-thin bg-surface space-y-1.5">
                     <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-text-main">EVALUACIÓN FINAL</span>
+                        <span className="text-[10px] font-bold text-text-main">{currentRows[2]?.nota || 'EVALUACIÓN'}</span>
                         <input
                             type="text"
-                            value={config.finalNota || '10,00'}
-                            onChange={(e) => onUpdateConfig(block.id, 'finalNota', e.target.value)}
+                            value={currentRows[2]?.calificacion || config.finalNota || '10,00'}
+                            onChange={(e) => updateMatrixField(2, 'calificacion', e.target.value, 'finalNota')}
                             className="w-16 bg-surface-hover/40 border border-border-thin rounded px-1.5 py-0.5 text-[10px] text-center font-bold text-text-main"
                         />
                     </div>
                     <input
                         type="text"
-                        value={config.finalDesc || 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)'}
-                        onChange={(e) => onUpdateConfig(block.id, 'finalDesc', e.target.value)}
+                        value={currentRows[2]?.tipo || config.finalDesc || 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)'}
+                        onChange={(e) => updateMatrixField(2, 'tipo', e.target.value, 'finalDesc')}
                         className="w-full bg-surface-hover/30 border border-border-thin rounded px-2 py-1 text-[9.5px] text-text-main"
                     />
                 </div>

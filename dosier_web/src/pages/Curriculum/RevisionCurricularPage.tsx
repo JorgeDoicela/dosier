@@ -168,8 +168,6 @@ export const RevisionCurricularPage: React.FC = () => {
             <FinalizeAuditModal
                 isOpen={layout.isFinalizeModalOpen}
                 onClose={() => layout.setIsFinalizeModalOpen(false)}
-                generalFeedback={layout.generalFeedback}
-                setGeneralFeedback={layout.setGeneralFeedback}
                 submitting={data.submitting}
                 onAprobar={async (motivo, password, tipoFirma, certP12, passP12) => {
                     const success = await data.handleAprobar(motivo, password, tipoFirma, certP12, passP12);
@@ -180,13 +178,14 @@ export const RevisionCurricularPage: React.FC = () => {
                     return success;
                 }}
                 onDevolver={async (fechaLimite) => {
-                    const success = await data.handleDevolver(layout.generalFeedback, fechaLimite);
+                    const success = await data.handleDevolver(fechaLimite);
                     if (success) {
                         layout.setIsFinalizeModalOpen(false);
                         handleNavigateBack();
                     }
                     return success;
                 }}
+                comments={commentsState.comments}
                 pendingObservationsCount={pendingObservationsCount}
                 projectTitle={data.project.title}
             />
@@ -196,7 +195,9 @@ export const RevisionCurricularPage: React.FC = () => {
                 projectUuid={projectUuid}
                 project={data.project}
                 docSnapshot={data.docSnapshot}
+                existingComments={commentsState.comments}
                 canAudit={isAuditActive}
+                hidden={layout.isFinalizeModalOpen}
                 onSaveComment={commentsState.saveCommentForSection}
                 onNavigateToSection={(sectionKey) => {
                     if (layout.viewMode !== 'interactive') {

@@ -29,7 +29,8 @@ public record CalendarioEventoDto(
     bool RecurrenciaAnual,
     int? IdCarrera = null,
     string? NombreCarrera = null,
-    string? NombreDocente = null
+    string? NombreDocente = null,
+    bool PuedeGestionar = false
 );
 
 public record EventoNormativoDto(

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
     Search,
     RefreshCw,
-    Info,
     BookOpen,
     AlertCircle,
     CheckCircle2
@@ -367,7 +366,7 @@ export const PeaSupervisionTray: React.FC = () => {
                         </span>
                     </button>
 
-                    {(isAdmin || isCoordAcad || isCoordCarrera || isVicerrector) && (
+                    {(isAdmin || isVicerrector) && (
                         <button
                             type="button"
                             onClick={() => handleWorkflowTabChange('en_redaccion')}
@@ -384,32 +383,24 @@ export const PeaSupervisionTray: React.FC = () => {
                         </button>
                     )}
 
-                    <button
-                        type="button"
-                        onClick={() => handleWorkflowTabChange('todos')}
-                        className={`pb-2.5 pt-2 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
-                            workflowTab === 'todos'
-                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
-                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
-                        }`}
-                    >
-                        <span>Todas las Asignaturas</span>
-                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
-                            {stats.total}
-                        </span>
-                    </button>
+                    {(isAdmin || isVicerrector) && (
+                        <button
+                            type="button"
+                            onClick={() => handleWorkflowTabChange('todos')}
+                            className={`pb-2.5 pt-2 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+                                workflowTab === 'todos'
+                                    ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                    : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
+                            }`}
+                        >
+                            <span>Todas las Asignaturas</span>
+                            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
+                                {stats.total}
+                            </span>
+                        </button>
+                    )}
                 </nav>
             </div>
-
-            {/* Banner explicativo contextual según la pestaña activa */}
-            {(isAdmin || isCoordAcad || isCoordCarrera || isVicerrector) && workflowTab === 'en_redaccion' && (
-                <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 text-slate-700 dark:text-zinc-300 text-xs flex items-center gap-3">
-                    <Info size={16} className="text-slate-400 dark:text-zinc-500 shrink-0" />
-                    <span>
-                        <strong>Modo de Monitoreo:</strong> Las siguientes asignaturas están en fase de formulación docente (borrador) y aún no han sido remitidas formalmente a la Coordinación. La visualización está habilitada en modo consulta de avance sin emisión de aprobación.
-                    </span>
-                </div>
-            )}
 
             {/* ── ESTADOS DE CARGA Y ERROR ── */}
             {error && (

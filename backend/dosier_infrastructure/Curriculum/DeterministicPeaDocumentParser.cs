@@ -643,8 +643,8 @@ namespace dosier_infrastructure.Curriculum
                     continue;
                 }
 
-                // Caso PDF de una sola línea sin tabulador: "FRECUENTE Actividades autónomas 3.00"
-                var pdfEvalMatch = Regex.Match(line, @"(?i)^(FRECUENTE|PARCIAL|FINAL|GESTI[ÓO]N\s+FORMATIVA|GESTI[ÓO]N\s+PR[ÁA]CTICA|EXAMEN(?:\s+FINAL)?)\s+(.+?)\s+(\d+(?:[\.,]\d+)?)$");
+                // Caso PDF de una sola línea sin tabulador: "NOTA PARCIAL 1 ACTIVIDADES AUTÓNOMAS... 10,00" o "FRECUENTE Actividades autónomas 3.00"
+                var pdfEvalMatch = Regex.Match(line, @"(?i)^(NOTA\s+PARCIAL\s*\d+|NOTA\s+EXAMEN(?:\s+FINAL)?|EVALUACI[ÓO]N(?:\s+FINAL)?|FRECUENTE|PARCIAL(?:\s*\d+)?|FINAL|GESTI[ÓO]N\s+FORMATIVA|GESTI[ÓO]N\s+PR[ÁA]CTICA|EXAMEN(?:\s+FINAL)?)\s+(.+?)\s+(\d+(?:[\.,]\d+)?)$");
                 if (pdfEvalMatch.Success && TryParseDecimal(pdfEvalMatch.Groups[3].Value, out decimal pdfCalif))
                 {
                     list.Add(new PeaDraftEvaluacionDto
@@ -656,6 +656,7 @@ namespace dosier_infrastructure.Curriculum
                 }
             }
 
+            PeaDocumentExtractorService.NormalizeEvaluacionColumns(list);
             return list;
         }
 

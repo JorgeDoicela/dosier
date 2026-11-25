@@ -110,16 +110,52 @@ CREATE TABLE doc_notificaciones (
 ### 5.2. Historial de Correos Transaccionales (`doc_email_historial`)
 ```sql
 CREATE TABLE doc_email_historial (
-    id_email_historial INT AUTO_INCREMENT PRIMARY KEY,
+    idEmailHistorial INT AUTO_INCREMENT PRIMARY KEY,
     uuid VARCHAR(36) NOT NULL,
     destinatario VARCHAR(255) NOT NULL,
-    id_usuario_destinatario INT NULL,
+    idUsuarioDestinatario INT NULL,
     asunto VARCHAR(255) NOT NULL,
     cuerpo LONGTEXT NOT NULL,                 -- HTML completo renderizado con membrete institucional
-    estado VARCHAR(50) NOT NULL,              -- Pendiente, Enviado, Fallido, Rebotado
-    fecha_envio DATETIME NOT NULL,
-    fecha_entrega DATETIME NULL,
-    error_detalle TEXT NULL,
-    FOREIGN KEY (id_usuario_destinatario) REFERENCES usuarios(idUsuario)
+    estado ENUM('Pendiente', 'Enviado', 'Fallido', 'Rebotado') NOT NULL DEFAULT 'Pendiente',
+    errorMensaje TEXT NULL,
+    fechaEnvio TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    adjuntosJson JSON NULL,
+    metadataJson JSON NULL,
+    FOREIGN KEY (idUsuarioDestinatario) REFERENCES usuarios(idUsuario) ON DELETE SET NULL
 );
 ```
+
+---
+
+## 6. Motor de Correos Curriculares (`EmailEngine`)
+
+El módulo de gestión de correos institucionales (`/emails` en frontend, `/api/Admin/email-engine` en backend) aplica control de acceso basado en roles (RBAC) y aislamiento por alcance de carrera:
+
+| Rol Institucional | Alcance de Envío y Destinatarios | Plantillas (`doc_email_templates`) | Historial (`doc_email_historial`) |
+| :--- | :--- | :--- | :--- |
+| `DOSIER_ADMIN` | Global institucional (todos los roles, carreras y PEAs). | Ver, crear, editar y eliminar. | Auditoría global completa. |
+| `DOSIER_VICERRECTOR` / `DOSIER_COORD_ACAD` | Global institucional (todos los roles, carreras y PEAs). | Ver, crear y editar (eliminación reservada a Admin). | Auditoría global completa. |
+| `DOSIER_COORD_CARRERA` | Restringido estrictamente a docentes y PEAs de sus carreras coordinadas (`doc_autoridades_curriculares`). Difusión masiva limitada únicamente al rol `DOSIER_DOCENTE` dentro de su carrera. | Solo lectura y uso en redacción. | Únicamente sus propios envíos (`senderUserId`). |
+
+El backend expone `GET /api/Admin/email-engine/scope` para informar las capacidades efectivas del actor autenticado y `GET /api/Admin/email-engine/recipients` para buscar destinatarios dentro de su alcance permitido, validando en `EmailSenderSubservice` cada solicitud de despacho antes de encolarla (respondiendo `403 Forbidden` ante cualquier intento fuera de alcance).
+
+### 6.1. Catálogo de Plantillas Sembradas (`doc_email_templates`)
+El script `scripts/base_datos/01_sistema_base.sql` inicializa siete plantillas curriculares orientadas al flujo de gestión de PEAs y calendario CACES:
+
+| Código | Propósito | Contexto Recomendado |
+| :--- | :--- | :--- |
+| `COMUNICADO_CURRICULAR` | Comunicado institucional general a docentes, autoridades o carreras. | General |
+| `PEA_RECORDATORIO_ELABORACION` | Recordatorio de formulación y entrega de PEA antes de la fecha límite. | `PEA` |
+| `PEA_OBSERVACIONES_SUBSANACION` | Aviso de observaciones curriculares para subsanación docente. | `PEA` |
+| `PEA_SOLICITUD_AVAL` | Solicitud de revisión y emisión de aval para Coordinación o Vicerrectorado. | `PEA` |
+| `PEA_APROBACION_OFICIAL` | Confirmación de legalización definitiva del PEA con firma y código QR CACES. | `PEA` |
+| `PERIODO_APERTURA_DISTRIBUTIVO` | Apertura de período académico y habilitación de planificación de PEAs. | `Periodo` |
+| `CALENDARIO_ALERTA_EVENTO` | Alerta automática ejecutada por `CalendarioService` para hitos normativos. | Calendario |
+
+### 6.2. Contexto Dinámico y Adjuntos Autogenerados (`EmailSenderSubservice`)
+Al vincular una entidad del sistema en el envío (`EntityType` y `EntityUuid`), `EmailSenderSubservice` consulta las tablas de DOSIER y SIGAFI en modo solo lectura (`.AsNoTracking()`) para inyectar automáticamente los tokens curriculares:
+* **Contexto `PEA`:** `[[pea_asignatura]]`, `[[pea_codigo]]`, `[[pea_carrera]]`, `[[pea_periodo]]`, `[[pea_nivel]]`, `[[pea_modalidad]]`, `[[pea_estado]]`, `[[pea_docente]]`, `[[pea_docente_email]]`, `[[pea_horas_totales]]`, `[[pea_creditos]]`, `[[pea_workspace_url]]`, `[[pea_revision_url]]`.
+* **Contexto `Periodo`:** `[[periodo_codigo]]`, `[[periodo_nombre]]`, `[[periodo_fecha_inicio]]`, `[[periodo_fecha_fin]]`, `[[periodo_estado]]`.
+* **Adjunto PDF Autogenerado (`SYSTEM:PEA_OFICIAL`):** Cuando se vincula un `PEA` y se activa la generación al vuelo, `EmailSenderSubservice` renderiza el PDF oficial una sola vez por lote mediante `IDocumentEngine` (aplicando firma PKCS#12 opcional con `IFirmaElectronicaService` si se provee certificado `.p12`) y lo almacena en `email_attachments/` para su despacho asíncrono por `EmailBackgroundProcessorService`.
+* **Difusión por Carrera y Segmentación por Grupos (`TargetModalidadIds`, `TargetCarreraIds`, `TargetRole`, `TargetPeaEstado`, `TargetPeriodoId`):** Permite conformar grupos combinables por modalidad de estudio (`modalidades` y `modalidades_carreras` de SIGAFI), selección múltiple de carreras, rol institucional y estado de avance del PEA (`Borrador`, `Observado`, `EnRevision`, `RevisadoCoord`, `RevisadoAcad`, `Aprobado`). Antes del envío, el endpoint `POST /api/Admin/email-engine/audience/preview` calcula el conteo exacto y una muestra de destinatarios aplicando las mismas reglas RBAC del despacho real.
+

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
-    Sparkles,
     Send,
     Loader2,
     Check,
@@ -11,14 +10,14 @@ import {
     X,
     ChevronDown,
     ChevronUp,
-    ArrowUpRight,
-    PlusCircle
+    ArrowUpRight
 } from 'lucide-react';
 import { PeaAiAssistantModal } from '../../../../components/DOSIER/shell/components/PeaAiAssistantModal';
 import {
     getPeaAiConfig,
     savePeaAiConfig,
     analyzePeaForReview,
+    extractPeaAiErrorMessage,
     AI_PROVIDER_MODELS,
     type PeaAiConfigStatus,
     type PeaAiReviewFocusMode,
@@ -27,7 +26,14 @@ import {
 } from '../../../../services/peaAiService';
 import { useAuth } from '../../../../api/AuthContext';
 import { useNotifications } from '../../../../api/NotificationsContext';
-import type { ProjectDetail } from '../types/revisionTecnicaTypes';
+import type { ProjectDetail, SectionComment } from '../types/revisionTecnicaTypes';
+import {
+    FOCUS_OPTIONS,
+    normalizeClientSectionKey,
+    buildReviewerSnapshotPayload,
+    isObservationAlreadyRegistered,
+    getPendingSectionObservationCount
+} from '../utils/peaReviewerSnapshot';
 
 export interface ReviewerChatMessage {
     id: string;
@@ -41,83 +47,25 @@ export interface ReviewerChatMessage {
 export interface PeaAiReviewerWidgetProps {
     projectUuid?: string;
     project: ProjectDetail;
-    docSnapshot: any;
+    docSnapshot: Record<string, unknown> | null | undefined;
+    existingComments?: Record<string, SectionComment[]>;
     canAudit?: boolean;
-    onSaveComment?: (sectionKey: string, text: string) => Promise<void>;
+    hidden?: boolean;
+    onSaveComment?: (
+        sectionKey: string,
+        text: string,
+        options?: { silentToast?: boolean }
+    ) => Promise<void>;
     onNavigateToSection?: (sectionKey: string) => void;
 }
-
-const FOCUS_OPTIONS: Array<{ value: PeaAiReviewFocusMode; label: string; promptLabel: string }> = [
-    {
-        value: 'overview',
-        label: 'Explicación integral del PEA',
-        promptLabel: 'Explicame el proyecto PEA, su estructura pedagógica y coherencia general.'
-    },
-    {
-        value: 'career_profile',
-        label: 'Comparar con perfil de carrera',
-        promptLabel: 'Compara este PEA con el perfil de egreso de la carrera, prerrequisitos de malla y RDAs.'
-    },
-    {
-        value: 'hours_audit',
-        label: 'Auditar horas, créditos y APE',
-        promptLabel: 'Audita el cuadre matemático de horas (CD, APE, TA), créditos (48h) y prácticas experimentales.'
-    }
-];
-
-const stripHtmlClean = (val: any): string | undefined => {
-    if (typeof val !== 'string') return undefined;
-    const stripped = val.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    return stripped.length > 0 && stripped !== '-' ? stripped : undefined;
-};
-
-const normalizeClientSectionKey = (rawKey: string): string => {
-    const k = (rawKey || '').trim();
-    if (!k) return 'ObjetivoAsignatura';
-    const lower = k.toLowerCase();
-    if (lower.includes('general') || lower.includes('nombre') || lower.includes('hora') || lower.includes('credito')) return 'NombreAsignatura';
-    if (lower.includes('objetivo')) return 'ObjetivoAsignatura';
-    if (lower.includes('prerreq')) return 'Prerrequisitos';
-    if (lower.includes('perfil') || lower.includes('career') || lower.includes('rdacarrera') || lower.includes('aporte')) return 'AportePerfilEgreso';
-    if (lower.includes('resultado') || lower.includes('subject') || lower.includes('rda')) return 'ResultadosAprendizaje';
-    if (lower.includes('contenido') || lower.includes('unidad') || lower.includes('content')) return 'Unidades';
-    if (lower.includes('metodolog')) return 'MetodologiaEnsenanza';
-    if (lower.includes('practica') || lower.includes('ape') || lower.includes('actividad') || lower.includes('recurso')) return 'ActividadesPracticas';
-    if (lower.includes('evaluac') || lower.includes('criterio')) return 'Evaluaciones';
-    if (lower.includes('bibliog')) return 'Bibliografia';
-    return k;
-};
-
-const extractUnitContenidosClean = (u: any): string => {
-    const raw = u.contenidos ?? u.Contenidos ?? u.temas ?? u.Temas ?? u['1'] ?? '';
-    if (typeof raw === 'string') {
-        const clean = stripHtmlClean(raw) || '';
-        if (clean.toLowerCase() === 'contenidos y subtemas de aprendizaje') return '';
-        return clean;
-    }
-    if (Array.isArray(raw)) {
-        return raw
-            .map((t: any) => {
-                if (typeof t === 'string') return stripHtmlClean(t) || '';
-                if (!t || typeof t !== 'object') return '';
-                const titulo = stripHtmlClean(t.TituloTema ?? t.titulo_tema ?? t.titulo ?? t.nombre_tema ?? t.nombre) || '';
-                const desc = stripHtmlClean(t.DescripcionSubtemas ?? t.descripcion_subtemas ?? t.descripcion ?? t.subtemas) || '';
-                const isPlaceholder = !titulo || titulo.toLowerCase() === 'contenidos y subtemas de aprendizaje';
-                if (isPlaceholder && !desc) return '';
-                if (!isPlaceholder && desc) return `${titulo}: ${desc}`;
-                return desc || titulo;
-            })
-            .filter(Boolean)
-            .join('; ');
-    }
-    return '';
-};
 
 export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
     projectUuid,
     project,
     docSnapshot,
+    existingComments,
     canAudit = false,
+    hidden = false,
     onSaveComment,
     onNavigateToSection
 }) => {
@@ -131,7 +79,6 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
     const [configVersion, setConfigVersion] = useState<number>(0);
 
     const [selectedModel, setSelectedModel] = useState<string>('');
-    const [selectedFocus, setSelectedFocus] = useState<PeaAiReviewFocusMode>('overview');
     const [inputPrompt, setInputPrompt] = useState<string>('');
     const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
 
@@ -139,6 +86,7 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
     const [expandedDetailsMap, setExpandedDetailsMap] = useState<Record<string, boolean>>({});
     const [appliedObsKeys, setAppliedObsKeys] = useState<Record<string, boolean>>({});
     const [applyingObsKey, setApplyingObsKey] = useState<string | null>(null);
+    const [applyingBatchMsgId, setApplyingBatchMsgId] = useState<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const isHistoryLoadedRef = useRef<boolean>(false);
@@ -160,10 +108,13 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
         try {
             const raw = localStorage.getItem(storageKey);
             if (raw) {
-                const parsed = JSON.parse(raw);
+                const parsed = JSON.parse(raw) as {
+                    messages?: ReviewerChatMessage[];
+                    appliedObsKeys?: Record<string, boolean>;
+                };
                 if (parsed && typeof parsed === 'object') {
                     if (Array.isArray(parsed.messages)) {
-                        const cleaned = parsed.messages.map((m: any) =>
+                        const cleaned = parsed.messages.map(m =>
                             m?.sender === 'assistant' && !m?.analysis && typeof m?.text === 'string' && m.text.startsWith('Analizando el PEA')
                                 ? { ...m, text: 'Error en el análisis: La consulta fue interrumpida al recargar la página.' }
                                 : m
@@ -255,130 +206,8 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
         }
     };
 
-    const buildSnapshotRequestPayload = useCallback(() => {
-        const snap = docSnapshot || {};
-
-        const rawUnits: any[] = Array.isArray(snap.Unidades) ? snap.Unidades : [];
-        const peaDbUnits: any[] = Array.isArray((project?.peaData as any)?.unidades) ? (project.peaData as any).unidades : [];
-        const currentUnidades = rawUnits
-            .map((u: any, idx: number) => {
-                const dbU = peaDbUnits[idx] || {};
-                const cd = Number(u.horasCD ?? u.HorasCD ?? u.horasDocencia ?? u.HorasDocencia ?? u.horas_docencia ?? u.horasDocente ?? u['2'] ?? dbU.horasDocencia ?? dbU.horas_docencia ?? 0);
-                const ape = Number(u.horasAPE ?? u.HorasAPE ?? u.horasPractica ?? u.horas_practica ?? u.horasPracticoExp ?? u.HorasPracticoExp ?? u.horas_practico_exp ?? u['3'] ?? dbU.horasPracticoExp ?? dbU.horas_practico_exp ?? 0);
-                const ta = Number(u.horasTA ?? u.HorasTA ?? u.horasAutonomo ?? u.HorasAutonomo ?? u.horas_autonomo ?? u['4'] ?? dbU.horasAutonomo ?? dbU.horas_autonomo ?? 0);
-                return {
-                    num: Number(u.num ?? u.Numero ?? u.numero ?? u.NumeroUnidad ?? u.numero_unidad ?? idx + 1),
-                    titulo: (stripHtmlClean(u.titulo ?? u.Titulo ?? u.nombre ?? u.NombreUnidad ?? u.nombre_unidad ?? u['0'] ?? '') || '').trim(),
-                    contenidos: extractUnitContenidosClean(u),
-                    horasCD: cd,
-                    horasAPE: ape,
-                    horasTA: ta
-                };
-            })
-            .filter(u => u.titulo || u.contenidos);
-
-        const rawPrereqs: any[] = Array.isArray(snap.Prerrequisitos) ? snap.Prerrequisitos : [];
-        const currentPrerrequisitos = rawPrereqs
-            .map((p: any) => ({
-                asignatura: (stripHtmlClean(p.asignatura ?? p.Asignatura ?? p.NombreAsignatura ?? p.nombre_asignatura ?? p[0] ?? '') || '').trim(),
-                observacion: (stripHtmlClean(p.observacion ?? p.Observacion ?? p.observaciones ?? p.Condicion ?? p.condicion ?? p[1] ?? '') || '').trim()
-            }))
-            .filter(p => p.asignatura);
-
-        const rawPracticas: any[] = Array.isArray(snap.ActividadesPracticas) ? snap.ActividadesPracticas : [];
-        const currentActividadesPracticas = rawPracticas
-            .map((p: any, idx: number) => {
-                const rawHoras = p.horas ?? p.Horas ?? p.duracionHoras ?? p.DuracionHoras ?? p.duracion_horas ?? p['2'] ?? 2;
-                const parsedHoras = Number(String(rawHoras).replace(',', '.'));
-                return {
-                    unidad: Number(String(p.unidad ?? p.Unidad ?? p.numeroUnidad ?? p.NumeroUnidad ?? p.NumeroPractica ?? p.numeroPractica ?? p.numero_practica ?? idx + 1).replace(/\D/g, '')) || idx + 1,
-                    nombre: (stripHtmlClean(p.nombre ?? p.Nombre ?? p.nombrePractica ?? p.NombrePractica ?? p.nombre_practica ?? p.nombre_caracterizacion ?? p.NombreCaracterizacion ?? p.tema ?? p.Tema ?? p.descripcion ?? p['1'] ?? '') || '').trim(),
-                    horas: Number.isFinite(parsedHoras) && parsedHoras > 0 ? parsedHoras : 2,
-                    escenario: (stripHtmlClean(p.escenario ?? p.Escenario ?? '') || '').trim(),
-                    producto: (stripHtmlClean(p.producto ?? p.Producto ?? '') || '').trim(),
-                    caracterizacion: (stripHtmlClean(p.caracterizacion ?? p.Caracterizacion ?? '') || '').trim()
-                };
-            })
-            .filter(p => p.nombre);
-
-        const rawEvals: any[] = Array.isArray(snap.Evaluaciones) ? snap.Evaluaciones : [];
-        const currentEvaluaciones = rawEvals
-            .map((e: any) => {
-                const rawCalif = e.calificacion ?? e.Calificacion ?? e.calificacionMaxima ?? e.CalificacionMaxima ?? e.calificacion_maxima ?? e.porcentaje ?? e.Porcentaje ?? e['2'] ?? 10;
-                const parsedCalif = Number(String(rawCalif).replace(',', '.'));
-                return {
-                    nota: (stripHtmlClean(e.nota ?? e.Nota ?? e.denominacion ?? e.Denominacion ?? e.criterio ?? e.Criterio ?? e['0'] ?? '') || '').trim(),
-                    tipo: (stripHtmlClean(e.tipo ?? e.Tipo ?? e.tipoEvaluacion ?? e.TipoEvaluacion ?? e.tipo_evaluacion ?? e.descripcion ?? e.Descripcion ?? e['1'] ?? '') || '').trim(),
-                    calificacion: Number.isFinite(parsedCalif) && parsedCalif > 0 ? parsedCalif : 10
-                };
-            })
-            .filter(e => e.nota || e.tipo);
-
-        const rawBibs: any[] = Array.isArray(snap.Bibliografias) ? snap.Bibliografias : [];
-        const currentBibliografias = rawBibs
-            .map((b: any) => ({
-                tipoBibliografia: String(b.tipoBibliografia ?? b.TipoBibliografia ?? b.tipo_bibliografia ?? 'Basica'),
-                autor: (stripHtmlClean(b.autor ?? b.Autor ?? '') || '').trim(),
-                tituloLibro: (stripHtmlClean(b.tituloLibro ?? b.TituloLibro ?? b.titulo_libro ?? '') || '').trim(),
-                editorialCiudad: (stripHtmlClean(b.editorialCiudad ?? b.EditorialCiudad ?? b.editorial_ciudad ?? '') || '').trim(),
-                citaCompletaApa: (stripHtmlClean(b.citaCompletaApa ?? b.CitaCompletaApa ?? b.cita_completa_apa ?? '') || '').trim()
-            }))
-            .filter(b => b.citaCompletaApa || b.tituloLibro);
-
-        const rdaCarreraClean = (stripHtmlClean(snap.RdaCarrera) || '').replace(/\s+/g, '');
-        let rdaAsigStr: string | undefined;
-        if (typeof snap.ResultadosAprendizaje === 'string') {
-            rdaAsigStr = stripHtmlClean(snap.ResultadosAprendizaje);
-        } else if (Array.isArray(snap.ResultadosAprendizaje)) {
-            const cleanedRdas = snap.ResultadosAprendizaje
-                .filter((r: any) => {
-                    const tipo = String(r?.tipoRda || r?.TipoRda || r?.tipo_rda || '').toLowerCase();
-                    return tipo !== 'carrera';
-                })
-                .map((r: any) => {
-                    const raw = stripHtmlClean(typeof r === 'string' ? r : (r?.descripcion ?? r?.Descripcion ?? r?.texto ?? '')) || '';
-                    return raw.replace(/^rda\s*\d+\s*:\s*/i, '').trim();
-                })
-                .filter((t: string) => {
-                    if (!t || t === '-' || /^rda\s*[-#]?\s*\d*\s*:?$/i.test(t)) return false;
-                    if (rdaCarreraClean.length > 20 && t.replace(/\s+/g, '') === rdaCarreraClean) return false;
-                    return true;
-                });
-            rdaAsigStr = cleanedRdas.length > 0 ? cleanedRdas.join(' | ') : undefined;
-        }
-
-        const toOptionalNumber = (val: any): number | undefined => {
-            if (val === undefined || val === null || val === '') return undefined;
-            const n = Number(val);
-            return Number.isFinite(n) ? n : undefined;
-        };
-
-        return {
-            currentCreditos: toOptionalNumber(snap.Creditos ?? project.creditos),
-            currentHorasCD: toOptionalNumber(snap.HorasContactoDocente ?? project.horas_docencia),
-            currentHorasAPE: toOptionalNumber(snap.HorasPracticoExperimental ?? project.horas_practica),
-            currentHorasTA: toOptionalNumber(snap.HorasAutonomo ?? project.horas_autonomo),
-            currentTotalHoras: toOptionalNumber(snap.TotalHorasAsignatura ?? project.horas_totales),
-            currentModalidad: String(snap.Modalidad ?? project.modalidad ?? '').trim() || undefined,
-            currentUnidadOrganizacion: String(snap.UnidadOrganizacion ?? project.dominio ?? '').trim() || undefined,
-            currentNivel: String(snap.Nivel ?? project.semestre_nivel ?? '').trim() || undefined,
-            currentObjetivo: stripHtmlClean(snap.ObjetivoAsignatura ?? project.descripcion),
-            currentPrerrequisitos: currentPrerrequisitos.length > 0 ? currentPrerrequisitos : undefined,
-            currentRdaCarrera: stripHtmlClean(snap.RdaCarrera),
-            currentResultadosAprendizaje: rdaAsigStr,
-            currentUnidades: currentUnidades.length > 0 ? currentUnidades : undefined,
-            currentMetodologiaEnsenanza: stripHtmlClean(snap.MetodologiaEnsenanza),
-            currentRecursosDidacticos: stripHtmlClean(snap.RecursosDidacticos),
-            currentActividadesPracticas: currentActividadesPracticas.length > 0 ? currentActividadesPracticas : undefined,
-            currentEvaluaciones: currentEvaluaciones.length > 0 ? currentEvaluaciones : undefined,
-            currentBibliografias: currentBibliografias.length > 0 ? currentBibliografias : undefined,
-            currentBibliografiaBasica: stripHtmlClean(snap.BibliografiaBasica),
-            currentBibliografiaConsulta: stripHtmlClean(snap.BibliografiaConsulta)
-        };
-    }, [docSnapshot, project]);
-
     const handleTriggerAnalysis = useCallback(
-        async (customFocus?: PeaAiReviewFocusMode, customPromptText?: string) => {
+        async (quickFocus?: PeaAiReviewFocusMode, quickDisplayText?: string) => {
             const targetUuid = projectUuid || project?.uuid;
             if (!targetUuid || isAnalyzing) return;
 
@@ -387,10 +216,19 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                 return;
             }
 
-            const effectiveFocus = customFocus ?? selectedFocus;
-            const focusMeta = FOCUS_OPTIONS.find(f => f.value === effectiveFocus) || FOCUS_OPTIONS[0];
-            const promptToSend = (customPromptText ?? inputPrompt).trim();
-            const displayUserText = promptToSend || focusMeta.promptLabel;
+            const isQuickAction = Boolean(quickFocus);
+            const typedPrompt = inputPrompt.trim();
+
+            if (!isQuickAction && !typedPrompt) {
+                // Si se pulsa enviar con input vacío, ejecutar explicación integral por defecto
+                quickFocus = 'overview';
+            }
+
+            const effectiveFocus: PeaAiReviewFocusMode = quickFocus ?? 'custom';
+            const focusMeta = FOCUS_OPTIONS.find(f => f.value === effectiveFocus);
+            const displayUserText = quickDisplayText ?? (typedPrompt || focusMeta?.promptLabel || 'Analiza este PEA.');
+            const customQuestionToSend = isQuickAction ? undefined : typedPrompt || undefined;
+            const focusLabel = isQuickAction ? focusMeta?.label : 'Consulta personalizada';
 
             const userMsgId = `rev_user_${Date.now()}`;
             const assistantMsgId = `rev_ast_${Date.now() + 1}`;
@@ -400,7 +238,7 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                 sender: 'user',
                 text: displayUserText,
                 timestamp: new Date().toISOString(),
-                focusLabel: focusMeta.label
+                focusLabel
             };
 
             const loadingAstMsg: ReviewerChatMessage = {
@@ -411,7 +249,7 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
             };
 
             setMessages(prev => [...prev, userMsg, loadingAstMsg]);
-            if (!customPromptText) {
+            if (!isQuickAction) {
                 setInputPrompt('');
             }
             setIsAnalyzing(true);
@@ -425,10 +263,10 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                         content: m.analysis ? `${m.analysis.analysisSummary}\n${m.analysis.hoursComparisonSummary}` : m.text
                     }));
 
-                const snapPayload = buildSnapshotRequestPayload();
+                const snapPayload = buildReviewerSnapshotPayload(docSnapshot, project);
                 const analysis = await analyzePeaForReview(targetUuid, {
                     focusMode: effectiveFocus,
-                    customQuestion: promptToSend || undefined,
+                    customQuestion: customQuestionToSend,
                     provider: aiConfigStatus.activeProvider,
                     model: selectedModel || aiConfigStatus.activeModel,
                     reasoningEffort: aiConfigStatus.activeReasoningEffort || undefined,
@@ -440,10 +278,10 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                 const hasPriorAnalysis = messages.some(m => m.sender === 'assistant' && Boolean(m.analysis));
                 const isConversationalSummary =
                     hasPriorAnalysis &&
-                    !customPromptText &&
-                    Boolean(promptToSend) &&
-                    /resum|explic|trata|sintetiz|cu[aá]l|qu[eé]\s+es/i.test(promptToSend) &&
-                    !/revis|audit|observ|evalu|verific|erro/i.test(promptToSend);
+                    !isQuickAction &&
+                    Boolean(customQuestionToSend) &&
+                    /resum|explic|trata|sintetiz|cu[aá]l|qu[eé]\s+es/i.test(customQuestionToSend || '') &&
+                    !/revis|audit|observ|evalu|verific|erro/i.test(customQuestionToSend || '');
 
                 setMessages(prev =>
                     prev.map(m =>
@@ -464,11 +302,11 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                     collapsedPrev[assistantMsgId] = !isConversationalSummary;
                     return collapsedPrev;
                 });
-            } catch (err: any) {
-                const errMsg =
-                    err?.response?.data?.message ||
-                    err?.message ||
-                    'No se pudo completar el análisis curricular con el proveedor de IA.';
+            } catch (err: unknown) {
+                const errMsg = extractPeaAiErrorMessage(
+                    err,
+                    'No se pudo completar el análisis curricular con el proveedor de IA.'
+                );
                 setMessages(prev =>
                     prev.map(m =>
                         m.id === assistantMsgId
@@ -487,13 +325,12 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
         [
             projectUuid,
             project,
+            docSnapshot,
             isAnalyzing,
             aiConfigStatus,
-            selectedFocus,
             inputPrompt,
             messages,
             selectedModel,
-            buildSnapshotRequestPayload,
             addToast
         ]
     );
@@ -516,12 +353,21 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
         }
     };
 
-    const [applyingBatchMsgId, setApplyingBatchMsgId] = useState<string | null>(null);
+    const isObsRegistered = useCallback(
+        (msgId: string, obsIdx: number, obs: PeaReviewSuggestedObservation): boolean => {
+            const key = `${msgId}_${obsIdx}`;
+            return (
+                Boolean(appliedObsKeys[key]) ||
+                isObservationAlreadyRegistered(existingComments, obs.sectionKey, obs.observationText)
+            );
+        },
+        [appliedObsKeys, existingComments]
+    );
 
     const handleApplyObservation = async (msgId: string, obsIdx: number, obs: PeaReviewSuggestedObservation) => {
         if (!onSaveComment) return;
         const key = `${msgId}_${obsIdx}`;
-        if (appliedObsKeys[key] || applyingObsKey === key || applyingBatchMsgId === msgId) return;
+        if (isObsRegistered(msgId, obsIdx, obs) || applyingObsKey === key || applyingBatchMsgId === msgId) return;
 
         const targetSectionKey = normalizeClientSectionKey(obs.sectionKey);
         setApplyingObsKey(key);
@@ -542,8 +388,8 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
         try {
             for (let idx = 0; idx < observations.length; idx++) {
                 const key = `${msgId}_${idx}`;
-                if (appliedObsKeys[key]) continue;
                 const obs = observations[idx];
+                if (isObsRegistered(msgId, idx, obs)) continue;
                 const targetSectionKey = normalizeClientSectionKey(obs.sectionKey);
                 await onSaveComment(targetSectionKey, obs.observationText);
                 newlyApplied[key] = true;
@@ -565,7 +411,9 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
         if (storageKey) {
             try {
                 localStorage.removeItem(storageKey);
-            } catch {}
+            } catch {
+                // Ignorar errores de almacenamiento
+            }
         }
     };
 
@@ -577,9 +425,11 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
         }
     };
 
+    if (hidden) return null;
+
     return (
         <>
-            {/* ── Botón Flotante (FAB) para Revisores ── */}
+            {/* Botón Flotante (FAB) para Revisores */}
             {!isOpen && (
                 <button
                     type="button"
@@ -591,7 +441,7 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                 </button>
             )}
 
-            {/* ── Ventana Flotante Sólida del Asistente de Revisión IA ── */}
+            {/* Ventana Flotante Sólida del Asistente de Revisión IA */}
             {isOpen && (
                 <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[150] w-[94vw] sm:w-[440px] md:w-[470px] h-[82vh] max-h-[740px] bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 font-sans">
                     {/* Cabecera Superior */}
@@ -683,10 +533,7 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                                             key={opt.value}
                                             type="button"
                                             disabled={isAnalyzing}
-                                            onClick={() => {
-                                                setSelectedFocus(opt.value);
-                                                handleTriggerAnalysis(opt.value, opt.promptLabel);
-                                            }}
+                                            onClick={() => handleTriggerAnalysis(opt.value, opt.promptLabel)}
                                             className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 hover:border-[#0070f3] dark:hover:border-blue-400 bg-zinc-50 dark:bg-zinc-900 hover:bg-white dark:hover:bg-zinc-800/80 transition-all flex items-center justify-between gap-2 text-xs font-medium text-slate-800 dark:text-zinc-200 cursor-pointer disabled:opacity-50"
                                         >
                                             <span>{opt.label}</span>
@@ -699,6 +546,9 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                             messages.map((msg, msgIdx) => {
                                 const isUser = msg.sender === 'user';
                                 const isExpanded = expandedDetailsMap[msg.id] ?? (msgIdx === messages.length - 1);
+                                const pendingCount = msg.analysis
+                                    ? msg.analysis.suggestedObservations.filter((obs, idx) => !isObsRegistered(msg.id, idx, obs)).length
+                                    : 0;
 
                                 return (
                                     <div
@@ -749,8 +599,7 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                                                         className="w-full flex items-center justify-between text-[11px] font-semibold text-[#0070f3] dark:text-blue-400 cursor-pointer"
                                                     >
                                                         <span>
-                                                            Verificación de Perfil, Horas y Observaciones (
-                                                            {msg.analysis.checks.length} criterios)
+                                                            Verificación de Perfil, Horas y Observaciones ({msg.analysis.checks.length} criterios)
                                                         </span>
                                                         {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                                                     </button>
@@ -804,31 +653,32 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                                                                         {canAudit &&
                                                                             onSaveComment &&
                                                                             msg.analysis.suggestedObservations.length > 1 &&
-                                                                            msg.analysis.suggestedObservations.some((_, idx) => !appliedObsKeys[`${msg.id}_${idx}`]) && (
-                                                                                <button
-                                                                                    type="button"
-                                                                                    disabled={applyingBatchMsgId === msg.id || Boolean(applyingObsKey)}
-                                                                                    onClick={() =>
-                                                                                        handleApplyAllObservations(
-                                                                                            msg.id,
-                                                                                            msg.analysis!.suggestedObservations
-                                                                                        )
-                                                                                    }
-                                                                                    className="text-[11px] font-semibold text-[#0070f3] dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer disabled:opacity-50 shrink-0"
-                                                                                    title="Registrar todas las observaciones pendientes en sus respectivas secciones"
-                                                                                >
-                                                                                    {applyingBatchMsgId === msg.id && (
-                                                                                        <Loader2 size={11} className="animate-spin" />
-                                                                                    )}
-                                                                                    <span>Registrar todas</span>
-                                                                                </button>
-                                                                            )}
+                                                                            pendingCount > 0 && (
+                                                                            <button
+                                                                                type="button"
+                                                                                disabled={applyingBatchMsgId === msg.id || Boolean(applyingObsKey)}
+                                                                                onClick={() =>
+                                                                                    handleApplyAllObservations(
+                                                                                        msg.id,
+                                                                                        msg.analysis!.suggestedObservations
+                                                                                    )
+                                                                                }
+                                                                                className="text-[11px] font-semibold text-[#0070f3] dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer disabled:opacity-50 shrink-0"
+                                                                                title="Registrar todas las observaciones pendientes en sus respectivas secciones"
+                                                                            >
+                                                                                {applyingBatchMsgId === msg.id && (
+                                                                                    <Loader2 size={11} className="animate-spin" />
+                                                                                )}
+                                                                                <span>Registrar todas</span>
+                                                                            </button>
+                                                                        )}
                                                                     </div>
                                                                     {msg.analysis.suggestedObservations.map((obs, obsIdx) => {
                                                                         const obsKey = `${msg.id}_${obsIdx}`;
-                                                                        const isApplied = Boolean(appliedObsKeys[obsKey]);
+                                                                        const isApplied = isObsRegistered(msg.id, obsIdx, obs);
                                                                         const isApplying = applyingObsKey === obsKey || applyingBatchMsgId === msg.id;
                                                                         const canonicalKey = normalizeClientSectionKey(obs.sectionKey);
+                                                                        const existingPending = getPendingSectionObservationCount(existingComments, canonicalKey);
 
                                                                         return (
                                                                             <div
@@ -836,14 +686,21 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                                                                                 className="p-2.5 rounded-xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 space-y-2"
                                                                             >
                                                                                 <div className="flex items-center justify-between gap-2">
-                                                                                    <button
-                                                                                        type="button"
-                                                                                        onClick={() => onNavigateToSection?.(canonicalKey)}
-                                                                                        className="text-[11px] font-semibold text-[#0070f3] dark:text-blue-400 hover:underline text-left truncate cursor-pointer"
-                                                                                        title="Ir a esta sección en el documento"
-                                                                                    >
-                                                                                        {obs.sectionLabel || canonicalKey}
-                                                                                    </button>
+                                                                                    <div className="min-w-0 flex items-center gap-1.5">
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            onClick={() => onNavigateToSection?.(canonicalKey)}
+                                                                                            className="text-[11px] font-semibold text-[#0070f3] dark:text-blue-400 hover:underline text-left truncate cursor-pointer"
+                                                                                            title="Ir a esta sección en el documento"
+                                                                                        >
+                                                                                            {obs.sectionLabel || canonicalKey}
+                                                                                        </button>
+                                                                                        {!isApplied && existingPending > 0 && (
+                                                                                            <span className="text-[10px] text-amber-600 dark:text-amber-400 shrink-0">
+                                                                                                · {existingPending} previa{existingPending > 1 ? 's' : ''}
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </div>
 
                                                                                     {canAudit && onSaveComment && (
                                                                                         isApplied ? (
@@ -856,13 +713,11 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                                                                                                 type="button"
                                                                                                 disabled={isApplying}
                                                                                                 onClick={() => handleApplyObservation(msg.id, obsIdx, obs)}
-                                                                                                className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-[10px] font-semibold transition-colors cursor-pointer shrink-0"
+                                                                                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-[10px] font-semibold transition-colors cursor-pointer shrink-0"
                                                                                                 title="Registrar formalmente esta observación en la sección"
                                                                                             >
-                                                                                                {isApplying ? (
+                                                                                                {isApplying && (
                                                                                                     <Loader2 size={10} className="animate-spin" />
-                                                                                                ) : (
-                                                                                                    <PlusCircle size={10} />
                                                                                                 )}
                                                                                                 <span>Registrar observación</span>
                                                                                             </button>
@@ -899,10 +754,7 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                                         key={opt.value}
                                         type="button"
                                         disabled={isAnalyzing}
-                                        onClick={() => {
-                                            setSelectedFocus(opt.value);
-                                            handleTriggerAnalysis(opt.value, opt.promptLabel);
-                                        }}
+                                        onClick={() => handleTriggerAnalysis(opt.value, opt.promptLabel)}
                                         className="shrink-0 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-[#0070f3] dark:hover:border-blue-400 text-[10px] font-medium text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer disabled:opacity-50"
                                     >
                                         {opt.label}
@@ -921,7 +773,7 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                                 placeholder="Pregunta sobre el PEA, horas o perfil de carrera... (Doble Enter o botón para enviar)"
                                 className="w-full bg-transparent text-xs text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 resize-none focus:outline-hidden leading-relaxed"
                             />
-                            
+
                             <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-slate-100 dark:border-zinc-800/60">
                                 {/* Selector compacto de modelo en la esquina inferior izquierda */}
                                 <div className="relative inline-flex items-center gap-1 group">
@@ -974,4 +826,3 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
 };
 
 export default PeaAiReviewerWidget;
-

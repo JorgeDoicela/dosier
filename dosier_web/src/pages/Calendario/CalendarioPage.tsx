@@ -126,6 +126,8 @@ export const CalendarioPage: React.FC = () => {
         draggingType,
         setDraggingUuid,
         setDraggingType,
+        draggingCanReturnToInbox,
+        setDraggingCanReturnToInbox,
         handleNoteDragStart,
         handleDragStart,
         handleGlobalDragEnd,
@@ -182,6 +184,7 @@ export const CalendarioPage: React.FC = () => {
                     stickyNotes={stickyNotes}
                     draggingUuid={draggingUuid}
                     draggingType={draggingType}
+                    draggingCanReturnToInbox={draggingCanReturnToInbox}
                     onDropEventToInbox={handleDevolverAInbox}
                     handleNoteDragStart={handleNoteDragStart}
                     handleGlobalDragEnd={handleGlobalDragEnd}
@@ -226,6 +229,7 @@ export const CalendarioPage: React.FC = () => {
                             onCalendarEventDragStart={(uuid) => {
                                 setDraggingUuid(uuid);
                                 setDraggingType('kanban');
+                                setDraggingCanReturnToInbox(true);
                                 document.body.classList.add('body-dragging-active');
                             }}
                         />
@@ -245,6 +249,7 @@ export const CalendarioPage: React.FC = () => {
                             handleEditEventClick={handleEditEventClick}
                             handleDeleteEvent={handleDeleteEvent}
                             handleGoToEventAction={handleGoToEventAction}
+                            hasCarreras={carrerasUsuario.length > 0}
                         />
                     ) : (
                         <InboxView

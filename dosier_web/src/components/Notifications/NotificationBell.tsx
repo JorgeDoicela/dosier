@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, ExternalLink, Mail, Info, AlertTriangle, BookOpen, Users } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useNotifications } from '../../api/NotificationsContext';
 import { stripHtmlToText } from '../../utils/notificationText';
@@ -34,17 +34,6 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ size = 'sm' }) => {
                 navigate(n.url_accion);
             }
             setIsOpen(false);
-        }
-    };
-
-    const getIcon = (category: string) => {
-        switch (category) {
-            case 'CURRICULUM': return <BookOpen size={12} className="text-[#0070f3]" />;
-            case 'COLABORACION': return <Users size={12} className="text-indigo-500" />;
-            case 'INVESTIGACION': return <ExternalLink size={12} className="text-info" />;
-            case 'SISTEMA': return <Info size={12} className="text-text-dim" />;
-            case 'URGENTE': return <AlertTriangle size={12} className="text-error" />;
-            default: return <Mail size={12} className="text-text-dim" />;
         }
     };
 
@@ -100,10 +89,8 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ size = 'sm' }) => {
                                         className={`p-3 border-b border-slate-100 dark:border-zinc-800 last:border-0 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-colors cursor-pointer group ${!n.leido ? 'bg-blue-50/40 dark:bg-zinc-900/60' : 'opacity-75'}`}
                                         onClick={() => handleNotificationClick(n)}
                                     >
-                                        <div className="flex gap-2.5">
-                                            <div className="mt-0.5 shrink-0">
-                                                {getIcon(n.categoria)}
-                                            </div>
+                                        <div className="flex gap-2.5 items-start">
+                                            <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${!n.leido ? 'bg-[#0070f3]' : 'opacity-0'}`} />
                                             <div className="space-y-0.5 flex-1 min-w-0 overflow-hidden">
                                                 <div className="flex justify-between items-start gap-1">
                                                     <h5 className="text-[11.5px] font-semibold text-slate-800 dark:text-zinc-200 leading-tight truncate">{stripHtmlToText(n.titulo)}</h5>
@@ -112,19 +99,16 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ size = 'sm' }) => {
                                                 <p className="text-[10.5px] text-slate-500 dark:text-zinc-400 leading-relaxed line-clamp-2 break-words">{stripHtmlToText(n.mensaje)}</p>
                                                 {n.url_accion ? (
                                                     <span 
-                                                        className="inline-flex items-center gap-1 text-[9.5px] font-medium text-[#0070f3] dark:text-blue-400 hover:underline cursor-pointer mt-1"
+                                                        className="inline-block text-[9.5px] font-medium text-[#0070f3] dark:text-blue-400 hover:underline cursor-pointer mt-1"
                                                     >
-                                                        Ver estado actual <ExternalLink size={9.5} className="opacity-80" />
+                                                        Ver estado actual
                                                     </span>
                                                 ) : (
-                                                    <span className="inline-flex items-center text-[8.5px] font-mono text-slate-400 dark:text-zinc-500 uppercase mt-1 tracking-wider">
+                                                    <span className="inline-block text-[8.5px] font-mono text-slate-400 dark:text-zinc-500 uppercase mt-1 tracking-wider">
                                                         Informativo
                                                     </span>
                                                 )}
                                             </div>
-                                            {!n.leido && (
-                                                <div className="w-1.5 h-1.5 bg-[#0070f3] rounded-full mt-1.5 shrink-0" />
-                                            )}
                                         </div>
                                     </div>
                                 ))

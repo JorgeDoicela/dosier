@@ -804,6 +804,8 @@ namespace Dosier.Infrastructure.Common.Documents
                             {
                                 dataDict["ActividadesPracticas"] = pea.ActividadesPracticas.OrderBy(p => p.Orden).Select(p => new
                                 {
+                                    Unidad = !string.IsNullOrWhiteSpace(p.UnidadesReferencia) ? p.UnidadesReferencia : $"Unidad {p.NumeroPractica}",
+                                    UnidadesReferencia = p.UnidadesReferencia,
                                     NumeroPractica = p.NumeroPractica,
                                     NombrePractica = p.NombrePractica,
                                     Caracterizacion = p.Caracterizacion,

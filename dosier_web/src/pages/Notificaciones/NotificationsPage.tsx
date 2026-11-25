@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import {
-    Bell, ExternalLink, Mail, Info, AlertTriangle, BookOpen,
-    CheckCheck, Search, Inbox, Trash2, Users, UserCheck, UserX, Check, Loader2
+    Bell, CheckCheck, Search, Inbox, Trash2, Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { notificacionesService, type NotificationDto } from '../../services/notificacionesService';
@@ -13,15 +12,15 @@ import { ConfirmarRespuestaColaboracionModal } from '../Curriculum/components/Co
 
 type NotificationItem = NotificationDto;
 
-const categoryConfig: Record<string, { icon: typeof Info; color: string; bg: string; label: string }> = {
-    CURRICULUM: { icon: BookOpen, color: 'text-[#0070f3] dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/20', label: 'Curricular (PEA)' },
-    INVESTIGACION: { icon: ExternalLink, color: 'text-info', bg: 'bg-info/10', label: 'Investigación' },
-    SISTEMA: { icon: Info, color: 'text-text-dim', bg: 'bg-text-main/5', label: 'Sistema' },
-    URGENTE: { icon: AlertTriangle, color: 'text-error', bg: 'bg-error/10', label: 'Urgente' },
-    COLABORACION: { icon: Users, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/20', label: 'Colaboración PEA' },
+const categoryConfig: Record<string, { color: string; bg: string; label: string }> = {
+    CURRICULUM: { color: 'text-[#0070f3] dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/20', label: 'Curricular (PEA)' },
+    INVESTIGACION: { color: 'text-info', bg: 'bg-info/10', label: 'Investigación' },
+    SISTEMA: { color: 'text-text-dim', bg: 'bg-text-main/5', label: 'Sistema' },
+    URGENTE: { color: 'text-error', bg: 'bg-error/10', label: 'Urgente' },
+    COLABORACION: { color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/20', label: 'Colaboración PEA' },
 };
 
-const getCategoryConfig = (cat: string) => categoryConfig[cat] || { icon: Mail, color: 'text-text-dim', bg: 'bg-text-main/5', label: cat };
+const getCategoryConfig = (cat: string) => categoryConfig[cat] || { color: 'text-text-dim', bg: 'bg-text-main/5', label: cat };
 
 const NotificationsPage = () => {
     const navigate = useNavigate();
@@ -412,7 +411,6 @@ const NotificationsPage = () => {
                                     <div className="rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-950 divide-y divide-slate-100 dark:divide-zinc-800/80 overflow-hidden shadow-2xs">
                                         {items.map(n => {
                                             const config = getCategoryConfig(n.categoria);
-                                            const IconComp = config.icon;
 
                                             return (
                                                 <div
@@ -422,16 +420,11 @@ const NotificationsPage = () => {
                                                         !n.leido ? 'bg-blue-50/20 dark:bg-blue-950/10' : ''
                                                     }`}
                                                 >
-                                                    <div className="flex items-start gap-3.5">
-                                                        {/* Punto indicador de no leído + Icono desnudo */}
-                                                        <div className="flex items-center gap-2 shrink-0 mt-0.5">
-                                                            <span className={`w-2 h-2 rounded-full shrink-0 transition-opacity ${
-                                                                !n.leido ? 'bg-[#0070f3]' : 'opacity-0'
-                                                            }`} />
-                                                            <span className={!n.leido ? 'text-[#0070f3]' : 'text-slate-400 dark:text-zinc-500'}>
-                                                                <IconComp size={16} />
-                                                            </span>
-                                                        </div>
+                                                    <div className="flex items-start gap-3">
+                                                        {/* Único punto indicador: estado no leído */}
+                                                        <span className={`w-2 h-2 rounded-full shrink-0 mt-1.5 transition-opacity ${
+                                                            !n.leido ? 'bg-[#0070f3]' : 'opacity-0'
+                                                        }`} />
 
                                                         <div className="flex-1 min-w-0 space-y-1">
                                                             <div className="flex justify-between items-start gap-3">
@@ -459,22 +452,17 @@ const NotificationsPage = () => {
                                                             </p>
 
                                                             <div className="flex items-center gap-3 pt-0.5">
-                                                                <span className={`inline-flex items-center gap-1.5 text-xs font-mono font-medium ${
+                                                                <span className={`text-xs font-medium ${
                                                                     n.categoria === 'URGENTE' ? 'text-rose-600 dark:text-rose-400' :
                                                                     n.categoria === 'INVESTIGACION' ? 'text-[#0070f3] dark:text-blue-400' :
                                                                     n.categoria === 'COLABORACION' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-zinc-400'
                                                                 }`}>
-                                                                    <span className={`w-1.5 h-1.5 rounded-full ${
-                                                                        n.categoria === 'URGENTE' ? 'bg-rose-500' :
-                                                                        n.categoria === 'INVESTIGACION' ? 'bg-[#0070f3]' :
-                                                                        n.categoria === 'COLABORACION' ? 'bg-indigo-500' : 'bg-slate-400 dark:bg-zinc-500'
-                                                                    }`} />
                                                                     {config.label}
                                                                 </span>
 
                                                                 {n.url_accion && !n.url_accion.includes('colaboracion=') && (
-                                                                    <span className="text-xs font-medium text-[#0070f3] hover:underline flex items-center gap-1">
-                                                                        Ir al detalle <ExternalLink size={11} />
+                                                                    <span className="text-xs font-medium text-[#0070f3] hover:underline">
+                                                                        Ir al detalle
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -495,18 +483,18 @@ const NotificationsPage = () => {
                                                                 const respuesta = colaboracionesRespondidas[colabUuid];
                                                                 if (respuesta === 'Aprobada') {
                                                                     return (
-                                                                        <div className="pt-2">
-                                                                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800">
-                                                                                <Check size={12} /> Colaboración Aceptada
+                                                                        <div className="pt-1.5">
+                                                                            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                                                                Colaboración aceptada
                                                                             </span>
                                                                         </div>
                                                                     );
                                                                 }
                                                                 if (respuesta === 'Rechazada') {
                                                                     return (
-                                                                        <div className="pt-2">
-                                                                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-800/80 px-2.5 py-1 rounded-md border border-zinc-200 dark:border-zinc-700">
-                                                                                Solicitud Rechazada
+                                                                        <div className="pt-1.5">
+                                                                            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                                                                                Solicitud rechazada
                                                                             </span>
                                                                         </div>
                                                                     );
@@ -520,10 +508,8 @@ const NotificationsPage = () => {
                                                                             onClick={(e) => handleSolicitarRespuestaModal(e, n, colabUuid!, 'aceptar')}
                                                                             className="bg-[#0070f3] hover:bg-[#0060df] text-white shadow-xs inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
                                                                         >
-                                                                            {respondingUuid === colabUuid ? (
+                                                                            {respondingUuid === colabUuid && (
                                                                                 <Loader2 className="w-3 h-3 animate-spin" />
-                                                                            ) : (
-                                                                                <UserCheck size={13} />
                                                                             )}
                                                                             <span>Aceptar</span>
                                                                         </button>
@@ -531,10 +517,9 @@ const NotificationsPage = () => {
                                                                             type="button"
                                                                             disabled={respondingUuid === colabUuid}
                                                                             onClick={(e) => handleSolicitarRespuestaModal(e, n, colabUuid!, 'rechazar')}
-                                                                            className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer disabled:opacity-50"
+                                                                            className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer disabled:opacity-50"
                                                                         >
-                                                                            <UserX size={13} />
-                                                                            <span>Rechazar</span>
+                                                                            Rechazar
                                                                         </button>
                                                                     </div>
                                                                 );

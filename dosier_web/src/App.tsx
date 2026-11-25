@@ -265,7 +265,7 @@ function App() {
                             <Route path="/usuarios" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><UsersPage /></RoleRoute>} />
                             <Route path="/auditoria" element={<AdminRoute><AuditPage /></AdminRoute>} />
                             <Route path="/parametros-normativos" element={<Navigate to="/configuracion?tab=parametros" replace />} />
-                             <Route path="/emails" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><EmailEnginePage /></RoleRoute>} />
+                             <Route path="/emails" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR', 'DOSIER_COORD_CARRERA']}><EmailEnginePage /></RoleRoute>} />
                              <Route path="/admin/documentos" element={<AdminRoute><DocumentMaintenancePage /></AdminRoute>} />
                              <Route path="/plantillas" element={<RoleRoute allowedRoles={['ANY']}><DocumentTemplatesPage /></RoleRoute>} />
                              <Route path="/formatos" element={<RedirectPreserveSearch to="/plantillas" />} />

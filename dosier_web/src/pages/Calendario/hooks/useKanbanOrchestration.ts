@@ -43,6 +43,7 @@ export const useKanbanOrchestration = ({
 
     const [draggingUuid, setDraggingUuid] = useState<string | null>(null);
     const [draggingType, setDraggingType] = useState<'note' | 'kanban' | null>(null);
+    const [draggingCanReturnToInbox, setDraggingCanReturnToInbox] = useState(false);
     const draggingNoteRef = useRef<Evento | null>(null);
     const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
@@ -96,6 +97,9 @@ export const useKanbanOrchestration = ({
     };
 
     const handleDragStart = (e: React.DragEvent, uuid: string) => {
+        const draggedEvent = eventos.find(ev => ev.resource.uuid === uuid)?.resource;
+        const canReturn = Boolean(draggedEvent?.es_privado);
+
         document.body.classList.add('body-dragging-active');
         e.dataTransfer.setData('dosier/kanban-event', uuid);
         e.dataTransfer.setData('text/plain', uuid);
@@ -104,12 +108,14 @@ export const useKanbanOrchestration = ({
         setTimeout(() => {
             setDraggingUuid(uuid);
             setDraggingType('kanban');
+            setDraggingCanReturnToInbox(canReturn);
         }, 0);
     };
 
     const handleGlobalDragEnd = useCallback(async () => {
         setDraggingUuid(null);
         setDraggingType(null);
+        setDraggingCanReturnToInbox(false);
         setDragOverColumn(null);
         document.body.classList.remove('body-dragging-active');
         setTimeout(() => {
@@ -216,10 +222,10 @@ export const useKanbanOrchestration = ({
         if (!eventFound) return;
 
         const ev = eventFound.resource;
-        const isPersonal = ev.categoria_global === 'Personal';
+        const canMove = (ev.categoria_global === 'Personal' && ev.es_privado)
+            || (!ev.es_privado && (ev.categoria_global === 'Carrera' || Boolean(ev.id_carrera)) && Boolean(ev.puede_gestionar));
 
-        if (!isPersonal) {
-            alert('Solo se pueden reorganizar las tareas y eventos personales.');
+        if (!canMove) {
             return;
         }
 
@@ -239,6 +245,8 @@ export const useKanbanOrchestration = ({
             alertaDias: ev.alerta_dias ?? '',
             recurrenciaAnual: ev.recurrencia_anual ?? false,
             urlAccion: ev.url_accion,
+            rolesVisibles: ev.roles_visibles ?? null,
+            idCarrera: ev.es_privado ? null : (ev.id_carrera ?? null),
         });
 
         // Actualización Optimista
@@ -330,6 +338,9 @@ export const useKanbanOrchestration = ({
 
         try {
             const eventFound = eventos.find(ev => ev.resource.uuid === uuid);
+            if (eventFound && !eventFound.resource.es_privado) {
+                return;
+            }
             // Actualización optimista: quitar de eventos
             setEventos(prev => prev.filter(ev => ev.resource.uuid !== uuid));
 
@@ -355,9 +366,9 @@ export const useKanbanOrchestration = ({
         }
     }, [eventos, setEventos, setStickyNotes, fetchStickyNotes, fetchEventos, currentDate]);
 
-    // Soporte para devolver al soltar arrastrando con mouse desde Kanban o Calendario
+    // Soporte para devolver al soltar arrastrando con mouse desde Kanban o Calendario (solo tareas privadas)
     React.useEffect(() => {
-        if (!draggingUuid || draggingType !== 'kanban') return;
+        if (!draggingUuid || draggingType !== 'kanban' || !draggingCanReturnToInbox) return;
 
         const handleWindowMouseMove = (e: MouseEvent) => {
             const targetEl = document.elementFromPoint(e.clientX, e.clientY);
@@ -393,7 +404,7 @@ export const useKanbanOrchestration = ({
             const sidebarZone = document.querySelector('.sticky-notes-section');
             if (sidebarZone) sidebarZone.classList.remove('drop-target-active');
         };
-    }, [draggingUuid, draggingType, handleGlobalDragEnd, handleDevolverAInbox]);
+    }, [draggingUuid, draggingType, draggingCanReturnToInbox, handleGlobalDragEnd, handleDevolverAInbox]);
 
     return {
         viewMode,
@@ -402,6 +413,8 @@ export const useKanbanOrchestration = ({
         setDraggingUuid,
         draggingType,
         setDraggingType,
+        draggingCanReturnToInbox,
+        setDraggingCanReturnToInbox,
         dragOverColumn,
         setDragOverColumn,
         planificando,

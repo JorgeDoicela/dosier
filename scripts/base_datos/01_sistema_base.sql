@@ -524,10 +524,91 @@ CREATE TRIGGER trg_doc_email_hist_uuid BEFORE INSERT ON doc_email_historial FOR 
 SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- =============================================================================
--- SEMILLAS: MOTOR DE CORREOS PERSONALIZADO (DOSIER)
+-- SEMILLAS: MOTOR DE CORREOS INSTITUCIONAL (DOSIER — GESTIÓN CURRICULAR)
 -- =============================================================================
 
--- (Plantillas personalizadas administrables desde el panel de administración)
+INSERT IGNORE INTO doc_email_templates (uuid, codigo, nombre, descripcion, asunto, cuerpoHtml, activo) VALUES
+(
+    UUID(),
+    'COMUNICADO_CURRICULAR',
+    'Comunicado Curricular General',
+    'Comunicado institucional dirigido a docentes, coordinadores o carreras sobre lineamientos curriculares del ISTPET.',
+    'DOSIER — Comunicado de Gestión Curricular',
+    '<p>Estimado/a <strong>[[destinatario_nombre]]</strong>,</p>
+<p>Le remitimos el presente comunicado oficial desde la Gestión Curricular del <strong>[[institucion_nombre]]</strong> correspondiente al período académico vigente.</p>
+<p>[[mensaje_adicional]]</p>
+<p>Para consultar sus asignaturas y documentos curriculares activos, ingrese a la plataforma institucional.</p>',
+    1
+),
+(
+    UUID(),
+    'PEA_RECORDATORIO_ELABORACION',
+    'Recordatorio de Elaboración / Entrega de PEA',
+    'Recuerda al docente titular o colaborador la elaboración y envío a revisión del Programa de Estudio de la Asignatura (PEA).',
+    'Recordatorio: Elaboración de PEA — [[pea_asignatura]] ([[pea_periodo]])',
+    '<p>Le recordamos que el Programa de Estudio de la Asignatura (PEA) correspondiente a <strong>[[pea_asignatura]]</strong> de la carrera <strong>[[pea_carrera]]</strong> (período <strong>[[pea_periodo]]</strong>) se encuentra actualmente en estado <strong>[[pea_estado]]</strong>.</p>
+<p>Por favor, ingrese al espacio de trabajo colaborativo de DOSIER para completar las secciones pendientes, verificar el cuadre horario RRA ([[pea_horas_totales]] horas / [[pea_creditos]] créditos) y remitir el instrumento a revisión antes del <strong>[[fecha_limite]]</strong>.</p>
+<p>[[mensaje_adicional]]</p>',
+    1
+),
+(
+    UUID(),
+    'PEA_OBSERVACIONES_SUBSANACION',
+    'Observaciones Curriculares en PEA',
+    'Notifica al docente que el PEA fue devuelto con observaciones disciplinarias o metodológicas para subsanación.',
+    'Acción requerida: Observaciones en PEA de [[pea_asignatura]]',
+    '<p>Le informamos que durante la revisión técnica del PEA de la asignatura <strong>[[pea_asignatura]]</strong> (carrera <strong>[[pea_carrera]]</strong>, período <strong>[[pea_periodo]]</strong>), se han registrado observaciones que requieren su atención y subsanación.</p>
+<p><strong>Resumen de observaciones:</strong> [[observacion_resumen]]</p>
+<p>Por favor, acceda al editor del PEA en DOSIER para revisar el detalle por sección, efectuar los ajustes correspondientes y reenviar el documento a revisión.</p>
+<p>[[mensaje_adicional]]</p>',
+    1
+),
+(
+    UUID(),
+    'PEA_SOLICITUD_AVAL',
+    'Solicitud de Revisión y Aval Curricular',
+    'Notifica a Coordinación de Carrera, Coordinación Académica o Vicerrectorado que un PEA está listo para revisión y emisión de aval.',
+    'Revisión requerida: PEA de [[pea_asignatura]] — [[pea_carrera]]',
+    '<p>El Programa de Estudio de la Asignatura (PEA) de <strong>[[pea_asignatura]]</strong>, elaborado por <strong>[[pea_docente]]</strong> para la carrera <strong>[[pea_carrera]]</strong> (período <strong>[[pea_periodo]]</strong>), se encuentra en estado <strong>[[pea_estado]]</strong> y listo para su revisión y emisión de aval institucional.</p>
+<p>Ingrese a la bandeja de supervisión curricular de DOSIER para verificar la consistencia normativa CACES/CES y registrar su dictamen o firma electrónica.</p>
+<p>[[mensaje_adicional]]</p>',
+    1
+),
+(
+    UUID(),
+    'PEA_APROBACION_OFICIAL',
+    'Aprobación y Legalización Oficial de PEA',
+    'Confirma al docente y autoridades la legalización definitiva del PEA con firma electrónica y código QR CACES.',
+    'PEA Aprobado Oficialmente — [[pea_asignatura]] ([[pea_periodo]])',
+    '<p>Nos complace informarle que el Programa de Estudio de la Asignatura (PEA) de <strong>[[pea_asignatura]]</strong> (carrera <strong>[[pea_carrera]]</strong>, período <strong>[[pea_periodo]]</strong>) ha completado satisfactoriamente todas las etapas de revisión y cuenta con la <strong>Aprobación Oficial del Vicerrectorado Académico</strong>.</p>
+<p>El documento legalizado con sellos criptográficos y código QR de verificación CACES ya se encuentra disponible para consulta y descarga en su portafolio docente de DOSIER.</p>
+<p>[[mensaje_adicional]]</p>',
+    1
+),
+(
+    UUID(),
+    'PERIODO_APERTURA_DISTRIBUTIVO',
+    'Apertura de Período Académico y Elaboración de PEAs',
+    'Anuncia la apertura de un nuevo período académico e invita a los docentes a iniciar la planificación curricular en DOSIER.',
+    'Apertura de Período Académico [[periodo_nombre]] — Planificación PEA',
+    '<p>Le informamos que se ha habilitado la gestión curricular del período académico <strong>[[periodo_nombre]]</strong> (código <strong>[[periodo_codigo]]</strong>), vigente desde el <strong>[[periodo_fecha_inicio]]</strong> hasta el <strong>[[periodo_fecha_fin]]</strong>.</p>
+<p>Los docentes con carga horaria asignada en SIGAFI ya pueden ingresar a DOSIER para elaborar o actualizar los Programas de Estudio de la Asignatura (PEA) correspondientes a sus cátedras.</p>
+<p>[[mensaje_adicional]]</p>',
+    1
+),
+(
+    UUID(),
+    'CALENDARIO_ALERTA_EVENTO',
+    'Alerta de Hito Normativo y Calendario Curricular',
+    'Plantilla automática utilizada por el cron de Calendario CACES para alertar fechas límite normativas e institucionales.',
+    'Recordatorio Curricular: [[titulo_evento]] (en [[dias_restantes]] día/s)',
+    '<p>Le recordamos que se aproxima el siguiente hito registrado en el calendario curricular e institucional de DOSIER:</p>
+<p><strong>Evento:</strong> [[titulo_evento]]<br/>
+<strong>Fecha programada:</strong> [[fecha_evento]] (faltan <strong>[[dias_restantes]]</strong> día/s)</p>
+<p>[[descripcion_evento]]</p>
+<p>Ingrese a la plataforma DOSIER para consultar el detalle completo y cumplir oportunamente con el cronograma institucional.</p>',
+    1
+);
 
 -- #############################################################################
 -- MÓDULO: CALENDARIO INTEGRADO DOSIER

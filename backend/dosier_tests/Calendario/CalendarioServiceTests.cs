@@ -5,6 +5,7 @@ using Xunit;
 using Moq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using dosier_application.Academico;
 using dosier_application.Calendario;
 using dosier_application.Common.Notifications;
 using dosier_infrastructure.Calendario;
@@ -32,11 +33,15 @@ public class CalendarioServiceTests
         return new DosierContext(options);
     }
 
-    private static CalendarioService CreateSut(DosierContext context)
+    private static CalendarioService CreateSut(DosierContext context, string? periodoActivo = null)
     {
         var mockEmail = new Mock<IEmailEngineService>();
+        var mockPeriodo = new Mock<IPeriodoInstitucionalResolver>();
+        mockPeriodo
+            .Setup(p => p.GetIdPeriodoActivoAsync(default))
+            .ReturnsAsync(periodoActivo ?? string.Empty);
         var mockLogger = new Mock<ILogger<CalendarioService>>();
-        return new CalendarioService(context, mockEmail.Object, mockLogger.Object);
+        return new CalendarioService(context, mockEmail.Object, mockPeriodo.Object, mockLogger.Object);
     }
 
     // ─── CreateNormativoAsync ─────────────────────────────────────────────────
@@ -648,6 +653,247 @@ public class CalendarioServiceTests
         var (uuidInst, forbiddenInst) = await sut.CreateUsuarioEventoAsync(dtoInstituto, 40, "DOSIER_DOCENTE");
         Assert.True(forbiddenInst);
         Assert.Null(uuidInst);
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    [Trait("Feature", "Calendario")]
+    public async Task UpdateUsuarioEventoAsync_DocenteNoPuedeEscalarPersonalAInstitutoNiCarreraAjena()
+    {
+        var dbName = nameof(UpdateUsuarioEventoAsync_DocenteNoPuedeEscalarPersonalAInstitutoNiCarreraAjena);
+        await using var context = CreateInMemoryContext(dbName);
+
+        context.Carreras.AddRange(
+            new Carrera { IdCarrera = 5, Carrera1 = "Software", EsInstituto = 1 },
+            new Carrera { IdCarrera = 9, Carrera1 = "Gastronomía", EsInstituto = 1 }
+        );
+        context.Users.Add(new User { IdUsuario = 50, IdSigafi = "PROF-050", Administrador = false, Nombre = "Docente 50" });
+        context.DocPeas.Add(new DocPea
+        {
+            IdPea = 401,
+            Uuid = "pea-soft-50",
+            IdAsignatura = 1,
+            IdCarrera = 5,
+            IdDocenteElaborador = "PROF-050",
+            Estado = "Borrador",
+            Activo = true,
+            FechaModificacion = DateTime.UtcNow
+        });
+        await context.SaveChangesAsync();
+
+        var sut = CreateSut(context);
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+
+        var dtoPersonal = new EventoNormativoDto(
+            null, "Nota personal", "Detalle", "Personal",
+            hoy, null, true, false, null, null, "PERSONAL", null, "#F59E0B", null, true, true, "Media", "Pendiente"
+        );
+        var (uuid, forbidden) = await sut.CreateUsuarioEventoAsync(dtoPersonal, 50, "DOSIER_DOCENTE");
+        Assert.False(forbidden);
+        Assert.NotNull(uuid);
+
+        // Intento de escalada a todo el instituto (EsPrivado = false, IdCarrera = null) -> bloqueado
+        var escalateInst = await sut.UpdateUsuarioEventoAsync(uuid!, dtoPersonal with { EsPrivado = false, IdCarrera = null }, 50, "DOSIER_DOCENTE");
+        Assert.False(escalateInst);
+
+        // Intento de escalada a carrera ajena (IdCarrera = 9) -> bloqueado
+        var escalateOtraCarrera = await sut.UpdateUsuarioEventoAsync(uuid!, dtoPersonal with { EsPrivado = false, IdCarrera = 9 }, 50, "DOSIER_DOCENTE");
+        Assert.False(escalateOtraCarrera);
+
+        // Cambio legítimo a su propia carrera (IdCarrera = 5) -> permitido
+        var moveOwnCarrera = await sut.UpdateUsuarioEventoAsync(uuid!, dtoPersonal with { EsPrivado = false, IdCarrera = 5 }, 50, "DOSIER_DOCENTE");
+        Assert.True(moveOwnCarrera);
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    [Trait("Feature", "Calendario")]
+    public async Task GetEventosAsync_EventoDeCarrera_ClasificaComoCarreraYAsignaPuedeGestionarPorRol()
+    {
+        var dbName = nameof(GetEventosAsync_EventoDeCarrera_ClasificaComoCarreraYAsignaPuedeGestionarPorRol);
+        await using var context = CreateInMemoryContext(dbName);
+
+        context.Carreras.AddRange(
+            new Carrera { IdCarrera = 5, Carrera1 = "Software", EsInstituto = 1 },
+            new Carrera { IdCarrera = 9, Carrera1 = "Gastronomía", EsInstituto = 1 }
+        );
+        context.Users.AddRange(
+            new User { IdUsuario = 60, IdSigafi = "PROF-060", Administrador = false, Nombre = "Docente Creador" },
+            new User { IdUsuario = 61, IdSigafi = "PROF-061", Administrador = false, Nombre = "Docente Compañero" },
+            new User { IdUsuario = 62, IdSigafi = "COORD-062", Administrador = false, Nombre = "Coord Software" },
+            new User { IdUsuario = 63, IdSigafi = "PROF-063", Administrador = false, Nombre = "Docente Otra Carrera" }
+        );
+        context.DocPeas.AddRange(
+            new DocPea { IdPea = 501, Uuid = "p1", IdAsignatura = 1, IdCarrera = 5, IdDocenteElaborador = "PROF-060", Estado = "Borrador", Activo = true, FechaModificacion = DateTime.UtcNow },
+            new DocPea { IdPea = 502, Uuid = "p2", IdAsignatura = 2, IdCarrera = 5, IdDocenteElaborador = "PROF-061", Estado = "Borrador", Activo = true, FechaModificacion = DateTime.UtcNow },
+            new DocPea { IdPea = 503, Uuid = "p3", IdAsignatura = 3, IdCarrera = 9, IdDocenteElaborador = "PROF-063", Estado = "Borrador", Activo = true, FechaModificacion = DateTime.UtcNow }
+        );
+        context.DocAutoridadesCurriculares.Add(new DocAutoridadCurricular
+        {
+            IdSigafi = "COORD-062",
+            CargoCurricular = "COORD_CARRERA",
+            IdCarrera = 5,
+            EsActivo = true
+        });
+
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        context.DocCalendarioEventosNormativos.AddRange(
+            new DocCalendarioEventoNormativo
+            {
+                Uuid = "evt-carrera-5",
+                Titulo = "Reunión de Software",
+                TipoEvento = "Reunion",
+                FechaInicio = hoy,
+                Activo = true,
+                EsPrivado = false,
+                IdCarrera = 5,
+                CreadoPor = 60
+            },
+            new DocCalendarioEventoNormativo
+            {
+                Uuid = "evt-privado-anual",
+                Titulo = "Recordatorio personal anual",
+                TipoEvento = "Personal",
+                FechaInicio = hoy,
+                RecurrenciaAnual = true,
+                Activo = true,
+                EsPrivado = true,
+                CreadoPor = 60
+            }
+        );
+        await context.SaveChangesAsync();
+
+        var sut = CreateSut(context);
+
+        var eventosCreador = (await sut.GetEventosAsync(hoy.AddDays(-1), hoy.AddDays(1), "DOSIER_DOCENTE", 60)).ToList();
+        var evCarreraCreador = Assert.Single(eventosCreador, e => e.Uuid == "evt-carrera-5");
+        Assert.Equal("Carrera", evCarreraCreador.CategoriaGlobal);
+        Assert.True(evCarreraCreador.PuedeGestionar);
+
+        var evPrivadoAnual = Assert.Single(eventosCreador, e => e.Uuid == "evt-privado-anual");
+        Assert.Equal("Personal", evPrivadoAnual.CategoriaGlobal);
+        Assert.True(evPrivadoAnual.PuedeGestionar);
+
+        var eventosCompanero = (await sut.GetEventosAsync(hoy.AddDays(-1), hoy.AddDays(1), "DOSIER_DOCENTE", 61)).ToList();
+        var evCarreraCompanero = Assert.Single(eventosCompanero, e => e.Uuid == "evt-carrera-5");
+        Assert.Equal("Carrera", evCarreraCompanero.CategoriaGlobal);
+        Assert.True(evCarreraCompanero.PuedeGestionar);
+
+        // Docente de otra carrera (IdCarrera = 9) no ve ni puede editar el evento de carrera 5
+        var dtoEditAjeno = new EventoNormativoDto(
+            "evt-carrera-5", "Intento ajeno", null, "Reunion",
+            hoy, null, true, false, null, null, "CARRERA", null, "#3B82F6", 3, true, false, "Media", "Pendiente",
+            IdCarrera: 5
+        );
+        var editOtraCarrera = await sut.UpdateUsuarioEventoAsync("evt-carrera-5", dtoEditAjeno, 63, "DOSIER_DOCENTE");
+        Assert.False(editOtraCarrera);
+
+        var eventosCoord = (await sut.GetEventosAsync(hoy.AddDays(-1), hoy.AddDays(1), "DOSIER_COORD_CARRERA", 62)).ToList();
+        var evCarreraCoord = Assert.Single(eventosCoord, e => e.Uuid == "evt-carrera-5");
+        Assert.True(evCarreraCoord.PuedeGestionar);
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    [Trait("Feature", "Calendario")]
+    public async Task ProcesarAlertasDiariasAsync_EventoCarrera_EnviaSoloAMiembrosDeCarrera()
+    {
+        var dbName = nameof(ProcesarAlertasDiariasAsync_EventoCarrera_EnviaSoloAMiembrosDeCarrera);
+        await using var context = CreateInMemoryContext(dbName);
+
+        context.Carreras.AddRange(
+            new Carrera { IdCarrera = 5, Carrera1 = "Software", EsInstituto = 1 },
+            new Carrera { IdCarrera = 9, Carrera1 = "Gastronomía", EsInstituto = 1 }
+        );
+        context.Users.AddRange(
+            new User { IdUsuario = 70, IdSigafi = "PROF-070", Activo = true, Administrador = false, Nombre = "Profe Soft", EmailInstitucional = "soft@istpet.edu.ec" },
+            new User { IdUsuario = 71, IdSigafi = "PROF-071", Activo = true, Administrador = false, Nombre = "Profe Gastro", EmailInstitucional = "gastro@istpet.edu.ec" }
+        );
+        context.DocPeas.AddRange(
+            new DocPea { IdPea = 601, Uuid = "ps1", IdAsignatura = 1, IdCarrera = 5, IdDocenteElaborador = "PROF-070", Estado = "Borrador", Activo = true, FechaModificacion = DateTime.UtcNow },
+            new DocPea { IdPea = 602, Uuid = "pg1", IdAsignatura = 2, IdCarrera = 9, IdDocenteElaborador = "PROF-071", Estado = "Borrador", Activo = true, FechaModificacion = DateTime.UtcNow }
+        );
+
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        context.DocCalendarioEventosNormativos.Add(new DocCalendarioEventoNormativo
+        {
+            Uuid = "evt-alerta-soft",
+            Titulo = "Entrega PEA Software",
+            TipoEvento = "Reunion",
+            FechaInicio = hoy.AddDays(1),
+            AlertaDias = 2,
+            Activo = true,
+            EsPrivado = false,
+            IdCarrera = 5,
+            CreadoPor = 70
+        });
+        await context.SaveChangesAsync();
+
+        var mockEmail = new Mock<IEmailEngineService>();
+        var mockPeriodo = new Mock<IPeriodoInstitucionalResolver>();
+        mockPeriodo.Setup(p => p.GetIdPeriodoActivoAsync(default)).ReturnsAsync(string.Empty);
+        var mockLogger = new Mock<ILogger<CalendarioService>>();
+        var sut = new CalendarioService(context, mockEmail.Object, mockPeriodo.Object, mockLogger.Object);
+
+        await sut.ProcesarAlertasDiariasAsync();
+
+        mockEmail.Verify(e => e.SendTemplatedEmailAsync(It.Is<EmailSendRequest>(r => r.DestinatariosEmails.Contains("soft@istpet.edu.ec"))), Times.Once);
+        mockEmail.Verify(e => e.SendTemplatedEmailAsync(It.Is<EmailSendRequest>(r => r.DestinatariosEmails.Contains("gastro@istpet.edu.ec"))), Times.Never);
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    [Trait("Feature", "Calendario")]
+    public async Task GetCarrerasUsuarioAsync_IgnoraAsignacionesHistoricasDePeriodosPasados()
+    {
+        await using var context = CreateInMemoryContext(nameof(GetCarrerasUsuarioAsync_IgnoraAsignacionesHistoricasDePeriodosPasados));
+
+        var roleCoord = new Role { IdRol = 90, CodigoRol = "DOSIER_COORD_CARRERA", Nombre = "Coordinador de Carrera" };
+        var user = new User { IdUsuario = 90, IdSigafi = "1709890626", Nombre = "WILFRIDO QUINTO", Activo = true };
+        context.Roles.Add(roleCoord);
+        context.Users.Add(user);
+        context.UserRoles.Add(new UserRole { IdUsuario = 90, IdRol = 90, EsActivo = true, Role = roleCoord });
+
+        context.Carreras.AddRange(
+            new Carrera { IdCarrera = 9, Carrera1 = "DESARROLLO DE SOFTWARE", EsInstituto = 1 },
+            new Carrera { IdCarrera = 10, Carrera1 = "MECANICA AUTOMOTRIZ", EsInstituto = 1 }
+        );
+
+        context.DocAutoridadesCurriculares.Add(new DocAutoridadCurricular
+        {
+            IdAutoridad = 6,
+            IdSigafi = "1709890626",
+            NombreCompleto = "WILFRIDO QUINTO",
+            CargoCurricular = "COORD_CARRERA",
+            IdCarrera = 9,
+            EsActivo = true
+        });
+
+        context.Cursos.AddRange(
+            new Curso { IdNivel = 50, IdCarrera = 9 },
+            new Curso { IdNivel = 57, IdCarrera = 10 }
+        );
+
+        context.AsignacionesProfesores.AddRange(
+            new AsignacionesProfesore { IdAsignacion = 25355, IdProfesor = "1709890626", IdPeriodo = "OCT2026", IdNivel = 50, Activo = 1 },
+            new AsignacionesProfesore { IdAsignacion = 15298, IdProfesor = "1709890626", IdPeriodo = "OCT2020", IdNivel = 57, Activo = 1 }
+        );
+
+        context.ProfesoresCarrerasPeriodos.AddRange(
+            new ProfesoresCarrerasPeriodo { IdProfesoresCarrerasPeriodos = 1, IdProfesor = "1709890626", IdPeriodo = "OCT2026", IdCarrera = 9, EsActivo = 1 },
+            new ProfesoresCarrerasPeriodo { IdProfesoresCarrerasPeriodos = 2, IdProfesor = "1709890626", IdPeriodo = "OCT2020", IdCarrera = 10, EsActivo = 1 },
+            new ProfesoresCarrerasPeriodo { IdProfesoresCarrerasPeriodos = 3, IdProfesor = "1709890626", IdPeriodo = "OCT2026", IdCarrera = 10, EsActivo = 0 }
+        );
+
+        await context.SaveChangesAsync();
+
+        var sut = CreateSut(context, periodoActivo: "OCT2026");
+
+        var carreras = (await sut.GetCarrerasUsuarioAsync(90, "DOSIER_COORD_CARRERA")).ToList();
+
+        Assert.Single(carreras);
+        Assert.Equal(9, carreras[0].IdCarrera);
+        Assert.Equal("DESARROLLO DE SOFTWARE", carreras[0].Nombre);
     }
 }
 

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { usersService } from '../../../../services/usersService';
-import { Users, CheckCircle2, Loader2, Search, ChevronDown, X, UserCheck, Sparkles } from 'lucide-react';
-import type { Carrera } from '../emailEngineTypes';
+import { emailService } from '../../../../services/emailService';
+import { Users, CheckCircle2, Loader2, Search, ChevronDown, X } from 'lucide-react';
+import type { Carrera, EmailEngineScope, PeriodoAcademicoItem } from '../emailEngineTypes';
+import EmailGroupSelector from './EmailGroupSelector';
 
 export interface SelectedPerson {
     idUsuario?: number;
@@ -13,8 +14,7 @@ export interface SelectedPerson {
 
 export const USER_TYPES = [
     { value: 'DOCENTE', label: 'Docente' },
-    { value: 'ADMINISTRATIVO', label: 'Personal Administrativo / Departamentos' },
-    { value: 'ESTUDIANTE', label: 'Estudiante' }
+    { value: 'ADMINISTRATIVO', label: 'Autoridades y Personal Administrativo' }
 ];
 
 export const ROLE_OPTIONS = [
@@ -32,13 +32,23 @@ export const TYPE_BADGE: Record<string, string> = {
 };
 
 export interface RecipientPickerProps {
+    scope: EmailEngineScope;
     carreras: Carrera[];
+    periodos: PeriodoAcademicoItem[];
     selected: SelectedPerson[];
     onSelected: (people: SelectedPerson[]) => void;
     broadcastRole: string;
     onBroadcastRole: (role: string) => void;
     broadcastCarreraId: string;
     onBroadcastCarreraId: (id: string) => void;
+    selectedCarreraIds: number[];
+    onSelectedCarreraIds: React.Dispatch<React.SetStateAction<number[]>>;
+    selectedModalidadIds: number[];
+    onSelectedModalidadIds: React.Dispatch<React.SetStateAction<number[]>>;
+    selectedPeaEstado: string;
+    onSelectedPeaEstado: (estado: string) => void;
+    selectedPeriodoFiltro: string;
+    onSelectedPeriodoFiltro: (periodoId: string) => void;
 }
 
 const mapApiUserToPerson = (u: Record<string, unknown>): SelectedPerson => ({
@@ -50,8 +60,8 @@ const mapApiUserToPerson = (u: Record<string, unknown>): SelectedPerson => ({
 });
 
 const personKey = (p: SelectedPerson) =>
-    p.idUsuario 
-        ? `usr-${p.idUsuario}-${p.tipo}` 
+    p.idUsuario
+        ? `usr-${p.idUsuario}-${p.tipo}`
         : `name-${p.nombre.toLowerCase().replace(/\s+/g, '-')}-${p.tipo}`;
 
 /** Puede enviarse si tiene correo visible o cuenta DOSIER (idUsuario). */
@@ -59,9 +69,13 @@ const canSelectPerson = (p: SelectedPerson) =>
     Boolean(p.email?.includes('@')) || (p.idUsuario != null && p.idUsuario > 0);
 
 export const RecipientPicker: React.FC<RecipientPickerProps> = ({
-    carreras, selected, onSelected,
+    scope, carreras, periodos, selected, onSelected,
     broadcastRole, onBroadcastRole,
-    broadcastCarreraId, onBroadcastCarreraId
+    broadcastCarreraId, onBroadcastCarreraId,
+    selectedCarreraIds, onSelectedCarreraIds,
+    selectedModalidadIds, onSelectedModalidadIds,
+    selectedPeaEstado, onSelectedPeaEstado,
+    selectedPeriodoFiltro, onSelectedPeriodoFiltro
 }) => {
     const [mode, setMode] = useState<'personas' | 'difusion'>('personas');
     const [query, setQuery] = useState('');
@@ -73,6 +87,26 @@ export const RecipientPicker: React.FC<RecipientPickerProps> = ({
     const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+
+    const allowedRoleOptions = ROLE_OPTIONS.filter(r =>
+        scope.isGlobalScope || scope.allowedBroadcastRoles.includes(r.value)
+    );
+
+    const availableUserTypes = scope.isGlobalScope
+        ? USER_TYPES
+        : USER_TYPES.filter(t => t.value === 'DOCENTE');
+
+    // Si es Coordinador de Carrera y activa grupos, preseleccionar rol Docente y carrera única automáticamente
+    useEffect(() => {
+        if (!scope.isGlobalScope && mode === 'difusion') {
+            if (!broadcastRole && allowedRoleOptions.length > 0) {
+                onBroadcastRole(allowedRoleOptions[0].value);
+            }
+            if (carreras.length === 1 && selectedCarreraIds.length === 0) {
+                onSelectedCarreraIds([carreras[0].idCarrera]);
+            }
+        }
+    }, [scope.isGlobalScope, mode, carreras, selectedCarreraIds.length, onSelectedCarreraIds, broadcastRole, onBroadcastRole, allowedRoleOptions]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -88,44 +122,24 @@ export const RecipientPicker: React.FC<RecipientPickerProps> = ({
         setSearching(true);
         setSearchError(null);
         try {
-            const typesToFetch = type ? [type] : (['DOCENTE', 'ADMINISTRATIVO', 'ESTUDIANTE'] as const);
-            const carreraLabel = carreraId
-                ? carreras.find(c => c.idCarrera.toString() === carreraId)?.carrera1
-                : '';
-
-            const batches = await Promise.all(
-                typesToFetch.map(async t => {
-                    const params: Record<string, string> = { pageSize: '50', page: '1', type: t };
-                    if (q.trim()) params.search = q.trim();
-                    const p = new URLSearchParams(params);
-                    const res = await usersService.getUsers(p);
-                    const raw = res?.items ?? res ?? [];
-                    return (Array.isArray(raw) ? raw : []).map((u: Record<string, unknown>) =>
-                        mapApiUserToPerson(u)
-                    );
-                })
+            const raw = await emailService.searchRecipients({
+                search: q.trim() || undefined,
+                type: type || undefined,
+                carreraId: carreraId || undefined,
+                limit: 50
+            });
+            const mapped = (Array.isArray(raw) ? raw : []).map((u) =>
+                mapApiUserToPerson(u as unknown as Record<string, unknown>)
             );
-
-            const seen = new Set<string>();
-            const merged: SelectedPerson[] = [];
-            for (const batch of batches) {
-                for (const p of batch) {
-                    const key = personKey(p);
-                    if (seen.has(key)) continue;
-                    seen.add(key);
-                    merged.push(p);
-                }
-            }
-
-            merged.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-            setResults(merged);
+            mapped.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+            setResults(mapped);
         } catch {
             setResults([]);
-            setSearchError('No se pudo cargar personas. Verifique su sesión de administrador.');
+            setSearchError('No se pudo cargar la nómina de destinatarios.');
         } finally {
             setSearching(false);
         }
-    }, [carreras]);
+    }, []);
 
     useEffect(() => {
         clearTimeout(debounceRef.current);
@@ -149,11 +163,19 @@ export const RecipientPicker: React.FC<RecipientPickerProps> = ({
         onSelected(selected.filter(s => personKey(s) !== targetKey));
     };
 
+    const hasGroupSelection = Boolean(
+        broadcastRole ||
+        broadcastCarreraId ||
+        selectedCarreraIds.length > 0 ||
+        selectedModalidadIds.length > 0 ||
+        selectedPeaEstado
+    );
+
     const totalDestinatarios =
         selected.length > 0
             ? `${selected.length} persona${selected.length > 1 ? 's' : ''}`
-            : (broadcastRole || broadcastCarreraId)
-                ? 'difusión por filtro'
+            : hasGroupSelection
+                ? 'grupo segmentado'
                 : 'ninguno';
 
     return (
@@ -168,21 +190,23 @@ export const RecipientPicker: React.FC<RecipientPickerProps> = ({
                 </span>
             </div>
 
-            {/* Mode tabs */}
-            <div className="flex border border-border-thin rounded-lg p-0.5 bg-bg-deep/50 gap-0.5">
-                {(['personas', 'difusion'] as const).map(m => (
-                    <button
-                        key={m}
-                        type="button"
-                        onClick={() => setMode(m)}
-                        className={`flex-1 text-[9px] font-semibold uppercase tracking-wider py-1.5 rounded-md transition-all cursor-pointer ${mode === m
-                                ? 'bg-surface border border-border-thin text-text-main shadow-sm'
-                                : 'text-text-dim hover:text-text-main'
-                            }`}
-                    >
-                        {m === 'personas' ? 'Personas específicas' : 'Difusión por filtro'}
-                    </button>
-                ))}
+            {/* Mode tabs — Riel plano Modern Enterprise Docs */}
+            <div className="border-b border-slate-200 dark:border-zinc-800">
+                <nav className="-mb-px flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar" aria-label="Modo de selección de destinatarios">
+                    {(['personas', 'difusion'] as const).map(m => (
+                        <button
+                            key={m}
+                            type="button"
+                            onClick={() => setMode(m)}
+                            className={`pb-2 pt-0.5 px-0.5 text-xs transition-colors cursor-pointer border-b-2 whitespace-nowrap ${mode === m
+                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
+                                }`}
+                        >
+                            {m === 'personas' ? 'Personas específicas' : 'Grupos y segmentación'}
+                        </button>
+                    ))}
+                </nav>
             </div>
 
             {/* ── MODO PERSONAS ── */}
@@ -199,8 +223,8 @@ export const RecipientPicker: React.FC<RecipientPickerProps> = ({
                                     setIsOpen(true);
                                 }}
                             >
-                                <option value="">Todos los tipos</option>
-                                {USER_TYPES.map(t => (
+                                {scope.isGlobalScope && <option value="">Todos los tipos</option>}
+                                {availableUserTypes.map(t => (
                                     <option key={t.value} value={t.value}>{t.label}</option>
                                 ))}
                             </select>
@@ -255,9 +279,9 @@ export const RecipientPicker: React.FC<RecipientPickerProps> = ({
                             </div>
                         </div>
 
-                        {/* Dropdown flotante 2 en 1 */}
+                        {/* Dropdown flotante 2 en 1 (Fondo 100% sólido) */}
                         {isOpen && (
-                            <div className="absolute left-0 right-0 top-full mt-1 bg-surface border border-border-thin rounded-xl shadow-xl max-h-60 overflow-y-auto z-50 divide-y divide-border-thin animate-fade-in">
+                            <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-zinc-950 border border-border-thin rounded-xl shadow-xl max-h-60 overflow-y-auto z-50 divide-y divide-border-thin animate-fade-in">
                                 {searchError && (
                                     <div className="p-3 text-[10px] text-error text-center">{searchError}</div>
                                 )}
@@ -281,8 +305,8 @@ export const RecipientPicker: React.FC<RecipientPickerProps> = ({
                                                     setQuery(''); // Limpia el buscador para la siguiente selección
                                                 }}
                                                 className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors cursor-pointer ${alreadyAdded || !selectable
-                                                        ? 'opacity-45 cursor-not-allowed'
-                                                        : 'hover:bg-brand/5'
+                                                    ? 'opacity-45 cursor-not-allowed'
+                                                    : 'hover:bg-brand/5'
                                                     }`}
                                             >
                                                 <div className="w-6 h-6 rounded-full bg-brand/15 flex items-center justify-center text-[9px] font-semibold text-brand shrink-0">
@@ -344,53 +368,23 @@ export const RecipientPicker: React.FC<RecipientPickerProps> = ({
                 </div>
             )}
 
-            {/* ── MODO DIFUSIÓN ── */}
+            {/* ── MODO GRUPOS Y SEGMENTACIÓN ── */}
             {mode === 'difusion' && (
-                <div className="space-y-3">
-                    <p className="text-[9px] text-text-dim leading-relaxed">
-                        El correo llegará a <strong>todos los usuarios activos</strong> que cumplan los criterios seleccionados.
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <label className="text-[9px] font-semibold text-text-dim uppercase tracking-wider flex items-center gap-1">
-                                <UserCheck size={10} /> Por rol
-                            </label>
-                            <select
-                                className="input-vercel !py-2 text-xs"
-                                value={broadcastRole}
-                                onChange={e => onBroadcastRole(e.target.value)}
-                            >
-                                <option value="">— Sin filtro de rol —</option>
-                                {ROLE_OPTIONS.map(r => (
-                                    <option key={r.value} value={r.value}>{r.label}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-[9px] font-semibold text-text-dim uppercase tracking-wider">Por carrera</label>
-                            <select
-                                className="input-vercel !py-2 text-xs"
-                                value={broadcastCarreraId}
-                                onChange={e => onBroadcastCarreraId(e.target.value)}
-                            >
-                                <option value="">— Todas las carreras —</option>
-                                {carreras.map(c => (
-                                    <option key={c.idCarrera} value={c.idCarrera.toString()}>{c.carrera1}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                    {(broadcastRole || broadcastCarreraId) && (
-                        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-brand/5 border border-brand/20 text-[9px] text-brand font-semibold">
-                            <Sparkles size={11} />
-                            Enviará a todos los usuarios activos
-                            {broadcastRole && ` con rol "${ROLE_OPTIONS.find(r => r.value === broadcastRole)?.label ?? broadcastRole}"`}
-                            {broadcastRole && broadcastCarreraId && ' y'}
-                            {broadcastCarreraId && ` de la carrera "${carreras.find(c => c.idCarrera.toString() === broadcastCarreraId)?.carrera1 ?? broadcastCarreraId}"`}
-                            .
-                        </div>
-                    )}
-                </div>
+                <EmailGroupSelector
+                    scope={scope}
+                    carreras={carreras}
+                    periodos={periodos}
+                    broadcastRole={broadcastRole}
+                    onBroadcastRole={onBroadcastRole}
+                    selectedCarreraIds={selectedCarreraIds}
+                    onSelectedCarreraIds={onSelectedCarreraIds}
+                    selectedModalidadIds={selectedModalidadIds}
+                    onSelectedModalidadIds={onSelectedModalidadIds}
+                    selectedPeaEstado={selectedPeaEstado}
+                    onSelectedPeaEstado={onSelectedPeaEstado}
+                    selectedPeriodoFiltro={selectedPeriodoFiltro}
+                    onSelectedPeriodoFiltro={onSelectedPeriodoFiltro}
+                />
             )}
         </div>
     );

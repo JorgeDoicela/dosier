@@ -202,6 +202,14 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
     const handleSaveEvent = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formTitulo.trim()) return;
+        if (formFechaInicio && formFechaFin && formFechaFin < formFechaInicio) {
+            showToast({
+                title: 'Rango de fechas inválido',
+                body: 'La fecha de fin no puede ser anterior a la fecha de inicio.',
+                type: 'warning',
+            });
+            return;
+        }
         if (formAlcance === 'carrera' && !formIdCarrera) {
             showToast({
                 title: 'Selecciona una carrera',
@@ -227,6 +235,9 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
             }
             setIsFormOpen(false);
             fetchEventos(currentDate, selectedCarreraId);
+            if (isEditing && fetchStickyNotesRefetch) {
+                fetchStickyNotesRefetch();
+            }
         } catch (error) {
             console.error('Error al guardar evento:', error);
             showToast({
@@ -240,7 +251,7 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
     };
 
     const handleDeleteEvent = async (uuid: string) => {
-        const isNorm = selectedEvent?.categoria_global === 'Normativo';
+        const isNorm = selectedEvent?.categoria_global === 'Normativo' && !selectedEvent?.id_carrera;
         const ok = await confirm({
             title: isNorm ? 'Eliminar Hito Institucional' : 'Eliminar Evento',
             message: isNorm
@@ -254,19 +265,30 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
 
         try {
             setLoading(true);
-            if (isAdmin && isNorm) {
+            if (canPublishInstituto && isNorm) {
                 await deleteNormativo(uuid);
             } else {
                 await deleteEvento(uuid);
             }
             setSelectedEvent(null);
-            fetchEventos(currentDate);
+            fetchEventos(currentDate, selectedCarreraId);
             if (fetchStickyNotesRefetch) fetchStickyNotesRefetch();
         } catch (error) {
             console.error('Error al eliminar evento:', error);
+            showToast({
+                title: 'No se pudo eliminar el evento',
+                body: 'Verifica tus permisos o intenta nuevamente.',
+                type: 'error',
+            });
         } finally {
             setLoading(false);
         }
+    };
+
+    const canDragOrModifyEvent = (ev?: Evento | null): boolean => {
+        if (!ev) return false;
+        if (ev.es_privado) return true;
+        return ev.categoria_global === 'Carrera' && Boolean(ev.puede_gestionar);
     };
 
     const handleQuickComplete = async (ev: Evento) => {
@@ -284,6 +306,8 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
             alertaDias: ev.alerta_dias ?? '',
             recurrenciaAnual: ev.recurrencia_anual ?? false,
             urlAccion: ev.url_accion,
+            rolesVisibles: ev.roles_visibles ?? null,
+            idCarrera: ev.es_privado ? null : (ev.id_carrera ?? null),
         };
         const payload = buildPayload({
             ...basePayloadFields,
@@ -293,7 +317,7 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
             setLoading(true);
             await updateEvento(ev.uuid, payload);
             setSelectedEvent(null);
-            fetchEventos(currentDate);
+            fetchEventos(currentDate, selectedCarreraId);
             showToast({
                 title: 'Evento completado',
                 body: `"${ev.titulo}" fue marcado como completado.`,
@@ -304,7 +328,7 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
                         estado: previousEstado,
                     });
                     await updateEvento(ev.uuid, revertPayload);
-                    fetchEventos(currentDate);
+                    fetchEventos(currentDate, selectedCarreraId);
                 },
             });
         } catch (error) {
@@ -318,73 +342,6 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
             setLoading(false);
         }
     };
-
-    const handleEventDrop = useCallback(async ({ event, start, end }: any) => {
-        const ev: Evento = event.resource;
-        if (ev.categoria_global !== 'Personal') return;
-
-        const nuevaInicio = format(start as Date, 'yyyy-MM-dd');
-        const nuevaFin = format(end as Date, 'yyyy-MM-dd');
-
-        const payload = buildPayload({
-            titulo: ev.titulo,
-            descripcion: ev.descripcion,
-            tipo: ev.subcategoria,
-            fechaInicio: nuevaInicio,
-            fechaFin: nuevaFin,
-            esTodoElDia: ev.es_todo_el_dia,
-            colorHex: ev.color_hex || '#F59E0B',
-            esPrivado: ev.es_privado,
-            prioridad: ev.prioridad,
-            estado: ev.estado,
-            alertaDias: ev.alerta_dias ?? '',
-            recurrenciaAnual: ev.recurrencia_anual ?? false,
-            urlAccion: ev.url_accion,
-        });
-
-        try {
-            await updateEvento(ev.uuid, payload);
-            fetchEventos(currentDate);
-        } catch (error) {
-            console.error('Error al mover evento:', error);
-        }
-    }, [currentDate]);
-
-    const handleEventResize = useCallback(async ({ event, start, end }: any) => {
-        const ev: Evento = event.resource;
-        if (ev.categoria_global !== 'Personal') return;
-
-        const nuevaInicio = format(start as Date, 'yyyy-MM-dd');
-        const nuevaFin = format(end as Date, 'yyyy-MM-dd');
-
-        const payload = buildPayload({
-            titulo: ev.titulo,
-            descripcion: ev.descripcion,
-            tipo: ev.subcategoria,
-            fechaInicio: nuevaInicio,
-            fechaFin: nuevaFin,
-            esTodoElDia: ev.es_todo_el_dia,
-            colorHex: ev.color_hex || '#F59E0B',
-            esPrivado: ev.es_privado,
-            prioridad: ev.prioridad,
-            estado: ev.estado,
-            alertaDias: ev.alerta_dias ?? '',
-            recurrenciaAnual: ev.recurrencia_anual ?? false,
-            urlAccion: ev.url_accion,
-        });
-        try {
-            await updateEvento(ev.uuid, payload);
-            fetchEventos(currentDate);
-        } catch (error) {
-            console.error('Error al redimensionar evento:', error);
-        }
-    }, [currentDate]);
-
-    useEffect(() => {
-        getCarrerasUsuario()
-            .then(data => setCarrerasUsuario(data || []))
-            .catch(() => setCarrerasUsuario([]));
-    }, []);
 
     const fetchEventos = useCallback(async (date: Date, carreraId: number | null = selectedCarreraId) => {
         try {
@@ -411,6 +368,13 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
                         es_todo_el_dia: ev.es_todo_el_dia ?? (ev as any).esTodoElDia ?? true,
                         color_hex: ev.color_hex || (ev as any).colorHex || null,
                         url_accion: ev.url_accion || (ev as any).urlAccion || null,
+                        es_privado: ev.es_privado ?? (ev as any).esPrivado ?? false,
+                        creado_por: ev.creado_por ?? (ev as any).creadoPor ?? null,
+                        roles_visibles: ev.roles_visibles ?? (ev as any).rolesVisibles ?? null,
+                        id_carrera: ev.id_carrera ?? (ev as any).idCarrera ?? null,
+                        nombre_carrera: ev.nombre_carrera ?? (ev as any).nombreCarrera ?? null,
+                        nombre_docente: ev.nombre_docente ?? (ev as any).nombreDocente ?? null,
+                        puede_gestionar: ev.puede_gestionar ?? (ev as any).puedeGestionar ?? false,
                     };
                     return {
                         title: ev.titulo,
@@ -427,6 +391,77 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
             setLoading(false);
         }
     }, [selectedCarreraId]);
+
+    const handleEventDrop = useCallback(async ({ event, start, end }: any) => {
+        const ev: Evento = event.resource;
+        if (!canDragOrModifyEvent(ev)) return;
+
+        const nuevaInicio = format(start as Date, 'yyyy-MM-dd');
+        const nuevaFin = format(end as Date, 'yyyy-MM-dd');
+
+        const payload = buildPayload({
+            titulo: ev.titulo,
+            descripcion: ev.descripcion,
+            tipo: ev.subcategoria,
+            fechaInicio: nuevaInicio,
+            fechaFin: nuevaFin < nuevaInicio ? nuevaInicio : nuevaFin,
+            esTodoElDia: ev.es_todo_el_dia,
+            colorHex: ev.color_hex || '#F59E0B',
+            esPrivado: ev.es_privado,
+            prioridad: ev.prioridad,
+            estado: ev.estado,
+            alertaDias: ev.alerta_dias ?? '',
+            recurrenciaAnual: ev.recurrencia_anual ?? false,
+            urlAccion: ev.url_accion,
+            rolesVisibles: ev.roles_visibles ?? null,
+            idCarrera: ev.es_privado ? null : (ev.id_carrera ?? null),
+        });
+
+        try {
+            await updateEvento(ev.uuid, payload);
+            fetchEventos(currentDate, selectedCarreraId);
+        } catch (error) {
+            console.error('Error al mover evento:', error);
+        }
+    }, [currentDate, selectedCarreraId, fetchEventos]);
+
+    const handleEventResize = useCallback(async ({ event, start, end }: any) => {
+        const ev: Evento = event.resource;
+        if (!canDragOrModifyEvent(ev)) return;
+
+        const nuevaInicio = format(start as Date, 'yyyy-MM-dd');
+        const nuevaFin = format(end as Date, 'yyyy-MM-dd');
+
+        const payload = buildPayload({
+            titulo: ev.titulo,
+            descripcion: ev.descripcion,
+            tipo: ev.subcategoria,
+            fechaInicio: nuevaInicio,
+            fechaFin: nuevaFin < nuevaInicio ? nuevaInicio : nuevaFin,
+            esTodoElDia: ev.es_todo_el_dia,
+            colorHex: ev.color_hex || '#F59E0B',
+            esPrivado: ev.es_privado,
+            prioridad: ev.prioridad,
+            estado: ev.estado,
+            alertaDias: ev.alerta_dias ?? '',
+            recurrenciaAnual: ev.recurrencia_anual ?? false,
+            urlAccion: ev.url_accion,
+            rolesVisibles: ev.roles_visibles ?? null,
+            idCarrera: ev.es_privado ? null : (ev.id_carrera ?? null),
+        });
+        try {
+            await updateEvento(ev.uuid, payload);
+            fetchEventos(currentDate, selectedCarreraId);
+        } catch (error) {
+            console.error('Error al redimensionar evento:', error);
+        }
+    }, [currentDate, selectedCarreraId, fetchEventos]);
+
+    useEffect(() => {
+        getCarrerasUsuario()
+            .then(data => setCarrerasUsuario(data || []))
+            .catch(() => setCarrerasUsuario([]));
+    }, []);
 
     useEffect(() => {
         fetchEventos(currentDate, selectedCarreraId);
@@ -501,7 +536,7 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         .slice(0, 7);
 
     const isDraggable = (event: object) => {
-        return (event as CalendarEventExtended).resource?.categoria_global === 'Personal';
+        return canDragOrModifyEvent((event as CalendarEventExtended).resource);
     };
 
     const handleNavigateClick = (action: 'PREV' | 'NEXT' | 'TODAY') => {

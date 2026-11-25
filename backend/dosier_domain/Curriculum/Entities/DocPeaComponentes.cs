@@ -24,6 +24,7 @@ namespace dosier_domain.Curriculum.Entities
         public string Uuid { get; set; } = Guid.NewGuid().ToString();
         public int IdPea { get; set; }
         public int? IdUnidad { get; set; }
+        public string? UnidadesReferencia { get; set; }
         public int NumeroPractica { get; set; }
         public string NombrePractica { get; set; } = string.Empty;
         public string? Caracterizacion { get; set; }

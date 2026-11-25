@@ -316,7 +316,7 @@ const SettingsPage: React.FC = () => {
             )}
 
             {activeMainTab === 'perfil' ? (
-                <div className="max-w-6xl space-y-6">
+                <div className="w-full space-y-6">
                 <SignatureProfileCard />
 
                 {!isLoadingProfile && (
@@ -326,65 +326,67 @@ const SettingsPage: React.FC = () => {
                             Seguridad y Contraseña
                         </h2>
 
-                        <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
+                        <form onSubmit={handleChangePassword} className="space-y-4">
                             <p className="text-xs text-text-dim leading-relaxed">
                                 Actualice su contraseña de acceso a DOSIER. Por motivos de seguridad, debe tener al menos 8 caracteres e incluir letras y números.
                             </p>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Contraseña Actual</label>
-                                <div className="relative">
-                                    <input
-                                        type={showCurrentPassword ? "text" : "password"}
-                                        className="w-full bg-surface border border-border-thin rounded-lg pl-3 pr-10 py-2 text-xs text-text-main focus:outline-none focus:border-brand"
-                                        placeholder="Ingrese su contraseña actual"
-                                        value={passwordForm.currentPassword}
-                                        onChange={e => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
-                                    >
-                                        {showCurrentPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                                    </button>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Contraseña Actual</label>
+                                    <div className="relative">
+                                        <input
+                                            type={showCurrentPassword ? "text" : "password"}
+                                            className="w-full bg-surface border border-border-thin rounded-lg pl-3 pr-10 py-2 text-xs text-text-main focus:outline-none focus:border-brand"
+                                            placeholder="Ingrese su contraseña actual"
+                                            value={passwordForm.currentPassword}
+                                            onChange={e => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
+                                        >
+                                            {showCurrentPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Nueva Contraseña</label>
-                                <div className="relative">
-                                    <input
-                                        type={showNewPassword ? "text" : "password"}
-                                        className="w-full bg-surface border border-border-thin rounded-lg pl-3 pr-10 py-2 text-xs text-text-main focus:outline-none focus:border-brand"
-                                        placeholder="Mínimo 8 caracteres (letras y números)"
-                                        value={passwordForm.newPassword}
-                                        onChange={e => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowNewPassword(!showNewPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
-                                    >
-                                        {showNewPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                                    </button>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Nueva Contraseña</label>
+                                    <div className="relative">
+                                        <input
+                                            type={showNewPassword ? "text" : "password"}
+                                            className="w-full bg-surface border border-border-thin rounded-lg pl-3 pr-10 py-2 text-xs text-text-main focus:outline-none focus:border-brand"
+                                            placeholder="Mínimo 8 caracteres (letras y números)"
+                                            value={passwordForm.newPassword}
+                                            onChange={e => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowNewPassword(!showNewPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
+                                        >
+                                            {showNewPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Confirmar Nueva Contraseña</label>
-                                <div className="relative">
-                                    <input
-                                        type={showConfirmPassword ? "text" : "password"}
-                                        className="w-full bg-surface border border-border-thin rounded-lg pl-3 pr-10 py-2 text-xs text-text-main focus:outline-none focus:border-brand"
-                                        placeholder="Repita la nueva contraseña"
-                                        value={passwordForm.confirmPassword}
-                                        onChange={e => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
-                                    >
-                                        {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                                    </button>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Confirmar Nueva Contraseña</label>
+                                    <div className="relative">
+                                        <input
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            className="w-full bg-surface border border-border-thin rounded-lg pl-3 pr-10 py-2 text-xs text-text-main focus:outline-none focus:border-brand"
+                                            placeholder="Repita la nueva contraseña"
+                                            value={passwordForm.confirmPassword}
+                                            onChange={e => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
+                                        >
+                                            {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex justify-end pt-2">

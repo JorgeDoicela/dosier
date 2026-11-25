@@ -38,15 +38,17 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
         : (Array.isArray(formData?.evaluaciones) ? formData.evaluaciones : []);
 
     const normalizeEvaluacion = (e: any, _idx: number): EvaluacionItem => {
-        const nota = String(e?.nota ?? e?.Nota ?? e?.denominacion ?? e?.Denominacion ?? e?.['0'] ?? '').trim();
-        const tipo = String(e?.tipo ?? e?.Tipo ?? e?.tipoEvaluacion ?? e?.TipoEvaluacion ?? e?.['1'] ?? '').trim();
-        const rawCalif = e?.calificacion ?? e?.Calificacion ?? e?.calificacionMaxima ?? e?.CalificacionMaxima ?? e?.['2'];
-        const calificacion = rawCalif !== undefined && rawCalif !== null && rawCalif !== '' ? Number(rawCalif) : 10;
+        const nota = String(e?.nota ?? e?.Nota ?? e?.denominacion ?? e?.Denominacion ?? e?.criterio ?? e?.Criterio ?? e?.['0'] ?? '').trim();
+        const tipo = String(e?.tipo ?? e?.Tipo ?? e?.tipoEvaluacion ?? e?.TipoEvaluacion ?? e?.tipo_evaluacion ?? e?.descripcion ?? e?.Descripcion ?? e?.['1'] ?? '').trim();
+        const rawCalif = e?.calificacion ?? e?.Calificacion ?? e?.calificacionMaxima ?? e?.CalificacionMaxima ?? e?.calificacion_maxima ?? e?.porcentaje ?? e?.Porcentaje ?? e?.['2'];
+        const parsedCalif = rawCalif !== undefined && rawCalif !== null && rawCalif !== ''
+            ? Number(String(rawCalif).replace(',', '.'))
+            : 10;
 
         return {
             nota,
             tipo,
-            calificacion: isNaN(calificacion) ? 10 : calificacion
+            calificacion: isNaN(parsedCalif) ? 10 : parsedCalif
         };
     };
 
@@ -127,7 +129,7 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
                                             value={item.nota}
                                             onChange={(e) => handleUpdateEvaluacion(idx, 'nota', e.target.value)}
                                             disabled={readOnly}
-                                            placeholder="Denominación..."
+                                            placeholder="Ej: NOTA PARCIAL 1"
                                             className="w-full bg-surface border border-border-thin rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-text-main uppercase outline-none focus:border-text-main transition-colors"
                                         />
                                     </td>
@@ -137,7 +139,7 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
                                             onChange={(e) => handleUpdateEvaluacion(idx, 'tipo', e.target.value)}
                                             disabled={readOnly}
                                             rows={Math.max(3, (item.tipo || '').split('\n').length)}
-                                            placeholder="Tipo de evaluación o actividad..."
+                                            placeholder="Ej: ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)"
                                             className="w-full bg-surface border border-border-thin rounded-xl p-3 text-xs sm:text-sm text-text-main uppercase outline-none focus:border-text-main resize-none transition-colors leading-relaxed min-h-[74px] sm:min-h-[80px]"
                                         />
                                     </td>

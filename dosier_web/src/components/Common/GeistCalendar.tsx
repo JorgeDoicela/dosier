@@ -287,7 +287,7 @@ export const GeistCalendar: React.FC<GeistCalendarProps> = ({
                     >
                         <ChevronRight className="w-4 h-4" />
                     </button>
-                    si inte</div>
+                </div>
             </div>
 
             {/* Días de la Semana */}

@@ -740,20 +740,31 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                                                 )}
 
                                                 {secId === 'pea_evaluation_section' && (
-                                                    <div className="space-y-1 pt-0.5">
-                                                        {extractedDraft.evaluaciones.map((e, idx) => (
-                                                            <div key={idx} className="flex items-center justify-between text-xs text-slate-600 dark:text-zinc-300">
-                                                                <div className="flex items-center gap-2 truncate pr-2">
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-zinc-500 shrink-0" />
-                                                                    <span className="truncate">{e.nota || e.tipo || 'Criterio de evaluación'}</span>
-                                                                </div>
-                                                                {e.calificacion && (
-                                                                    <span className="font-mono text-[11px] font-semibold text-slate-700 dark:text-zinc-300 shrink-0">
-                                                                        {e.calificacion} pts
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        ))}
+                                                    <div className="pt-1 overflow-x-auto rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+                                                        <table className="w-full text-left border-collapse text-xs">
+                                                            <thead>
+                                                                <tr className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 text-[11px] font-semibold text-slate-600 dark:text-zinc-300">
+                                                                    <th className="px-3 py-2 border-r border-slate-200 dark:border-zinc-800 w-[26%]">Notas</th>
+                                                                    <th className="px-3 py-2 border-r border-slate-200 dark:border-zinc-800">Tipo de evaluación</th>
+                                                                    <th className="px-3 py-2 text-center w-[90px]">Calificación</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-slate-200 dark:divide-zinc-800">
+                                                                {extractedDraft.evaluaciones.map((e, idx) => (
+                                                                    <tr key={idx}>
+                                                                        <td className="px-3 py-2 border-r border-slate-200 dark:border-zinc-800 font-semibold text-slate-900 dark:text-zinc-100 align-top">
+                                                                            {e.nota || '---'}
+                                                                        </td>
+                                                                        <td className="px-3 py-2 border-r border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 leading-relaxed align-top">
+                                                                            {e.tipo || '---'}
+                                                                        </td>
+                                                                        <td className="px-3 py-2 text-center font-mono font-semibold text-slate-800 dark:text-zinc-200 align-top">
+                                                                            {Number(e.calificacion ?? 10).toFixed(2).replace('.', ',')}
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
                                                     </div>
                                                 )}
 

@@ -172,17 +172,18 @@ export const AdminFeedbackPage: React.FC = () => {
         <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 space-y-6">
             <nav aria-label="Breadcrumb" className="flex items-center gap-2 mb-1 text-xs text-text-dim animate-fade-in select-none">
                 <Link
-                    to="/dashboard"
+                    to="/solicitudes"
                     className="p-1 -ml-1 rounded-md hover:bg-surface-hover text-text-dim hover:text-text-main transition-colors inline-flex items-center justify-center no-underline"
-                    title="Volver al Panel"
+                    title="Volver a Solicitudes"
+                    aria-label="Volver a Solicitudes"
                 >
                     <ArrowLeft size={14} />
                 </Link>
                 <Link
-                    to="/dashboard"
+                    to="/solicitudes"
                     className="hover:text-text-main cursor-pointer transition-colors font-medium no-underline text-inherit"
                 >
-                    Panel
+                    Solicitudes
                 </Link>
                 <ChevronRight size={12} className="opacity-50 shrink-0" />
                 <span className="text-text-main font-semibold">Bandeja de Incidencias</span>

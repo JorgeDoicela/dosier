@@ -91,56 +91,61 @@ export const AutoSignatureTab: React.FC<AutoSignatureTabProps> = ({
     }, [autoText, selectedFont]);
 
     return (
-        <div className="sig-auto-layout">
-            <div className="sig-mode-auto-workspace">
-                <div className="sig-form-group">
-                    <label htmlFor="sig-auto-text">Nombre a transformar en Firma</label>
-                    <input
-                        id="sig-auto-text"
-                        type="text"
-                        value={autoText}
-                        onChange={(e) => onAutoTextChange(e.target.value)}
-                        placeholder="Ingrese el texto de la firma"
-                    />
-                </div>
-
-                <div className="sig-preview-section">
-                    <span className="sig-label">Vista Previa Automática:</span>
-                    <div className="sig-preview-box auto-signature-preview">
-                        {firmaImagenB64 ? (
-                            <img src={firmaImagenB64} alt="Previsualización de firma cursiva" />
-                        ) : (
-                            <span className="no-image">Escriba su nombre para generar</span>
-                        )}
-                    </div>
-                </div>
+        <div className="space-y-5">
+            <div className="space-y-1 text-center">
+                <label htmlFor="sig-auto-text" className="text-xs font-bold text-text-main uppercase tracking-wider block text-center">
+                    Nombre a transformar en Firma
+                </label>
+                <input
+                    id="sig-auto-text"
+                    type="text"
+                    value={autoText}
+                    onChange={(e) => onAutoTextChange(e.target.value)}
+                    placeholder="Ingrese el texto de la firma"
+                    className="w-full bg-transparent border-0 border-b border-slate-300 dark:border-zinc-700 rounded-none px-1 py-2.5 text-center text-xs sm:text-sm font-medium text-text-main placeholder:text-slate-400 focus:border-[#0070f3] dark:focus:border-blue-400 outline-none transition-colors"
+                />
             </div>
 
-            <div className="sig-form-group font-styles-panel">
-                <label>Estilo de Letra Manuscrita</label>
-                <div className="sig-fonts-grid">
-                    {FONTS.map((font) => {
-                        const words = autoText.trim().split(/\s+/).filter(Boolean);
-                        const previewText = words.length === 0
-                            ? 'Firma'
-                            : words.length === 1
-                                ? words[0]
-                                : `${words[0]} ${words[1]}`;
+            <div className="sig-auto-layout">
+                <div className="sig-mode-auto-workspace">
+                    <div className="sig-preview-section">
+                        <span className="sig-label">Vista Previa Automática:</span>
+                        <div className="sig-preview-box auto-signature-preview">
+                            {firmaImagenB64 ? (
+                                <img src={firmaImagenB64} alt="Previsualización de firma cursiva" />
+                            ) : (
+                                <span className="no-image">Escriba su nombre para generar</span>
+                            )}
+                        </div>
+                    </div>
+                </div>
 
-                        return (
-                            <button
-                                key={font.id}
-                                type="button"
-                                className={`sig-font-option-btn ${selectedFont === font.id ? 'active' : ''}`}
-                                onClick={() => onFontChange(font.id)}
-                            >
-                                <span className="sig-font-option-label">{font.label}</span>
-                                <span className={`sig-font-option-preview ${font.fontClass}`}>
-                                    {previewText}
-                                </span>
-                            </button>
-                        );
-                    })}
+                <div className="sig-form-group font-styles-panel">
+                    <label>Estilo de Letra Manuscrita</label>
+                    <div className="sig-fonts-grid">
+                        {FONTS.map((font) => {
+                            const words = autoText.trim().split(/\s+/).filter(Boolean);
+                            const previewText = words.length === 0
+                                ? 'Firma'
+                                : words.length === 1
+                                    ? words[0]
+                                    : `${words[0]} ${words[1]}`;
+
+                            return (
+                                <button
+                                    key={font.id}
+                                    type="button"
+                                    className={`sig-font-option-btn ${selectedFont === font.id ? 'active' : ''}`}
+                                    onClick={() => onFontChange(font.id)}
+                                >
+                                    <span className="sig-font-option-label">{font.label}</span>
+                                    <span className={`sig-font-option-preview ${font.fontClass}`}>
+                                        {previewText}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
         </div>

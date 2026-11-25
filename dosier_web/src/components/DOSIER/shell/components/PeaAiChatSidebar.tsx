@@ -18,6 +18,7 @@ import {
     getPeaAiConfig,
     savePeaAiConfig,
     AI_PROVIDER_MODELS,
+    extractPeaAiErrorMessage,
     type PeaAiConfigStatus,
     type PeaStructuredDraft,
     convertDraftToEditorFields
@@ -674,10 +675,10 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
                 }
             }
         } catch (err: any) {
-            const backendMsg = err?.response?.data?.message || err?.response?.data;
-            const errorMsg = (typeof backendMsg === 'string' && backendMsg.trim())
-                ? backendMsg.trim()
-                : (err?.message || 'Ocurrió un error al procesar la propuesta curricular con el proveedor de IA.');
+            const errorMsg = extractPeaAiErrorMessage(
+                err,
+                'Ocurrió un error al procesar la propuesta curricular con el proveedor de IA.'
+            );
             setMessages(prev => prev.map(m => {
                 if (m.id === assistantMsgId) {
                     return {

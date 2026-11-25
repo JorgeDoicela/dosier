@@ -11,7 +11,7 @@
     PLACEHOLDERS DINÁMICOS DISPONIBLES (HANDLEBARS):
     ---------------------------------------------------------------------------------
     - {{title}}              : El asunto o título destacado del correo.
-    - {{recipient_name}}     : El nombre completo del docente o investigador receptor.
+    - {{recipient_name}}     : El nombre completo del docente o autoridad curricular receptor.
     - {{{body_text}}}        : El mensaje principal (admite HTML).
     - {{has_extra_data}}     : Booleano que controla si se renderiza la tarjeta de detalles.
     - {{extra_data}}         : Lista de objetos clave-valor (cada uno con {{key}} y {{value}})
@@ -29,7 +29,25 @@
     <title>{{title}}</title>
     <style>
         /* Force Segoe UI / Arial globally across all email clients */
-        body, table, td, p, a, li, blockquote, div, span, h1, h2, h3, h4, h5, h6, strong, b, em, i {
+        body,
+        table,
+        td,
+        p,
+        a,
+        li,
+        blockquote,
+        div,
+        span,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        strong,
+        b,
+        em,
+        i {
             font-family: Segoe UI, Arial, sans-serif !important;
         }
 
@@ -76,22 +94,25 @@
 
             <!-- Cabecera de Marca (Branding Minimalista Monocromático) -->
             <tr>
-                <td class="header-td" style="padding: 48px 48px 16px 48px; background-color: #ffffff; font-family: Segoe UI, Arial, sans-serif;">
+                <td class="header-td"
+                    style="padding: 48px 48px 16px 48px; background-color: #ffffff; font-family: Segoe UI, Arial, sans-serif;">
                     <!-- Row for Logos (ISTPET Top Left, DOSIER Top Right) -->
                     <table width="100%" border="0" cellpadding="0" cellspacing="0">
                         <tr>
                             <td align="left" valign="middle">
-                                <img src="{{logo_istpet}}" alt="ISTPET Logo" height="38" style="display: inline-block; border: 0; vertical-align: middle;">
+                                <img src="{{logo_istpet}}" alt="ISTPET Logo" height="38"
+                                    style="display: inline-block; border: 0; vertical-align: middle;">
                             </td>
                             <td align="right" valign="middle">
-                                <img src="{{logo_dosier}}" alt="DOSIER Logo" height="32" style="display: inline-block; border: 0; vertical-align: middle;">
+                                <img src="{{logo_dosier}}" alt="DOSIER Logo" height="32"
+                                    style="display: inline-block; border: 0; vertical-align: middle;">
                             </td>
                         </tr>
                     </table>
-                    
+
                     <!-- Spacing between logos and text -->
                     <div style="height: 6px; line-height: 6px; font-size: 1px;">&nbsp;</div>
-                    
+
                     <!-- Row for Centered Branding Text (Below Logos) -->
                     <table width="100%" border="0" cellpadding="0" cellspacing="0">
                         <tr>
@@ -102,7 +123,7 @@
                                 </p>
                                 <p
                                     style="color: #666666; margin: 6px 0 0 0; font-size: 10px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; font-family: Segoe UI, Arial, sans-serif; line-height: 1.3;">
-                                    Sistema de Portafolio Docente ISTPET
+                                    Sistema de Gestión Curricular · ISTPET
                                 </p>
                             </td>
                         </tr>
@@ -175,10 +196,12 @@
                     </p>
 
                     <!-- Pie de Página Institucional -->
-                    <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #eaeaea; font-family: Segoe UI, Arial, sans-serif;">
+                    <div
+                        style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #eaeaea; font-family: Segoe UI, Arial, sans-serif;">
                         <table width="100%" border="0" cellpadding="0" cellspacing="0">
                             <tr>
-                                <td style="text-align: left; vertical-align: top; font-family: Segoe UI, Arial, sans-serif;">
+                                <td
+                                    style="text-align: left; vertical-align: top; font-family: Segoe UI, Arial, sans-serif;">
                                     <p
                                         style="color: #000000; font-size: 13px; margin: 0 0 2px 0; font-weight: 600; font-family: Segoe UI, Arial, sans-serif;">
                                         Tecnológico Traversari
@@ -188,7 +211,8 @@
                                         Excelencia Académica y Tecnológica
                                     </p>
                                 </td>
-                                <td style="text-align: right; vertical-align: top; font-family: Segoe UI, Arial, sans-serif;">
+                                <td
+                                    style="text-align: right; vertical-align: top; font-family: Segoe UI, Arial, sans-serif;">
                                     <div
                                         style="color: #000000; font-weight: 600; font-size: 11px; font-family: Segoe UI, Arial, sans-serif;">
                                         ISTPET {{anio_actual}}
@@ -205,16 +229,18 @@
                                 <strong style="color: #000000;">Aviso de Protección de Datos (LOPDP):</strong> Conforme
                                 a la Ley Orgánica de Protección de Datos Personales de la República del Ecuador, le
                                 informamos que sus datos personales son tratados con el único fin de gestionar
-                                actividades de investigación en el sistema DOSIER. Para ejercer sus derechos de acceso,
+                                procesos curriculares, elaboración y legalización de Programas de Estudio de Asignatura
+                                (PEA) y portafolio docente en el sistema DOSIER. Para ejercer sus derechos de acceso,
                                 rectificación, eliminación o limitación, puede dirigirse por escrito al correo
-                                institucional <a href="mailto:direccion.investigacion@istpet.edu.ec"
-                                    style="color: #0070f3; text-decoration: none; font-weight: 500; font-family: Segoe UI, Arial, sans-serif;">direccion.investigacion@istpet.edu.ec</a>.
+                                institucional <a href="mailto:academico@istpet.edu.ec"
+                                    style="color: #0070f3; text-decoration: none; font-weight: 500; font-family: Segoe UI, Arial, sans-serif;">academico@istpet.edu.ec</a>.
                             </p>
                         </div>
 
                         <!-- Dirección física -->
                         <div style="text-align: center; margin-top: 24px; font-family: Segoe UI, Arial, sans-serif;">
-                            <p style="color: #888888; font-size: 10px; margin: 0; font-family: Segoe UI, Arial, sans-serif;">
+                            <p
+                                style="color: #888888; font-size: 10px; margin: 0; font-family: Segoe UI, Arial, sans-serif;">
                                 Av. Matilde Álvarez y Hugo Díaz Romero. Sector Chillogallo. Quito, Ecuador.
                             </p>
                         </div>

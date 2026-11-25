@@ -27,12 +27,12 @@ export const EmailPreviewSection: React.FC<EmailPreviewSectionProps> = ({
                 {/* Barra superior estilo Outlook */}
                 <div className="bg-[#f0f0f0] border-b border-[#d1d1d1] px-4 py-3 flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-full bg-[#0078d4] text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-sm">
-                            DI
+                        <div className="w-10 h-10 rounded-full bg-[#0070f3] text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-sm">
+                            DO
                         </div>
                         <div className="min-w-0">
                             <div className="text-sm font-semibold text-[#242424] truncate">
-                                DOSIER Investigación
+                                DOSIER — Gestión Curricular
                             </div>
                             <div className="text-xs text-[#616161] mt-0.5 truncate">
                                 Para: <span className="font-medium text-[#242424]">{parsedPreview.recipientName}</span>

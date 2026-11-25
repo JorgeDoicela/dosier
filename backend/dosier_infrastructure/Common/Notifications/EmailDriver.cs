@@ -54,7 +54,7 @@ namespace dosier_infrastructure.Common.Notifications
                     ? url 
                     : _appUrlService.BuildFrontendUrl(url)) 
                 : null;
-            var name = recipientName ?? "Investigador";
+            var name = recipientName ?? "Docente";
 
             try
             {

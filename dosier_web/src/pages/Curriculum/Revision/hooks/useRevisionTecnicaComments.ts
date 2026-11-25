@@ -93,7 +93,11 @@ export const useRevisionTecnicaComments = ({
         }
     };
 
-    const saveCommentForSection = async (section: string, text: string) => {
+    const saveCommentForSection = async (
+        section: string,
+        text: string,
+        options?: { silentToast?: boolean }
+    ) => {
         if (!text.trim() || !projectUuid) return;
 
         const rolObservador = isVicerrector
@@ -134,11 +138,13 @@ export const useRevisionTecnicaComments = ({
                 };
             });
 
-            addToast(
-                "Observación Registrada",
-                `Se ha guardado la observación técnica para ${section}.`,
-                "success"
-            );
+            if (!options?.silentToast) {
+                addToast(
+                    "Observación Registrada",
+                    `Se ha guardado la observación técnica para ${section}.`,
+                    "success"
+                );
+            }
         } catch (err: any) {
             console.error('[DOSIER] Error al registrar observación:', err);
             addToast("Error", err.response?.data?.message || "No se pudo guardar la observación en el servidor.", "error");

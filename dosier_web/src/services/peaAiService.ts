@@ -556,10 +556,66 @@ export const savePeaAiConfig = async (req: SavePeaAiConfigRequest): Promise<PeaA
     return normalizeConfigStatus(res.data);
 };
 
+export const extractPeaAiErrorMessage = (
+    err: unknown,
+    fallback = 'Ocurrió un error al procesar la solicitud con el asistente de IA.'
+): string => {
+    const anyErr = err as {
+        message?: unknown;
+        response?: {
+            data?: unknown;
+        };
+    } | null;
+
+    const data = anyErr?.response?.data;
+    if (typeof data === 'string' && data.trim()) {
+        return data.trim();
+    }
+
+    if (data && typeof data === 'object') {
+        const record = data as Record<string, unknown>;
+        if (typeof record.message === 'string' && record.message.trim()) {
+            return record.message.trim();
+        }
+        if (typeof record.detail === 'string' && record.detail.trim()) {
+            return record.detail.trim();
+        }
+        if (record.errors && typeof record.errors === 'object') {
+            const entries = Object.entries(record.errors as Record<string, unknown>);
+            for (const [field, messages] of entries) {
+                if (Array.isArray(messages) && messages.length > 0 && typeof messages[0] === 'string') {
+                    return `${field}: ${messages[0]}`;
+                }
+                if (typeof messages === 'string' && messages.trim()) {
+                    return `${field}: ${messages.trim()}`;
+                }
+            }
+        }
+        if (typeof record.title === 'string' && record.title.trim()) {
+            return record.title.trim();
+        }
+    }
+
+    if (typeof anyErr?.message === 'string' && anyErr.message.trim()) {
+        return anyErr.message.trim();
+    }
+
+    return fallback;
+};
+
 export const generatePeaAiDraft = async (
     peaUuid: string,
     req: GeneratePeaDraftRequest = {}
 ): Promise<PeaStructuredDraft> => {
+    const safeNum = (val: unknown, fallback: number): number => {
+        if (typeof val === 'number' && Number.isFinite(val)) return val;
+        if (typeof val === 'string') {
+            const parsed = Number(val.replace(',', '.').trim());
+            if (Number.isFinite(parsed)) return parsed;
+        }
+        return fallback;
+    };
+
     const res = await api.post(`/pea/uuid/${peaUuid}/ai/generar`, {
         target_section: req.targetSection ?? (req.targetSections && req.targetSections.length > 0 ? req.targetSections.join(',') : 'all'),
         target_sections: req.targetSections,
@@ -575,24 +631,25 @@ export const generatePeaAiDraft = async (
         current_total_horas: req.currentTotalHoras,
         current_objetivo: req.currentObjetivo,
         current_prerrequisitos: req.currentPrerrequisitos?.map(p => ({
-            asignatura: p.asignatura,
+            asignatura: p.asignatura ?? '',
             observacion: p.observacion ?? ''
         })),
         current_rda_carrera: req.currentRdaCarrera,
         current_resultados_aprendizaje: req.currentResultadosAprendizaje,
         current_metodologia_ensenanza: req.currentMetodologiaEnsenanza,
         current_recursos_didacticos: req.currentRecursosDidacticos,
-        current_actividades_practicas: req.currentActividadesPracticas?.map(p => ({
-            unidad: p.unidad ?? 1,
-            nombre: p.nombre,
-            horas: p.horas ?? 2,
+        current_actividades_practicas: req.currentActividadesPracticas?.map((p, idx) => ({
+            unidad: Math.max(1, Math.trunc(safeNum(p.unidad, idx + 1))),
+            nombre: p.nombre ?? '',
+            horas: Math.max(0, safeNum(p.horas, 2)),
             escenario: p.escenario ?? '',
-            producto: p.producto ?? ''
+            producto: p.producto ?? '',
+            caracterizacion: p.caracterizacion ?? ''
         })),
         current_evaluaciones: req.currentEvaluaciones?.map(e => ({
-            nota: e.nota,
-            tipo: e.tipo,
-            calificacion: e.calificacion
+            nota: e.nota ?? '',
+            tipo: e.tipo ?? '',
+            calificacion: Math.max(0, safeNum(e.calificacion, 10))
         })),
         current_bibliografias: req.currentBibliografias?.map(b => ({
             tipo_bibliografia: b.tipoBibliografia ?? b.tipo_bibliografia ?? 'Basica',
@@ -607,13 +664,13 @@ export const generatePeaAiDraft = async (
             role: h.role,
             content: h.content
         })),
-        current_unidades: req.currentUnidades?.map(u => ({
-            num: u.num,
-            titulo: u.titulo,
-            contenidos: u.contenidos,
-            horas_cd: u.horasCD,
-            horas_ape: u.horasAPE,
-            horas_ta: u.horasTA
+        current_unidades: req.currentUnidades?.map((u, idx) => ({
+            num: Math.max(1, Math.trunc(safeNum(u.num, idx + 1))),
+            titulo: u.titulo ?? '',
+            contenidos: u.contenidos ?? '',
+            horas_cd: Math.max(0, safeNum(u.horasCD, 0)),
+            horas_ape: Math.max(0, safeNum(u.horasAPE, 0)),
+            horas_ta: Math.max(0, safeNum(u.horasTA, 0))
         }))
     });
     return normalizeStructuredDraft(res.data);
@@ -771,7 +828,7 @@ export const analyzePeaForReview = async (
         current_actividades_practicas: req.currentActividadesPracticas?.map(p => ({
             unidad: p.unidad ?? 1,
             nombre: p.nombre,
-            horas: p.horas ?? 2,
+            horas: p.horas ?? 0,
             escenario: p.escenario ?? '',
             producto: p.producto ?? '',
             caracterizacion: p.caracterizacion ?? ''

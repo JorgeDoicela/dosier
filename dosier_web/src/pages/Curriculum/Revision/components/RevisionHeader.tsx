@@ -194,11 +194,6 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
                             className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] shadow-xs transition-all cursor-pointer inline-flex items-center gap-1.5"
                         >
                             <span>{getActionButtonLabel()}</span>
-                            {pendingObservationsCount > 0 && (
-                                <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-white/25 text-white font-semibold leading-none">
-                                    {pendingObservationsCount}
-                                </span>
-                            )}
                         </button>
                     ) : statusKey === 'Observado' ? (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">

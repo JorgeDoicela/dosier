@@ -7,9 +7,13 @@ import type { EmailHistorial } from '../emailEngineTypes';
 
 export interface EmailHistorySectionProps {
     historyHook: UseEmailHistoryResult;
+    canViewAllHistory?: boolean;
 }
 
-export const EmailHistorySection: React.FC<EmailHistorySectionProps> = ({ historyHook }) => {
+export const EmailHistorySection: React.FC<EmailHistorySectionProps> = ({
+    historyHook,
+    canViewAllHistory = true
+}) => {
     const {
         history,
         historyLimit,
@@ -31,7 +35,7 @@ export const EmailHistorySection: React.FC<EmailHistorySectionProps> = ({ histor
         <div className="space-y-6">
             <div className="flex flex-wrap justify-between items-center gap-3">
                 <h3 className="text-sm font-bold text-text-main uppercase tracking-widest flex items-center gap-2">
-                    Registro de auditoría LOPDP
+                    {canViewAllHistory ? 'Registro de auditoría LOPDP' : 'Historial de mis envíos'}
                 </h3>
                 <div className="flex items-center gap-2">
                     <div className="flex items-center gap-2 border border-border-thin rounded-lg px-3 py-1.5 bg-surface/30">

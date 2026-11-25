@@ -449,26 +449,36 @@ export const useRevisionTecnicaData = ({
     };
 
     // ── DEVOLUCIÓN AL DOCENTE CON OBSERVACIONES (ESTADO: OBSERVADO) ──
-    const handleDevolver = async (generalFeedback: string, fechaLimite?: string): Promise<boolean> => {
+    const handleDevolver = async (fechaLimite?: string): Promise<boolean> => {
         if (!project || !projectUuid) return false;
+
+        const pendingSectionEntries = Object.entries(comments)
+            .map(([sec, list]) => ({
+                sec,
+                pending: (list || []).filter((c) => c.status === 'Pendiente')
+            }))
+            .filter(({ pending }) => pending.length > 0);
+
+        if (pendingSectionEntries.length === 0) {
+            addToast(
+                'Observaciones requeridas',
+                'Registre al menos una observación por sección antes de devolver el PEA.',
+                'warning'
+            );
+            return false;
+        }
 
         setSubmitting(true);
         try {
-            const sectionIssues = Object.entries(comments)
-                .filter(([_, list]) => list && list.length > 0)
-                .map(([sec, list]) => {
+            const sectionIssues = pendingSectionEntries
+                .map(({ sec, pending }) => {
                     const label = FIELD_LABELS[sec] || sec;
-                    return `• ${label}: ${list.map(c => c.text).join('; ')}`;
+                    return `• ${label}: ${pending.map((c) => c.text).join('; ')}`;
                 })
                 .join('\n');
 
-            const cleanFeedback = generalFeedback.trim();
             const plazoTexto = fechaLimite ? ` con plazo hasta ${fechaLimite}` : '';
-            const motivoFull = cleanFeedback
-                ? `${cleanFeedback}${plazoTexto}${sectionIssues ? `\n\nDetalle por Sección:\n${sectionIssues}` : ''}`
-                : sectionIssues
-                    ? `Correcciones requeridas${plazoTexto}:\n${sectionIssues}`
-                    : `Devuelto para revisión y subsanación${plazoTexto}.`;
+            const motivoFull = `Correcciones requeridas${plazoTexto}:\n${sectionIssues}`;
 
             await cambiarEstadoPea(projectUuid, 'Observado', undefined, motivoFull);
 

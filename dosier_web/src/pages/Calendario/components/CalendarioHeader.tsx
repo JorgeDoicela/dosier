@@ -161,15 +161,15 @@ export const CalendarioHeader: React.FC<CalendarioHeaderProps> = ({
                         </div>
 
                         {/* Selector Sub-vistas Plano */}
-                        <div className="inline-flex items-center gap-1 border border-slate-200 dark:border-zinc-800 rounded-lg p-1 bg-white dark:bg-zinc-900 shadow-2xs">
+                        <div className="inline-flex items-center gap-1.5">
                             {(['agenda', 'month', 'week', 'day'] as const).map(v => (
                                 <button
                                     key={v}
                                     type="button"
-                                    className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all cursor-pointer ${
-                                        view === v 
-                                            ? 'bg-[#0070f3] text-white font-semibold shadow-xs' 
-                                            : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                                    className={`px-2.5 py-1.5 text-xs rounded-lg border transition-colors cursor-pointer ${
+                                        view === v
+                                            ? 'bg-[#0070f3] text-white border-[#0070f3] font-semibold'
+                                            : 'bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-slate-50 dark:hover:bg-zinc-800 font-medium'
                                     }`}
                                     onClick={() => setView(v)}
                                 >

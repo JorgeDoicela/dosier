@@ -122,6 +122,7 @@ export const PlanificacionPopover: React.FC<PlanificacionPopoverProps> = ({
                 <div className="kanban-popover-custom space-y-1.5">
                     <label className="kanban-popover-label">O elige una fecha:</label>
                     <GeistDatePicker
+                        inputReadOnly
                         placeholder="Seleccionar fecha..."
                         onChange={(newVal) => {
                             const iso = toISODate(newVal);

@@ -4,7 +4,7 @@ import { buildWorkspacePath } from '../../../../core/documents/templateUrl';
 import { useConfirm } from '../../../../api/ConfirmContext';
 import type { SelectedPerson } from '../components/RecipientPicker';
 import type {
-    EmailTemplate, Proyecto, Convocatoria, AttachmentFile
+    EmailTemplate, PeaContextItem, PeriodoAcademicoItem, AttachmentFile
 } from '../emailEngineTypes';
 import {
     AUTO_TOKENS,
@@ -26,8 +26,8 @@ import {
 
 export interface UseEmailComposerProps {
     templates: EmailTemplate[];
-    projects: Proyecto[];
-    convocatorias: Convocatoria[];
+    peas: PeaContextItem[];
+    periodos: PeriodoAcademicoItem[];
 }
 
 export interface UseEmailComposerResult {
@@ -45,6 +45,14 @@ export interface UseEmailComposerResult {
     setSelectedRole: (role: string) => void;
     selectedCarreraId: string;
     setSelectedCarreraId: (id: string) => void;
+    selectedCarreraIds: number[];
+    setSelectedCarreraIds: React.Dispatch<React.SetStateAction<number[]>>;
+    selectedModalidadIds: number[];
+    setSelectedModalidadIds: React.Dispatch<React.SetStateAction<number[]>>;
+    selectedPeaEstado: string;
+    setSelectedPeaEstado: (estado: string) => void;
+    selectedPeriodoFiltro: string;
+    setSelectedPeriodoFiltro: (periodoId: string) => void;
     contextType: string;
     setContextType: (type: string) => void;
     selectedEntityUuid: string;
@@ -81,8 +89,8 @@ export interface UseEmailComposerResult {
 
 export const useEmailComposer = ({
     templates,
-    projects,
-    convocatorias
+    peas,
+    periodos
 }: UseEmailComposerProps): UseEmailComposerResult => {
     const hasAutoSelectedRef = useRef(false);
     const confirm = useConfirm();
@@ -94,6 +102,10 @@ export const useEmailComposer = ({
     const [selectedPeople, setSelectedPeople] = useState<SelectedPerson[]>([]);
     const [selectedRole, setSelectedRole] = useState<string>('');
     const [selectedCarreraId, setSelectedCarreraId] = useState<string>('');
+    const [selectedCarreraIds, setSelectedCarreraIds] = useState<number[]>([]);
+    const [selectedModalidadIds, setSelectedModalidadIds] = useState<number[]>([]);
+    const [selectedPeaEstado, setSelectedPeaEstado] = useState<string>('');
+    const [selectedPeriodoFiltro, setSelectedPeriodoFiltro] = useState<string>('');
     const [contextType, setContextType] = useState<string>('');
     const [selectedEntityUuid, setSelectedEntityUuid] = useState<string>('');
     const [systemAttachments, setSystemAttachments] = useState<Record<string, boolean>>({
@@ -208,8 +220,11 @@ export const useEmailComposer = ({
         return detectedTokens.filter(tok => AUTO_TOKENS.has(tok));
     }, [detectedTokens]);
 
-    // Vaciar tokens de contexto cuando no hay instancia vinculada
+    // Vaciar tokens de contexto cuando no hay instancia vinculada y desactivar PDF PEA si el contexto no es PEA
     useEffect(() => {
+        if (contextType !== 'PEA' || !selectedEntityUuid) {
+            setSystemAttachments(prev => (prev['PEA_OFICIAL'] ? { ...prev, 'PEA_OFICIAL': false } : prev));
+        }
         if (!contextType) return;
         if (selectedEntityUuid) return;
         setTokenValues(prev => clearContextTokenValues(prev, contextType));
@@ -219,37 +234,40 @@ export const useEmailComposer = ({
     useEffect(() => {
         if (!contextType || !selectedEntityUuid) return;
 
-        if (contextType === 'Proyecto') {
-            const p = projects.find(proj => proj.uuid === selectedEntityUuid);
-            if (p) {
+        if (contextType === 'PEA') {
+            const pea = peas.find(item => item.uuid === selectedEntityUuid);
+            if (pea) {
+                const matchedPeriodo = periodos.find(pr => pr.idPeriodo === pea.periodo);
                 setTokenValues(prev => ({
                     ...prev,
-                    '[[proyecto_titulo]]': p.titulo || '',
-                    '[[proyecto_codigo]]': p.codigo_institucional || 'N/A',
-                    '[[proyecto_descripcion]]': p.descripcion || 'Sin descripción',
-                    '[[proyecto_estado]]': p.estado || 'En Ejecución',
-                    '[[linea_investigacion]]': p.linea_investigacion || 'General',
-                    '[[proyecto_workspace_url]]': `${window.location.origin}${buildWorkspacePath('PEA_OFICIAL', p.uuid)}`
+                    '[[pea_asignatura]]': pea.nombreAsignatura || '',
+                    '[[pea_codigo]]': pea.codigoAsignatura || 'Sin código',
+                    '[[pea_carrera]]': pea.carrera || 'Carrera Institucional',
+                    '[[pea_periodo]]': matchedPeriodo?.detalle || pea.periodo || '',
+                    '[[pea_nivel]]': pea.semestreNivel || 'No especificado',
+                    '[[pea_modalidad]]': pea.modalidad || 'Presencial',
+                    '[[pea_estado]]': pea.estado || 'Borrador',
+                    '[[pea_docente]]': pea.docenteElaborador || 'Docente Elaborador',
+                    '[[pea_horas_totales]]': pea.totalHoras != null ? String(pea.totalHoras) : '',
+                    '[[pea_creditos]]': pea.creditos != null ? String(pea.creditos) : '',
+                    '[[pea_workspace_url]]': `${window.location.origin}${buildWorkspacePath('PEA_OFICIAL', pea.uuid)}`,
+                    '[[pea_revision_url]]': `${window.location.origin}/documentacion/revision-tecnica/${pea.uuid}`
                 }));
             }
-        } else if (contextType === 'Convocatoria') {
-            const c = convocatorias.find(conv => conv.uuid === selectedEntityUuid);
-            if (c) {
+        } else if (contextType === 'Periodo') {
+            const per = periodos.find(item => item.idPeriodo === selectedEntityUuid);
+            if (per) {
                 setTokenValues(prev => ({
                     ...prev,
-                    '[[convocatoria_titulo]]': c.titulo || '',
-                    '[[convocatoria_codigo]]': c.codigoConvocatoria || 'N/A',
-                    '[[convocatoria_anio]]': (c.anio || new Date().getFullYear()).toString(),
-                    '[[convocatoria_apertura]]': c.fechaApertura ? c.fechaApertura.split('T')[0] : '',
-                    '[[convocatoria_cierre]]': c.fechaCierre ? c.fechaCierre.split('T')[0] : '',
-                    '[[convocatoria_presupuesto]]': c.presupuestoTotal ? `$${c.presupuestoTotal.toLocaleString()}` : '$0.00',
-                    '[[convocatoria_monto_maximo]]': (c.montoMaximoProyecto ?? c.presupuestoTotal) ? `$${(c.montoMaximoProyecto ?? c.presupuestoTotal)?.toLocaleString()}` : '$0.00',
-                    '[[convocatoria_bases_url]]': c.urlBases || '',
-                    '[[convocatoria_estado]]': c.estado || 'Borrador'
+                    '[[periodo_codigo]]': per.idPeriodo,
+                    '[[periodo_nombre]]': per.detalle || per.idPeriodo,
+                    '[[periodo_fecha_inicio]]': per.fechaInicial ? per.fechaInicial.split('T')[0] : 'Por definir',
+                    '[[periodo_fecha_fin]]': per.fechaFinal ? per.fechaFinal.split('T')[0] : 'Por definir',
+                    '[[periodo_estado]]': per.activo && !per.cerrado ? 'Activo' : 'Cerrado / Inactivo'
                 }));
             }
         }
-    }, [contextType, selectedEntityUuid, projects, convocatorias]);
+    }, [contextType, selectedEntityUuid, peas, periodos]);
 
     const handleTokenValChange = (token: string, value: string) => {
         setTokenValues(prev => ({
@@ -356,8 +374,16 @@ export const useEmailComposer = ({
             return;
         }
 
-        if (emailsList.length === 0 && userIdsList.length === 0 && !selectedRole && !selectedCarreraId) {
-            setSendResult({ success: false, message: 'Debe agregar al menos un destinatario o seleccionar un filtro de rol/carrera.' });
+        const hasGroupSelection = Boolean(
+            selectedRole ||
+            selectedCarreraId ||
+            selectedCarreraIds.length > 0 ||
+            selectedModalidadIds.length > 0 ||
+            selectedPeaEstado
+        );
+
+        if (emailsList.length === 0 && userIdsList.length === 0 && !hasGroupSelection) {
+            setSendResult({ success: false, message: 'Debe agregar al menos una persona o configurar un grupo (modalidad, carrera, rol o estado PEA).' });
             setSending(false);
             return;
         }
@@ -377,9 +403,9 @@ export const useEmailComposer = ({
             return;
         }
 
-        const isMassive = Boolean(selectedRole || selectedCarreraId);
+        const isMassive = hasGroupSelection;
         if (isMassive || totalSpecific > 5) {
-            const destText = isMassive 
+            const destText = isMassive
                 ? "un envío de difusión masiva según los filtros seleccionados"
                 : `un envío a ${totalSpecific} destinatarios específicos`;
 
@@ -420,6 +446,10 @@ export const useEmailComposer = ({
             destinatariosUserIds: userIdsList,
             targetRole: selectedRole || null,
             targetCarreraId: selectedCarreraId ? parseInt(selectedCarreraId, 10) : null,
+            targetCarreraIds: selectedCarreraIds,
+            targetModalidadIds: selectedModalidadIds,
+            targetPeaEstado: selectedPeaEstado || null,
+            targetPeriodoId: selectedPeriodoFiltro || null,
             customSubject: finalSubject,
             customBody: finalBody,
             templateData: buildTemplateDataForSend(tokenValues),
@@ -457,6 +487,10 @@ export const useEmailComposer = ({
             });
             setSelectedRole('');
             setSelectedCarreraId('');
+            setSelectedCarreraIds([]);
+            setSelectedModalidadIds([]);
+            setSelectedPeaEstado('');
+            setSelectedPeriodoFiltro('');
             setTokenValues({});
             setAdditionalMessage('');
             setSignatureFile(null);
@@ -492,6 +526,14 @@ export const useEmailComposer = ({
         setSelectedRole,
         selectedCarreraId,
         setSelectedCarreraId,
+        selectedCarreraIds,
+        setSelectedCarreraIds,
+        selectedModalidadIds,
+        setSelectedModalidadIds,
+        selectedPeaEstado,
+        setSelectedPeaEstado,
+        selectedPeriodoFiltro,
+        setSelectedPeriodoFiltro,
         contextType,
         setContextType,
         selectedEntityUuid,

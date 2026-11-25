@@ -53,7 +53,7 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({ template
                                     type="text"
                                     disabled={editingTemplate !== null}
                                     className="input-vercel text-xs font-mono uppercase"
-                                    placeholder="EJ: ALERTA_CRONOGRAMA"
+                                    placeholder="EJ: PEA_RECORDATORIO_ENTREGA"
                                     value={templateForm.codigo}
                                     onChange={e => setTemplateForm(prev => ({ ...prev, codigo: e.target.value }))}
                                 />
@@ -66,7 +66,7 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({ template
                                 <input
                                     type="text"
                                     className="input-vercel text-xs font-sans"
-                                    placeholder="Ej: Notificación de Hito Vencido"
+                                    placeholder="Ej: Recordatorio de Elaboración de PEA"
                                     value={templateForm.nombre}
                                     onChange={e => setTemplateForm(prev => ({ ...prev, nombre: e.target.value }))}
                                 />
@@ -79,7 +79,7 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({ template
                             <input
                                 type="text"
                                 className="input-vercel text-xs font-sans"
-                                placeholder="Ej: Se envía automáticamente a los docentes cuando se aproxima la fecha límite de un informe de avance."
+                                placeholder="Ej: Se envía a los docentes cuando se aproxima la fecha límite de entrega del PEA."
                                 value={templateForm.descripcion}
                                 onChange={e => setTemplateForm(prev => ({ ...prev, descripcion: e.target.value }))}
                             />
@@ -91,11 +91,11 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({ template
                             <input
                                 type="text"
                                 className="input-vercel text-xs font-semibold"
-                                placeholder="Ej: Alerta: Entrega pendiente en el proyecto [[proyecto_titulo]]"
+                                placeholder="Ej: Recordatorio: Entrega de PEA — [[pea_asignatura]] ([[pea_periodo]])"
                                 value={templateForm.asunto}
                                 onChange={e => setTemplateForm(prev => ({ ...prev, asunto: e.target.value }))}
                             />
-                            <span className="text-[8px] text-text-dim block">Puede usar tokens de inyección como [[proyecto_titulo]]</span>
+                            <span className="text-[8px] text-text-dim block">Puede usar tokens dinámicos como [[pea_asignatura]], [[pea_carrera]] o [[periodo_nombre]]</span>
                         </div>
 
                         {/* Cuerpo Html — solo administradores técnicos */}
@@ -131,9 +131,10 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({ template
                             )}
                             <div className="space-y-2 mt-2 select-none">
                                 {[
-                                    { label: 'Globales', tokens: ['[[destinatario_nombre]]', '[[destinatario_email]]', '[[anio_actual]]', '[[institucion_nombre]]', '[[sistema_url]]'] },
-                                    { label: 'Proyecto', tokens: ['[[proyecto_titulo]]', '[[proyecto_codigo]]', '[[proyecto_descripcion]]', '[[proyecto_estado]]', '[[proyecto_director]]', '[[proyecto_director_email]]', '[[linea_investigacion]]', '[[proyecto_sublinea]]', '[[proyecto_workspace_url]]'] },
-                                    { label: 'Convocatoria', tokens: ['[[convocatoria_titulo]]', '[[convocatoria_codigo]]', '[[convocatoria_anio]]', '[[convocatoria_apertura]]', '[[convocatoria_cierre]]', '[[convocatoria_presupuesto]]', '[[convocatoria_monto_maximo]]', '[[convocatoria_bases_url]]', '[[convocatoria_estado]]'] }
+                                    { label: 'Globales', tokens: ['[[destinatario_nombre]]', '[[destinatario_email]]', '[[anio_actual]]', '[[institucion_nombre]]', '[[sistema_url]]', '[[mensaje_adicional]]'] },
+                                    { label: 'PEA Curricular', tokens: ['[[pea_asignatura]]', '[[pea_codigo]]', '[[pea_carrera]]', '[[pea_periodo]]', '[[pea_nivel]]', '[[pea_modalidad]]', '[[pea_estado]]', '[[pea_docente]]', '[[pea_horas_totales]]', '[[pea_creditos]]', '[[pea_workspace_url]]', '[[pea_revision_url]]'] },
+                                    { label: 'Período Académico', tokens: ['[[periodo_codigo]]', '[[periodo_nombre]]', '[[periodo_fecha_inicio]]', '[[periodo_fecha_fin]]', '[[periodo_estado]]'] },
+                                    { label: 'Calendario y Workflow', tokens: ['[[fecha_limite]]', '[[observacion_resumen]]', '[[titulo_evento]]', '[[fecha_evento]]', '[[dias_restantes]]', '[[url_accion]]'] }
                                 ].map(group => (
                                     <div key={group.label}>
                                         <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider block mb-1">{group.label}:</span>

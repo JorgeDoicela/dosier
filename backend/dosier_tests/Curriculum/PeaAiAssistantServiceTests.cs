@@ -945,5 +945,93 @@ Nota adicional para el docente: verifica el formato {oficial}.";
 
             Assert.Contains("no permitida", ex.Message);
         }
+
+        [Fact]
+        public async Task AnalyzeForReviewAsync_Istpet3x10EvaluationAndHtmlBibliography_NoFalsePositives()
+        {
+            using var ctx = CreateInMemoryContext(nameof(AnalyzeForReviewAsync_Istpet3x10EvaluationAndHtmlBibliography_NoFalsePositives));
+            var (peaUuid, _) = await SeedPeaContextAsync(ctx, withSigafiPrereqs: false);
+
+            var handler = new StubHttpMessageHandler((_, _, _) => Task.FromResult(OpenAiJsonResponse(new
+            {
+                analysis_summary = "Revisión con posibles falsos positivos de evaluación 3x10 e idioma de bibliografía.",
+                checks = new[]
+                {
+                    new { criterion = "Evaluación del Aprendizaje (Sección 9)", status = "observado", detail = "La suma da 30 puntos." },
+                    new { criterion = "Bibliografía (Sección 10)", status = "alerta", detail = "Contiene libros en inglés." }
+                },
+                suggested_observations = new[]
+                {
+                    new { section_key = "Evaluaciones", section_label = "9. Evaluación", severity = "alta", observation_text = "La suma da 30 puntos, ajustar escala." },
+                    new { section_key = "Bibliografia", section_label = "10. Bibliografía", severity = "media", observation_text = "Cambiar libros en inglés a español." }
+                }
+            })));
+
+            var service = CreateService(ctx, handler);
+            var analysis = await service.AnalyzeForReviewAsync(peaUuid, 1, new AnalyzePeaReviewRequestDto
+            {
+                Provider = "openai",
+                ApiKeyOverride = "sk-test-key",
+                CurrentCreditos = 3,
+                CurrentTotalHoras = 144m,
+                CurrentHorasCD = 48m,
+                CurrentHorasAPE = 48m,
+                CurrentHorasTA = 48m,
+                CurrentEvaluaciones = new List<PeaDraftEvaluacionDto>
+                {
+                    new() { Nota = "NOTA PARCIAL 1", Tipo = "FRECUENTES", Calificacion = 10m },
+                    new() { Nota = "NOTA PARCIAL 2", Tipo = "PARCIAL", Calificacion = 10m },
+                    new() { Nota = "EVALUACIÓN", Tipo = "EXAMEN FINAL", Calificacion = 10m }
+                },
+                CurrentBibliografiaBasica = "<p>Silberschatz, A. (2020). Database System Concepts. McGraw-Hill.</p><p>Elmasri, R. (2021). Fundamentals of Database Systems. Pearson.</p><p>Date, C. (2019). An Introduction to Database Systems. Addison-Wesley.</p>",
+                CurrentBibliografiaConsulta = "<p>Kleppmann, M. (2022). Designing Data-Intensive Applications. O'Reilly.</p><p>Petrov, A. (2020). Database Internals. O'Reilly.</p><p>Connolly, T. (2021). Database Systems. Pearson.</p>"
+            });
+
+            Assert.DoesNotContain(analysis.SuggestedObservations, o => o.SectionKey == "Evaluaciones");
+            Assert.DoesNotContain(analysis.SuggestedObservations, o => o.SectionKey == "Bibliografia");
+        }
+
+        [Fact]
+        public async Task AnalyzeForReviewAsync_FocusModeHoursAuditAndRecursosSectionMapping_WorksCorrectly()
+        {
+            using var ctx = CreateInMemoryContext(nameof(AnalyzeForReviewAsync_FocusModeHoursAuditAndRecursosSectionMapping_WorksCorrectly));
+            var (peaUuid, _) = await SeedPeaContextAsync(ctx, withSigafiPrereqs: false);
+
+            var handler = new StubHttpMessageHandler((_, _, _) => Task.FromResult(OpenAiJsonResponse(new
+            {
+                analysis_summary = "Auditoría de horas completada.",
+                checks = new[]
+                {
+                    new { criterion = "Alineación con el perfil de egreso de la carrera", status = "cumple", detail = "Todo alineado." }
+                },
+                suggested_observations = new[]
+                {
+                    new { section_key = "RecursosDidacticos", section_label = "", severity = "media", observation_text = "Detallar recursos digitales para modalidad en línea." }
+                }
+            })));
+
+            var service = CreateService(ctx, handler);
+            var analysis = await service.AnalyzeForReviewAsync(peaUuid, 1, new AnalyzePeaReviewRequestDto
+            {
+                FocusMode = "hours_audit",
+                Provider = "openai",
+                ApiKeyOverride = "sk-test-key",
+                CurrentCreditos = 3,
+                CurrentTotalHoras = 144m,
+                CurrentHorasCD = 48m,
+                CurrentHorasAPE = 48m,
+                CurrentHorasTA = 48m
+            });
+
+            Assert.Single(handler.CapturedBodies);
+            Assert.Contains("AUDITORÍA DE HORAS, CRÉDITOS Y PRÁCTICAS", System.Text.RegularExpressions.Regex.Unescape(handler.CapturedBodies[0]));
+
+            // RecursosDidacticos debe mapear a MetodologiaEnsenanza (Sección 7), no a ActividadesPracticas (Sección 8)
+            Assert.Contains(analysis.SuggestedObservations, o => o.SectionKey == "MetodologiaEnsenanza");
+
+            // Como Objetivo, RDA Carrera y RDA Asignatura están vacíos, no puede quedar en "cumple"
+            var alignCheck = analysis.Checks.First(c => c.Criterion.Contains("perfil de egreso", StringComparison.OrdinalIgnoreCase));
+            Assert.Equal("observado", alignCheck.Status);
+        }
     }
 }
