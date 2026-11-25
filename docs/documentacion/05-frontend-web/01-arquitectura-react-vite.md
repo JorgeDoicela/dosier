@@ -83,7 +83,6 @@ dosier_web/src/
 │   ├── Lopdp/             # Gestión de consentimientos LOPDP (LopdpConsentPage, LopdpAdminPage)
 │   ├── Notificaciones/    # Bandeja unificada de notificaciones institucionales
 │   ├── Public/            # Verificación forense pública de autenticidad documental vía código QR
-│   ├── RecycleBin/        # Papelera de reciclaje y recuperación de registros eliminados lógicamente
 │   ├── Settings/          # Preferencias del usuario y parámetros normativos institucionales
 │   └── Solicitudes/       # Bandeja de trámites y solicitudes docentes
 ├── services/              # Capa de abstracción REST (Service Layer) con fachadas tipadas hacia la API
@@ -115,7 +114,7 @@ flowchart TD
     GuardDispatcher -->|"RoleRoute\n(Supervisión)"| SupervRoutes["/documentacion\n/documentacion/monitoreo/:projectUuid\n(Admin, Coordinadores, Vicerrector)"]
     GuardDispatcher -->|"RoleRoute\n(Salas Curriculares)"| SalaRoutes["/salas-curriculares\n/salas-curriculares/:idCarrera\n(Docente, Coord. Carrera, Admin)"]
     GuardDispatcher -->|"AdminRoute"| AdminRoutes["/auditoria\n/lopdp\n/admin/documentos\n/admin/incidencias"]
-    GuardDispatcher -->|"Rutas Generales Autenticadas"| GenRoutes["/dashboard, /calendario, /notificaciones\n/configuracion, /plantillas, /solicitudes\n/incidencias, /papelera"]
+    GuardDispatcher -->|"Rutas Generales Autenticadas"| GenRoutes["/dashboard, /calendario, /notificaciones\n/configuracion, /plantillas, /solicitudes\n/incidencias"]
 ```
 
 ### 4.1. Catálogo de Guardias de Seguridad
@@ -140,7 +139,6 @@ flowchart TD
 | `/consentimiento-lopdp` | `ProtectedRoute` | `LopdpConsentPage` | Aceptación obligatoria del consentimiento informado LOPDP. |
 | `/dashboard` | `ProtectedRoute` | `Dashboard` | Tablero principal con métricas, accesos y acciones según rol. |
 | `/calendario` | `ProtectedRoute` | `CalendarioPage` | Cronograma de actividades académicas y plazos del PEA. |
-| `/papelera` | `ProtectedRoute` | `RecycleBinPage` | Visualización y restauración de registros en borrado lógico. |
 | `/configuracion` | `ProtectedRoute` | `SettingsPage` | Ajustes de cuenta, perfil, firmas y parámetros normativos. |
 | `/settings` | `ProtectedRoute` | Redirección | Redirige de forma permanente a `/configuracion`. |
 | `/parametros-normativos` | `ProtectedRoute` | Redirección | Redirige a `/configuracion?tab=parametros`. |

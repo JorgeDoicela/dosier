@@ -65,7 +65,6 @@ flowchart TD
             IFBS["IFeedbackService"]
             ICAL["ICalendarioService"]
             ICAT["ICatalogsService"]
-            IREC["IRecycleBinService"]
             IREP["IReportsService"]
         end
     end
@@ -226,4 +225,4 @@ Implementa el marco jurídico de la Ley de Comercio Electrónico y Firmas Digita
 * **`IEmailEngineService`:** Motor de correos transaccionales con motor de plantillas HTML, soporte para adjuntos y registro de entrega en bitácora histórica.
 * **`IFeedbackService`:** Mesa de ayuda y seguimiento de incidencias técnicas del sistema (creación, seguimiento y mensajes entre usuario y administradores).
 * **`ICalendarioService`:** Administración del cronograma institucional, tablero Kanban de tareas curriculares, notas rápidas (Inbox) y despachador de alertas preventivas por correo electrónico.
-* **`ICatalogsService`, `IRecycleBinService`, `IReportsService`:** Gestión desacoplada de catálogos generales, papelera de reciclaje con borrado suave (*soft-delete*) y consolidación de reportes analíticos para acreditación CACES.
+* **`ICatalogsService`, `IReportsService`:** Gestión desacoplada de catálogos generales y consolidación de reportes analíticos para acreditación CACES.

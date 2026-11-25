@@ -57,6 +57,7 @@ export const DOCUMENTACION_CONFIG: HelpConfig = {
         'Al devolver un PEA con observaciones, detalla la sección específica para que el docente pueda subsanar con precisión.',
         'Los PEAs aprobados por Vicerrectorado quedan bloqueados contra edición para garantizar su inmutabilidad.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone className={`shrink-0 ${highlightTopClass}`}>
@@ -102,6 +103,7 @@ export const MIS_PROYECTOS_CONFIG: HelpConfig = {
         'Si tu PEA tiene observaciones, el botón cambia a Corregir PEA para que atiendas los comentarios de coordinación.',
         'Puedes abrir el monitoreo de cualquier asignatura para revisar su historial de estados antes de enviarla a revisión.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone className={`shrink-0 ${highlightTopClass}`}>
@@ -146,6 +148,7 @@ export const WORKSPACE_CONFIG: HelpConfig = {
         'Cuando el PEA avanza a En Revisión o Aprobado, las secciones pasan automáticamente a modo solo lectura para proteger la integridad del dictamen.',
         'Si trabajas junto a otro docente de la misma materia, verás los cambios reflejados al instante sin sobrescribir su trabajo.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
@@ -183,6 +186,7 @@ export const MONITOREO_CONFIG: HelpConfig = {
     tips: [
         'Desde esta pantalla puedes comprobar rápidamente qué autoridad tiene pendiente la revisión o firma del PEA.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
@@ -224,6 +228,7 @@ export const REVISION_TECNICA_CONFIG: HelpConfig = {
         'Verifica que la distribución de horas y la bibliografía correspondan al formato vigente antes de emitir tu aval.',
         'Al aprobar en la instancia final, el sistema genera el PDF legalizado con código QR de verificación.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
@@ -261,6 +266,7 @@ export const SALAS_CURRICULARES_CONFIG: HelpConfig = {
     tips: [
         'Las salas curriculares reflejan automáticamente las asignaturas y docentes vinculados a la carrera en SIGAFI.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>

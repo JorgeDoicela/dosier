@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import api from '../../api/axios_config';
-import { recycleBinService } from '../recycleBinService';
 import { notificacionesService } from '../notificacionesService';
 import { verificationService } from '../verificationService';
 import { lopdpService } from '../lopdpService';
@@ -20,29 +19,6 @@ vi.mock('../../api/axios_config', () => ({
 describe('Sprint 2 Service Layer Tests', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-    });
-
-    describe('recycleBinService', () => {
-        it('getDeletedProjects debe consultar /recyclebin/projects', async () => {
-            (api.get as any).mockResolvedValueOnce({ data: [{ uuid: 'item-1', titulo: 'PEA Eliminado' }] });
-            const result = await recycleBinService.getDeletedProjects();
-            expect(api.get).toHaveBeenCalledWith('/recyclebin/projects');
-            expect(result).toHaveLength(1);
-        });
-
-        it('restoreProject debe enviar POST a /recyclebin/restore/project/:uuid', async () => {
-            (api.post as any).mockResolvedValueOnce({ data: { message: 'Restaurado' } });
-            const result = await recycleBinService.restoreProject('proj-123');
-            expect(api.post).toHaveBeenCalledWith('/recyclebin/restore/project/proj-123');
-            expect(result.message).toBe('Restaurado');
-        });
-
-        it('purgeProject debe enviar DELETE a /recyclebin/purge/project/:uuid', async () => {
-            (api.delete as any).mockResolvedValueOnce({ data: { message: 'Purgado' } });
-            const result = await recycleBinService.purgeProject('proj-123');
-            expect(api.delete).toHaveBeenCalledWith('/recyclebin/purge/project/proj-123');
-            expect(result.message).toBe('Purgado');
-        });
     });
 
     describe('notificacionesService', () => {

@@ -83,9 +83,7 @@ Toda la comunicación de red se canaliza a través de las siguientes fachadas ti
     * Consulta de eventos normativos institucionales y exportación a formato iCalendar (`.ics`).
 25. **`notificacionesService.ts` (`/api/Admin/notifications`):**
     * Consulta, marcado de lectura y depuración de alertas transaccionales in-app.
-26. **`recycleBinService.ts` (`/api/recyclebin`):**
-    * Consulta y restauración de instrumentos curriculares en borrado lógico.
-27. **`reportService.ts` (`/api/reports`):**
+26. **`reportService.ts` (`/api/reports`):**
     * Generación en streaming y descarga automatizada de informes analíticos y consolidados en PDF.
 
 ---

@@ -116,12 +116,6 @@ describe('Sprint 5 Service Layer Tests', () => {
             expect(list).toHaveLength(1);
         });
 
-        it('deleteProject debe enviar DELETE a /documents/instances/:uuid', async () => {
-            (api.delete as any).mockResolvedValueOnce({ data: { success: true } });
-            await curriculumProjectService.deleteProject('p1');
-            expect(api.delete).toHaveBeenCalledWith('/documents/instances/p1');
-        });
-
         it('getConvocatorias debe consultar /docente-asignaturas/periodos', async () => {
             (api.get as any).mockResolvedValueOnce({ data: [{ id: 1 }] });
             const list = await curriculumProjectService.getConvocatorias();

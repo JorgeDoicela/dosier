@@ -7,7 +7,7 @@ import { useAuth } from '../../../api/AuthContext';
 import { KANBAN_COLUMNAS, type CalendarEventExtended, type Evento } from '../types/calendarioTypes';
 import './KanbanView.css';
 
-type KanbanScopeFilter = 'personal' | 'carrera' | 'peas' | 'todas';
+type KanbanScopeFilter = 'personal' | 'carrera' | 'todas';
 
 interface KanbanViewProps {
     filteredEventos: CalendarEventExtended[];
@@ -34,7 +34,7 @@ const isPeaEvent = (r: Evento): boolean =>
     r.tipo_entidad_origen === 'PEA';
 
 const isCarreraEvent = (r: Evento): boolean =>
-    !r.es_privado && !isPeaEvent(r) && (r.categoria_global === 'Carrera' || Boolean(r.id_carrera));
+    !r.es_privado && (isPeaEvent(r) || r.categoria_global === 'Carrera' || Boolean(r.id_carrera));
 
 export const KanbanView: React.FC<KanbanViewProps> = ({
     filteredEventos,
@@ -56,37 +56,32 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
     const { isAdmin } = useAuth();
     const [scopeFilter, setScopeFilter] = useState<KanbanScopeFilter>('personal');
 
-    const { personalEvents, carreraEvents, peaEvents } = useMemo(() => {
+    const { personalEvents, carreraEvents } = useMemo(() => {
         const personal: CalendarEventExtended[] = [];
         const carrera: CalendarEventExtended[] = [];
-        const peas: CalendarEventExtended[] = [];
         for (const ev of filteredEventos) {
             if (isPersonalEvent(ev.resource)) {
                 personal.push(ev);
-            } else if (isPeaEvent(ev.resource)) {
-                peas.push(ev);
             } else if (isCarreraEvent(ev.resource)) {
                 carrera.push(ev);
             }
         }
-        return { personalEvents: personal, carreraEvents: carrera, peaEvents: peas };
+        return { personalEvents: personal, carreraEvents: carrera };
     }, [filteredEventos]);
 
-    const showScopeFilter = hasCarreras || carreraEvents.length > 0 || peaEvents.length > 0;
+    const showScopeFilter = hasCarreras || carreraEvents.length > 0;
     const activeScope: KanbanScopeFilter = showScopeFilter ? scopeFilter : 'personal';
 
     const scopedEvents = useMemo(() => {
         if (activeScope === 'personal') return personalEvents;
         if (activeScope === 'carrera') return carreraEvents;
-        if (activeScope === 'peas') return peaEvents;
-        return [...personalEvents, ...carreraEvents, ...peaEvents];
-    }, [activeScope, personalEvents, carreraEvents, peaEvents]);
+        return [...personalEvents, ...carreraEvents];
+    }, [activeScope, personalEvents, carreraEvents]);
 
     const scopeOptions: { id: KanbanScopeFilter; label: string; count: number }[] = [
         { id: 'personal', label: 'Mis tareas', count: personalEvents.length },
         { id: 'carrera', label: 'De la carrera', count: carreraEvents.length },
-        ...(peaEvents.length > 0 ? [{ id: 'peas' as const, label: 'PEAs', count: peaEvents.length }] : []),
-        { id: 'todas', label: 'Todas', count: personalEvents.length + carreraEvents.length + peaEvents.length },
+        { id: 'todas', label: 'Todas', count: personalEvents.length + carreraEvents.length },
     ];
 
     return (

@@ -278,6 +278,7 @@ builder.Services.AddScoped<dosier_application.Common.Notifications.INotification
 builder.Services.AddScoped<dosier_infrastructure.Common.Notifications.EmailMasterLayoutRenderer>();
 builder.Services.AddScoped<dosier_infrastructure.Common.Notifications.IEmailTemplateService, dosier_infrastructure.Common.Notifications.EmailTemplateService>();
 builder.Services.AddScoped<dosier_application.Feedback.IFeedbackService, dosier_infrastructure.Feedback.FeedbackService>();
+builder.Services.AddScoped<dosier_application.Help.IHelpVideosService, dosier_infrastructure.Help.HelpVideosService>();
 builder.Services.AddScoped<dosier_infrastructure.Common.Notifications.IEmailSenderSubservice, dosier_infrastructure.Common.Notifications.EmailSenderSubservice>();
 builder.Services.AddScoped<dosier_application.Common.Notifications.IEmailEngineService, dosier_infrastructure.Common.Notifications.EmailEngineService>();
 // Notificación Drivers
@@ -290,7 +291,6 @@ builder.Services.AddScoped<dosier_application.Security.IAuditService, dosier_inf
 builder.Services.AddScoped<dosier_application.Security.ILopdpService, dosier_infrastructure.Security.LopdpService>();
 builder.Services.AddScoped<dosier_application.Common.Interfaces.ICatalogsService, dosier_infrastructure.Common.CatalogsService>();
 builder.Services.AddScoped<dosier_application.Collaboration.Interfaces.ICollaborationService, dosier_infrastructure.Collaboration.CollaborationService>();
-builder.Services.AddScoped<dosier_application.Common.Interfaces.IRecycleBinService, dosier_infrastructure.Common.RecycleBinService>();
 builder.Services.AddScoped<dosier_application.Common.Interfaces.IReportsService, dosier_infrastructure.Common.ReportsService>();
 
 // Gobernanza Curricular y Antecedentes Institucionales (CES / CACES / ISTPET)
@@ -310,8 +310,6 @@ builder.Services.AddSingleton<dosier_api.Services.BackupBackgroundService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<dosier_api.Services.BackupBackgroundService>());
 builder.Services.AddSingleton<dosier_api.Services.CalendarioAlertasJob>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<dosier_api.Services.CalendarioAlertasJob>());
-builder.Services.AddSingleton<dosier_api.Services.RecycleBinCleanupBackgroundService>();
-builder.Services.AddHostedService(sp => sp.GetRequiredService<dosier_api.Services.RecycleBinCleanupBackgroundService>());
 builder.Services.AddSingleton<dosier_api.Services.DocumentGarbageCollectorBackgroundService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<dosier_api.Services.DocumentGarbageCollectorBackgroundService>());
 builder.Services.AddSingleton<dosier_api.Services.EmailBackgroundProcessorService>();

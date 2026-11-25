@@ -68,10 +68,9 @@ Controladores del Backend DOSIER:
 │   ├── 18. ReportsController (/api/reports)
 │   └── 19. FeedbackController (/api/feedback)
 └── Subsistema de Mantenimiento y Utilidades:
-    ├── 20. RecycleBinController (/api/recyclebin)
-    ├── 21. StorageController (/api/storage)
-    ├── 22. HealthController (/api/health)
-    └── 23. Endpoint Mínimo Ping (/api/ping)
+    ├── 20. StorageController (/api/storage)
+    ├── 21. HealthController (/api/health)
+    └── 22. Endpoint Mínimo Ping (/api/ping)
 ```
 
 ---
@@ -402,18 +401,7 @@ Gestión institucional de incidencias técnicas, reportes de bugs, sugerencias y
 
 ---
 
-### 3.20. `RecycleBinController` (`/api/recyclebin`)
-Papelera de reciclaje lógica y recuperación de registros eliminados.
-
-| Método | Ruta | Autorización | Descripción |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/projects` | Autenticado | Lista elementos curriculares eliminados lógicamente disponibles para restauración. |
-| `POST`| `/projects/{uuid}/restore` | Autenticado | Restaura un instrumento curricular y reconstruye sus dependencias. |
-| `DELETE`| `/projects/{uuid}/permanent`| `DOSIER_ADMIN` | Eliminación definitiva (*Hard Delete*) de un registro tras período de gracia. |
-
----
-
-### 3.21. `StorageController` (`/api/storage`)
+### 3.20. `StorageController` (`/api/storage`)
 Despacho de archivos estáticos, evidencias y firmas institucionales.
 
 | Método | Ruta | Autorización | Descripción |
@@ -422,7 +410,7 @@ Despacho de archivos estáticos, evidencias y firmas institucionales.
 
 ---
 
-### 3.22. `HealthController` (`/api/health`) y Endpoint `/api/ping`
+### 3.21. `HealthController` (`/api/health`) y Endpoint `/api/ping`
 Comprobación de estado y disponibilidad del servicio API.
 
 * `HealthController`: `GET /api/health` retorna `{ "status": "online", "timestamp": "..." }`.

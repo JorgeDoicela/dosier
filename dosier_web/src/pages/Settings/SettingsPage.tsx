@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Loader2, Shield, CheckCircle2, KeyRound, Info, Eye, EyeOff, CheckCircle, XCircle, Settings2, HardDrive } from 'lucide-react';
+import { User, Loader2, Shield, CheckCircle2, KeyRound, Info, Eye, EyeOff, CheckCircle, XCircle, Settings2, HardDrive, Video } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../../components/Common/PageHeader';
 import { authService } from '../../services/authService';
@@ -11,6 +11,7 @@ import { useConfirm } from '../../api/ConfirmContext';
 import { SignatureProfileCard } from './components/SignatureProfileCard';
 import ConfiguracionPage from '../Admin/ConfiguracionPage';
 import DocumentMaintenancePage from '../Admin/DocumentMaintenancePage';
+import { HelpVideosAdminPanel } from '../Admin/HelpVideosAdminPanel';
 
 interface PerfilData {
     acepto_terminos_firma: boolean;
@@ -39,25 +40,29 @@ const SettingsPage: React.FC = () => {
             ? 'plantillas' 
             : (canManageStorage && (tabParam === 'almacenamiento' || mainTabParam === 'almacenamiento'))
                 ? 'almacenamiento'
-                : 'perfil';
+                : (canManageStorage && (tabParam === 'videos' || mainTabParam === 'videos'))
+                    ? 'videos'
+                    : 'perfil';
 
-    const setActiveMainTab = (tab: 'perfil' | 'parametros' | 'plantillas' | 'almacenamiento') => {
+    const setActiveMainTab = (tab: 'perfil' | 'parametros' | 'plantillas' | 'almacenamiento' | 'videos') => {
         if (tab === 'parametros' && !canManageParams) return;
         if (tab === 'plantillas' && !canManageTemplates) return;
-        if (tab === 'almacenamiento' && !canManageStorage) return;
+        if ((tab === 'almacenamiento' || tab === 'videos') && !canManageStorage) return;
 
         setSearchParams(prev => {
             const next = new URLSearchParams(prev);
             next.set('mainTab', tab);
             if (tab === 'parametros') {
                 const currentTab = next.get('tab');
-                if (!currentTab || currentTab === 'parametros' || currentTab === 'plantillas' || currentTab === 'almacenamiento') {
+                if (!currentTab || currentTab === 'parametros' || currentTab === 'plantillas' || currentTab === 'almacenamiento' || currentTab === 'videos') {
                     next.set('tab', 'periodos');
                 }
             } else if (tab === 'plantillas') {
                 next.set('tab', 'plantillas');
             } else if (tab === 'almacenamiento') {
                 next.set('tab', 'almacenamiento');
+            } else if (tab === 'videos') {
+                next.set('tab', 'videos');
             } else {
                 next.delete('tab');
                 next.delete('mainTab');
@@ -246,24 +251,28 @@ const SettingsPage: React.FC = () => {
                     activeMainTab === 'parametros' ? 'Parámetros del Sistema'
                     : activeMainTab === 'plantillas' ? 'Seguridad Documental'
                     : activeMainTab === 'almacenamiento' ? 'Mantenimiento y Almacenamiento'
+                    : activeMainTab === 'videos' ? 'Guía Contextual'
                     : 'Configuración de Cuenta'
                 }
                 icon={
                     activeMainTab === 'parametros' ? Settings2
                     : activeMainTab === 'plantillas' ? Shield
                     : activeMainTab === 'almacenamiento' ? HardDrive
+                    : activeMainTab === 'videos' ? Video
                     : User
                 }
                 title={
                     activeMainTab === 'parametros' ? 'Administración Global'
                     : activeMainTab === 'plantillas' ? 'Firmas por Plantilla'
                     : activeMainTab === 'almacenamiento' ? 'Ciclo de Vida Documental'
+                    : activeMainTab === 'videos' ? 'Videos de Ayuda'
                     : 'Mi Cuenta'
                 }
                 description={
                     activeMainTab === 'parametros' ? 'Administre los períodos académicos e hitos del calendario institucional.'
                     : activeMainTab === 'plantillas' ? 'Configure las firmas requeridas y el tipo de firma electrónica para cada plantilla de documento oficial de la institución.'
                     : activeMainTab === 'almacenamiento' ? 'Depure y audite el almacenamiento físico de versiones preliminares de documentos obsoletos bajo políticas del CACES.'
+                    : activeMainTab === 'videos' ? 'Suba o vincule videotutoriales por pantalla para guiar a docentes y coordinadores desde el botón de ayuda.'
                     : 'Configure y autorice el uso de su firma electrónica conforme a la LOPDP.'
                 }
             />
@@ -302,15 +311,26 @@ const SettingsPage: React.FC = () => {
                         </button>
                     )}
                     {canManageStorage && (
-                        <button
-                            onClick={() => setActiveMainTab('almacenamiento')}
-                            className={`tab-vercel-item flex items-center gap-2 cursor-pointer ${
-                                activeMainTab === 'almacenamiento' ? 'active' : ''
-                            }`}
-                        >
-                            <HardDrive size={14} />
-                            <span>Almacenamiento</span>
-                        </button>
+                        <>
+                            <button
+                                onClick={() => setActiveMainTab('almacenamiento')}
+                                className={`tab-vercel-item flex items-center gap-2 cursor-pointer ${
+                                    activeMainTab === 'almacenamiento' ? 'active' : ''
+                                }`}
+                            >
+                                <HardDrive size={14} />
+                                <span>Almacenamiento</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveMainTab('videos')}
+                                className={`tab-vercel-item flex items-center gap-2 cursor-pointer ${
+                                    activeMainTab === 'videos' ? 'active' : ''
+                                }`}
+                            >
+                                <Video size={14} />
+                                <span>Videos de Ayuda</span>
+                            </button>
+                        </>
                     )}
                 </div>
             )}
@@ -536,6 +556,8 @@ const SettingsPage: React.FC = () => {
                 </div>
             ) : activeMainTab === 'almacenamiento' && canManageStorage ? (
                 <DocumentMaintenancePage isEmbedded={true} />
+            ) : activeMainTab === 'videos' && canManageStorage ? (
+                <HelpVideosAdminPanel />
             ) : null}
         </div>
     );

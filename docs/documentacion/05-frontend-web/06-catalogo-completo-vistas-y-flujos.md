@@ -20,7 +20,6 @@ dosier_web/src/pages/
 ├── Lopdp/           # Gestión de consentimientos informados y solicitudes de derechos ARCO
 ├── Notificaciones/  # Centro unificado de notificaciones in-app vía SignalR
 ├── Public/          # Validador forense público de documentos vía código QR
-├── RecycleBin/      # Papelera de reciclaje y recuperación de registros en borrado lógico
 ├── Settings/        # Configuración de cuenta, firmas digitales y parámetros normativos
 └── Solicitudes/     # Centro de Solicitudes y trámites curriculares directos
 ```
@@ -172,8 +171,6 @@ Accesible en `/analiticas` para roles de dirección y supervisión:
   * Vista de notas adhesivas rápidas para anotaciones personales de cátedra.
 * **`src/pages/Notificaciones/NotificationsPage.tsx` (`/notificaciones`):**
   * Feed documental continuo con divisores finos para revisión de alertas y eventos transaccionales.
-* **`src/pages/RecycleBin/RecycleBinPage.tsx` (`/papelera`):**
-  * Interfaz de restauración para registros eliminados lógicamente en base de datos.
 * **`src/pages/Settings/SettingsPage.tsx` (`/configuracion`):**
   * Configuración de perfil docente, carga de firmas digitales (DFRM o certificado `.p12`) y parámetros normativos institucionales (`?tab=parametros`).
 * **`src/pages/Solicitudes/SolicitudesPage.tsx` (`/solicitudes`):**

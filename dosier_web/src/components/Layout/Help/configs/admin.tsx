@@ -37,6 +37,7 @@ export const USUARIOS_CONFIG: HelpConfig = {
         'Las cuentas docentes y carreras se sincronizan desde la frontera de solo lectura de SIGAFI.',
         'Un usuario puede tener múltiples roles (por ejemplo Docente y Coordinador de Carrera) y alternar entre ellos desde su panel.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone className={`shrink-0 ${highlightTopClass}`}>
@@ -85,6 +86,7 @@ export const AUDITORIA_CONFIG: HelpConfig = {
     tips: [
         'Usa los filtros por rango de fechas para auditar ventanas específicas de aprobación o cambios de roles.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
@@ -127,6 +129,7 @@ export const PLANTILLAS_CONFIG: HelpConfig = {
     tips: [
         'Las instancias de PEA ya resueltas conservan su snapshot original para evitar desconfiguraciones en documentos en curso.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
@@ -179,6 +182,7 @@ export const ALMACENAMIENTO_CONFIG: HelpConfig = {
     tips: [
         'Programa copias de seguridad periódicas antes de realizar actualizaciones mayores o cierres de período lectivo.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
@@ -223,6 +227,7 @@ export const EMAILS_CONFIG: HelpConfig = {
     tips: [
         'Conserva intactas las variables entre llaves dobles (por ejemplo {{nombre_usuario}}) para que los datos se reemplacen correctamente.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>

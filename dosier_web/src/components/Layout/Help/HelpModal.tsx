@@ -1,13 +1,21 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { X } from 'lucide-react';
-import type { HelpConfig, DosierRole } from './types';
-import { HELP_MAP, DEFAULT_CONFIG, normalizePathname } from './configs';
+import type { HelpConfig, DosierRole, HelpVideoItem } from './types';
+import { normalizePathname, resolveHelpConfig } from './configs';
 import { useAuth } from '../../../api/AuthContext';
+import { HelpVideoPanel } from './HelpVideoPanel';
+import type { HelpModalMode } from './helpEvents';
+import { helpVideosService, HELP_VIDEOS_CHANGED_EVENT } from '../../../services/helpVideosService';
+
+export type { HelpModalMode };
 
 interface HelpModalProps {
     isOpen: boolean;
     onClose: () => void;
     pathname: string;
+    search?: string;
+    contextKey?: string;
+    initialMode?: HelpModalMode;
 }
 
 interface LayoutMockupProps {
@@ -47,7 +55,7 @@ const LayoutMockup: React.FC<LayoutMockupProps> = ({ highlight, stepLabel, confi
         ? 'border-[#0070f3] bg-blue-50/50 dark:bg-blue-950/30'
         : `border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 ${isDimmed('content-bottom') ? 'opacity-40' : ''}`;
 
-    const MockupComp = config.Mockup || DEFAULT_CONFIG.Mockup;
+    const MockupComp = config.Mockup;
 
     return (
         <div className="w-full max-w-[500px] space-y-3 select-none">
@@ -144,7 +152,14 @@ const LayoutMockup: React.FC<LayoutMockupProps> = ({ highlight, stepLabel, confi
     );
 };
 
-export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname }) => {
+export const HelpModal: React.FC<HelpModalProps> = ({
+    isOpen,
+    onClose,
+    pathname,
+    search = '',
+    contextKey,
+    initialMode = 'guide'
+}) => {
     const {
         isAdmin,
         isDocente,
@@ -156,7 +171,12 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname 
     } = useAuth();
 
     const normalizedPathname = normalizePathname(pathname);
+    const effectiveRouteKey = contextKey || normalizedPathname;
+    const [mode, setMode] = useState<HelpModalMode>(initialMode);
     const [currentStep, setCurrentStep] = useState(0);
+    const [remoteVideos, setRemoteVideos] = useState<HelpVideoItem[]>([]);
+    const [isLoadingVideos, setIsLoadingVideos] = useState<boolean>(false);
+    const [videosReloadTick, setVideosReloadTick] = useState(0);
 
     const primaryRole = useMemo<DosierRole>(() => {
         if (activeRole === 'DOSIER_ADMIN') return 'admin';
@@ -184,7 +204,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname 
     }, [primaryRole, isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, isDocente]);
 
     const config = useMemo<HelpConfig>(() => {
-        const rawConfig = HELP_MAP[normalizedPathname] || DEFAULT_CONFIG;
+        const rawConfig = resolveHelpConfig(pathname, search, contextKey);
         const override = rawConfig.roleOverrides?.[primaryRole];
 
         const filteredSteps = rawConfig.steps.filter(step => {
@@ -198,6 +218,16 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname 
             return tip.roles.some(r => activeRoles.includes(r));
         });
 
+        const rawVideos = override?.videos ?? rawConfig.videos ?? [];
+        const combinedVideos = [...remoteVideos, ...rawVideos];
+        const seenIds = new Set<string>();
+        const filteredVideos = combinedVideos.filter(video => {
+            if (seenIds.has(video.id)) return false;
+            seenIds.add(video.id);
+            if (!video.roles || video.roles.length === 0 || video.roles.includes('todos')) return true;
+            return video.roles.some(r => activeRoles.includes(r));
+        });
+
         return {
             ...rawConfig,
             title: override?.title || rawConfig.title,
@@ -205,17 +235,45 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname 
             description: override?.description || rawConfig.description,
             compliance: override?.compliance || rawConfig.compliance,
             steps: filteredSteps.length > 0 ? filteredSteps : rawConfig.steps,
-            tips: filteredTips.length > 0 ? filteredTips : rawConfig.tips
+            tips: filteredTips.length > 0 ? filteredTips : rawConfig.tips,
+            videos: filteredVideos
         };
-    }, [normalizedPathname, primaryRole, activeRoles]);
+    }, [pathname, search, contextKey, primaryRole, activeRoles, remoteVideos]);
+
+    useEffect(() => {
+        const handleReload = () => setVideosReloadTick(t => t + 1);
+        window.addEventListener(HELP_VIDEOS_CHANGED_EVENT, handleReload);
+        return () => window.removeEventListener(HELP_VIDEOS_CHANGED_EVENT, handleReload);
+    }, []);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        let cancelled = false;
+        setRemoteVideos([]);
+        setIsLoadingVideos(true);
+        helpVideosService.getByRoute(effectiveRouteKey)
+            .then(items => {
+                if (!cancelled) setRemoteVideos(items);
+            })
+            .catch(() => {
+                if (!cancelled) setRemoteVideos([]);
+            })
+            .finally(() => {
+                if (!cancelled) setIsLoadingVideos(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [isOpen, effectiveRouteKey, videosReloadTick]);
 
     const totalSteps = config.steps.length + 2;
 
     useEffect(() => {
         if (isOpen) {
+            setMode(initialMode);
             setCurrentStep(0);
         }
-    }, [normalizedPathname, isOpen]);
+    }, [normalizedPathname, search, contextKey, isOpen, initialMode]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -232,17 +290,17 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname 
             if (e.key === 'Escape') {
                 e.preventDefault();
                 onClose();
-            } else if (e.key === 'ArrowRight' && currentStep < totalSteps - 1) {
+            } else if (mode === 'guide' && e.key === 'ArrowRight' && currentStep < totalSteps - 1) {
                 e.preventDefault();
                 setCurrentStep(prev => prev + 1);
-            } else if (e.key === 'ArrowLeft' && currentStep > 0) {
+            } else if (mode === 'guide' && e.key === 'ArrowLeft' && currentStep > 0) {
                 e.preventDefault();
                 setCurrentStep(prev => prev - 1);
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, currentStep, totalSteps, onClose]);
+    }, [isOpen, mode, currentStep, totalSteps, onClose]);
 
     if (!isOpen) return null;
 
@@ -282,18 +340,69 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname 
                         </p>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="p-1.5 rounded-md text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
-                        title="Cerrar Guía"
-                        aria-label="Cerrar Guía"
-                    >
-                        <X size={18} />
-                    </button>
+                    <div className="flex items-center gap-6 shrink-0">
+                        <div className="flex items-center gap-1.5" role="group" aria-label="Modo de ayuda">
+                            <button
+                                type="button"
+                                aria-pressed={mode === 'guide'}
+                                onClick={() => setMode('guide')}
+                                className={`px-3 py-1.5 text-xs rounded-lg border transition-colors cursor-pointer ${
+                                    mode === 'guide'
+                                        ? 'bg-[#0070f3] text-white border-[#0070f3] font-semibold'
+                                        : 'bg-white dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-900 font-medium'
+                                }`}
+                            >
+                                Guía visual
+                            </button>
+                            <button
+                                type="button"
+                                aria-pressed={mode === 'videos'}
+                                onClick={() => setMode('videos')}
+                                className={`px-3 py-1.5 text-xs rounded-lg border transition-colors cursor-pointer ${
+                                    mode === 'videos'
+                                        ? 'bg-[#0070f3] text-white border-[#0070f3] font-semibold'
+                                        : 'bg-white dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-900 font-medium'
+                                }`}
+                            >
+                                {(config.videos?.length ?? 0) > 0
+                                    ? `Videos (${config.videos!.length})`
+                                    : 'Videos'}
+                            </button>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="p-1.5 rounded-md text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
+                            title="Cerrar Guía"
+                            aria-label="Cerrar Guía"
+                        >
+                            <X size={18} />
+                        </button>
+                    </div>
                 </div>
 
-                {/* Cuerpo paginado para lectura dosificada */}
+                {mode === 'videos' ? (
+                    <>
+                        <HelpVideoPanel
+                            moduleTitle={config.title}
+                            videos={config.videos || []}
+                            isLoading={isLoadingVideos}
+                            onBackToGuide={() => setMode('guide')}
+                        />
+                        <div className="px-7 py-5 bg-white dark:bg-zinc-950 flex items-center justify-end shrink-0">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="px-5 py-2 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] transition-colors cursor-pointer"
+                            >
+                                Entendido
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        {/* Cuerpo paginado para lectura dosificada */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[380px] flex flex-col md:flex-row bg-white dark:bg-zinc-950">
                     <div className="w-full md:w-[42%] p-7 flex flex-col justify-center bg-white dark:bg-zinc-950">
                         {currentStep === 0 && (
@@ -396,15 +505,17 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname 
                             Entendido
                         </button>
                     ) : (
-                        <button
-                            type="button"
-                            onClick={() => setCurrentStep(prev => prev + 1)}
-                            className="px-5 py-2 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] transition-colors cursor-pointer"
-                        >
-                            Siguiente
-                        </button>
-                    )}
-                </div>
+                            <button
+                                type="button"
+                                onClick={() => setCurrentStep(prev => prev + 1)}
+                                className="px-5 py-2 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] transition-colors cursor-pointer"
+                            >
+                                Siguiente
+                            </button>
+                        )}
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );

@@ -148,13 +148,12 @@ El host de la aplicación incorpora mecanismos de alta disponibilidad contra int
 
 ## 6. Catálogo de Servicios en Segundo Plano (`BackgroundService` / `IHostedService`)
 
-El host ejecuta 6 procesos en segundo plano de manera continua para el mantenimiento, gobernanza y despacho automatizado de tareas:
+El host ejecuta 5 procesos en segundo plano de manera continua para el mantenimiento, gobernanza y despacho automatizado de tareas:
 
 | Servicio Hosted | Frecuencia / Activación | Responsabilidad Técnica y Operativa |
 | :--- | :--- | :--- |
 | `BackupBackgroundService` | Diario a las 02:00 UTC | Genera un respaldo estructural y de datos de la base de datos `sigafi_es`, calcula la suma de verificación SHA-256 del archivo generado y registra la evidencia en `doc_backup_logs`. |
 | `CalendarioAlertasJob` | Cada 15 minutos | Evalúa el cronograma académico institucional y los plazos de entrega del PEA, despachando alertas preventivas por correo a docentes y coordinadores ante vencimientos inminentes. |
-| `RecycleBinCleanupBackgroundService` | Diario a las 03:00 UTC | Ejecuta la purga física y definitiva de registros marcados con borrado suave (*soft-delete*) en PEAs e instancias documentales que hayan superado el período de retención legal institucional (30 días). |
 | `DocumentGarbageCollectorBackgroundService` | Diario a las 04:00 UTC | Realiza la purga forense de archivos binarios PDF antiguos asociados a instancias documentales cuyas plantillas hayan sido actualizadas (`IsFilePurged = true`), preservando los registros de auditoría y hashes SHA-256 en base de datos. |
 | `EmailBackgroundProcessorService` | Continuo (Cola en memoria) | Consume la cola en memoria de correos electrónicos transaccionales pendientes, despachándolos en lotes controlados para optimizar el rendimiento y prevenir bloqueos por tasa de envío (*rate-limiting*) en el servidor SMTP. |
 | `EmailBounceListenerService` | Cada 30 minutos | Monitorea y clasifica rebotes de correo electrónico (Hard Bounces y Soft Bounces), actualizando el estado de entrega en `doc_email_historial` y marcando direcciones inválidas. |

@@ -29,6 +29,17 @@ export interface MockupProps {
     highlightBottomClass: string;
 }
 
+export interface HelpVideoItem {
+    id: string;
+    title: string;
+    description?: string;
+    duration?: string;
+    url: string;
+    poster?: string;
+    /** Roles que pueden ver este video específico (por defecto: todos los del módulo) */
+    roles?: DosierRole[];
+}
+
 export interface HelpConfig {
     icon: React.ReactNode;
     title: string;
@@ -37,9 +48,10 @@ export interface HelpConfig {
     steps: HelpStep[];
     compliance: string;
     tips: (string | HelpTipItem)[];
+    videos?: HelpVideoItem[];
     Mockup?: React.ComponentType<MockupProps>;
     /** Roles autorizados para consultar esta guía */
     roles?: DosierRole[];
     /** Sobrescrituras opcionales según el rol del usuario conectado */
-    roleOverrides?: Partial<Record<DosierRole, Partial<Pick<HelpConfig, 'title' | 'summary' | 'description' | 'compliance'>>>>;
+    roleOverrides?: Partial<Record<DosierRole, Partial<Pick<HelpConfig, 'title' | 'summary' | 'description' | 'compliance' | 'videos'>>>>;
 }

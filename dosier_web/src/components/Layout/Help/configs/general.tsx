@@ -1,6 +1,6 @@
 import {
     Activity, Settings2, BarChart3, Bell, ShieldCheck, Calendar,
-    Trash2, FolderKanban, MessageSquareWarning
+    FolderKanban, MessageSquareWarning
 } from 'lucide-react';
 import type { HelpConfig, MockupProps } from '../types';
 import {
@@ -42,6 +42,7 @@ export const DEFAULT_CONFIG: HelpConfig = {
         'Presiona Ctrl + K (o Cmd + K en macOS) en cualquier pantalla para abrir la paleta de comandos y saltar rápidamente entre módulos.',
         'Si cuentas con múltiples atribuciones académicas, verifica tu rol activo antes de iniciar revisiones o elaborar un PEA.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
@@ -126,6 +127,7 @@ export const DASHBOARD_CONFIG: HelpConfig = {
         },
         'Haz clic directamente en cualquier asignatura o expediente listado para abrir su flujo correspondiente.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
@@ -181,6 +183,7 @@ export const SETTINGS_CONFIG: HelpConfig = {
         'Tu archivo .p12 y su contraseña se protegen mediante cifrado antes de su almacenamiento.',
         'Verifica la fecha de vigencia de tu certificado digital antes de los cierres de aprobación de PEAs.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone className={`shrink-0 ${highlightTopClass}`}>
@@ -232,6 +235,7 @@ export const ANALYTICS_CONFIG: HelpConfig = {
         'Revisa periódicamente las carreras con mayor porcentaje de borradores pendientes para emitir recordatorios oportunos.',
         'Combina esta vista con la bandeja de Supervisión Curricular para gestionar devoluciones específicas.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
@@ -271,6 +275,7 @@ export const NOTIFICATIONS_CONFIG: HelpConfig = {
         'Las notificaciones no leídas se identifican con un punto azul discreto a la izquierda.',
         'Atiende con prioridad las alertas de observaciones para no retrasar la aprobación del PEA.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
@@ -308,6 +313,7 @@ export const VERIFY_CONFIG: HelpConfig = {
         'El enlace del código QR apunta directamente a esta vista con el código precargado.',
         'Esta verificación está disponible tanto dentro de la sesión como para consulta pública externa.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
@@ -359,6 +365,7 @@ export const CALENDARIO_CONFIG: HelpConfig = {
         'Consulta las fechas de corte antes de enviar tu PEA a revisión para evitar bloqueos por cierre de ventana.',
         'Los administradores pueden gestionar los hitos institucionales desde Configuración > Parámetros.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
@@ -378,42 +385,6 @@ export const CALENDARIO_CONFIG: HelpConfig = {
             </WfZone>
             <WfZone className={`flex-1 ${highlightBottomClass}`}>
                 <WfCalendarGrid highlightedDays={[3, 9, 12]} />
-            </WfZone>
-        </>
-    )
-};
-
-export const PAPELERA_CONFIG: HelpConfig = {
-    icon: <Trash2 size={20} className="text-[#0070f3]" />,
-    title: 'Papelera de Reciclaje',
-    summary: 'Resguardo temporal de instrumentos y registros eliminados con opción de restauración o borrado definitivo.',
-    description: 'Centraliza los elementos eliminados lógicamente dentro de DOSIER para prevenir pérdidas accidentales de información curricular.',
-    steps: [
-        {
-            title: 'Búsqueda y filtrado de elementos eliminados',
-            description: 'Localiza el registro eliminado revisando su tipo, título y fecha de envío a la papelera en la cabecera de la lista.',
-            highlight: 'content-top'
-        },
-        {
-            title: 'Restauración o eliminación permanente',
-            description: 'Usa la acción Restaurar para devolver el elemento a su módulo original, o Eliminar permanentemente cuando confirmes que ya no es requerido.',
-            highlight: 'content-bottom'
-        }
-    ],
-    compliance: 'Previene la pérdida accidental de evidencia académica manteniendo control sobre la retención y eliminación de registros.',
-    tips: [
-        'La eliminación permanente es irreversible; verifica siempre el código de la asignatura antes de confirmar.',
-        'Los documentos aprobados y firmados cuentan con protección normativa contra borrado accidental.'
-    ],
-    Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
-        <>
-            <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
-                <WfSearchBar />
-                <WfSelect widthClass="w-16" />
-            </WfZone>
-            <WfZone className={`flex-1 divide-y divide-slate-100 dark:divide-zinc-800 justify-center ${highlightBottomClass}`}>
-                <WfListRow dotTone="neutral" titleWidth="w-24" metaWidth="w-14" secondaryAction actionTone="rose" />
-                <WfListRow dotTone="neutral" titleWidth="w-20" metaWidth="w-12" secondaryAction actionTone="rose" />
             </WfZone>
         </>
     )
@@ -440,6 +411,7 @@ export const SOLICITUDES_CONFIG: HelpConfig = {
     tips: [
         'Si no visualizas un trámite específico, verifica tu rol activo en la barra superior o consulta con Administración.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
@@ -483,6 +455,7 @@ export const INCIDENCIAS_CONFIG: HelpConfig = {
         'Indica el código de la asignatura o la ruta exacta de la pantalla donde ocurrió la novedad para agilizar la atención.',
         'Los mensajes nuevos sin leer se destacan en la lista para seguimiento inmediato.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>
@@ -521,6 +494,7 @@ export const LOPDP_ADMIN_CONFIG: HelpConfig = {
     tips: [
         'Los usuarios que aún no aceptan la política vigente son redirigidos automáticamente al flujo de consentimiento antes de operar.'
     ],
+    videos: [],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             <WfZone layout="row" className={`shrink-0 ${highlightTopClass}`}>

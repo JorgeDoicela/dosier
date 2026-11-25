@@ -7,7 +7,6 @@ import {
     NOTIFICATIONS_CONFIG,
     VERIFY_CONFIG,
     CALENDARIO_CONFIG,
-    PAPELERA_CONFIG,
     SOLICITUDES_CONFIG,
     INCIDENCIAS_CONFIG,
     LOPDP_ADMIN_CONFIG
@@ -31,7 +30,6 @@ import {
 export const HELP_MAP: Record<string, HelpConfig> = {
     '/dashboard': DASHBOARD_CONFIG,
     '/calendario': CALENDARIO_CONFIG,
-    '/papelera': PAPELERA_CONFIG,
     '/configuracion': SETTINGS_CONFIG,
     '/parametros-normativos': SETTINGS_CONFIG,
     '/lopdp': LOPDP_ADMIN_CONFIG,
@@ -115,4 +113,32 @@ export const normalizePathname = (path: string): string => {
     }
 
     return cleanPath;
+};
+
+/**
+ * Resuelve la configuración de ayuda con prioridad:
+ * 1) contextKey explícito (submódulos, pestañas o secciones),
+ * 2) ruta + query exacta si existe registrada,
+ * 3) ruta normalizada en HELP_MAP,
+ * 4) DEFAULT_CONFIG.
+ */
+export const resolveHelpConfig = (
+    pathname: string,
+    search = '',
+    contextKey?: string
+): HelpConfig => {
+    if (contextKey && HELP_MAP[contextKey]) {
+        return HELP_MAP[contextKey];
+    }
+
+    const cleanSearch = search.trim();
+    if (cleanSearch) {
+        const keyWithSearch = `${normalizePathname(pathname)}${cleanSearch.startsWith('?') ? cleanSearch : `?${cleanSearch}`}`;
+        if (HELP_MAP[keyWithSearch]) {
+            return HELP_MAP[keyWithSearch];
+        }
+    }
+
+    const normalized = normalizePathname(pathname);
+    return HELP_MAP[normalized] || DEFAULT_CONFIG;
 };

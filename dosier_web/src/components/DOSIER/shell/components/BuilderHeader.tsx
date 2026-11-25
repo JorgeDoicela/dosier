@@ -1,6 +1,7 @@
 import React from 'react';
-import { ArrowLeft, Save, Clock, CheckCircle, Shield, Sun, Moon, MessageSquarePlus, Sparkles } from 'lucide-react';
+import { ArrowLeft, Save, Clock, CheckCircle, Shield, Sun, Moon, MessageSquarePlus, HelpCircle } from 'lucide-react';
 import type { CoWorkUser } from '../../../../core/cowork/types';
+import { openContextualHelp } from '../../../Layout/Help/helpEvents';
 
 export interface BuilderHeaderProps {
     title: string;
@@ -150,7 +151,17 @@ export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
                     {isDarkMode ? <Sun size={14} className="text-warning animate-pulse" /> : <Moon size={14} className="text-indigo-400" />}
                 </button>
 
-                {/* 5. Botón de reporte de incidencia / sugerencia (al final) */}
+                {/* 5. Botón de guía visual y videos contextuales */}
+                <button
+                    onClick={() => openContextualHelp()}
+                    className="p-1.5 text-text-dim hover:text-text-main transition-all duration-200 flex items-center justify-center cursor-pointer active:scale-90 bg-transparent border-0"
+                    title="Guía Interactiva y Videos"
+                    aria-label="Abrir guía interactiva y videos"
+                >
+                    <HelpCircle size={14} />
+                </button>
+
+                {/* 6. Botón de reporte de incidencia / sugerencia (al final) */}
                 <button
                     onClick={() => window.dispatchEvent(new CustomEvent('dosier-open-feedback'))}
                     className="p-1.5 text-text-dim hover:text-text-main transition-all duration-200 flex items-center justify-center cursor-pointer active:scale-90 bg-transparent border-0"

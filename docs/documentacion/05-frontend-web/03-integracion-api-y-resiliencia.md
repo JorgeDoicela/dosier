@@ -158,8 +158,8 @@ const confirm = useConfirm();
 
 const handleDelete = async () => {
     const isConfirmed = await confirm({
-        title: 'Eliminar Registro',
-        message: '¿Está seguro de trasladar este elemento a la papelera institucional?',
+        title: 'Eliminar Notificación',
+        message: '¿Está seguro de eliminar esta notificación del historial?',
         confirmText: 'Eliminar',
         cancelText: 'Cancelar',
         variant: 'destructive',
@@ -167,7 +167,7 @@ const handleDelete = async () => {
     });
 
     if (isConfirmed) {
-        await peaService.deletePea(uuid);
+        await notificacionesService.deleteNotification(uuid);
     }
 };
 ```

@@ -211,14 +211,6 @@ export const curriculumProjectService = {
             .catch(() => []),
 
     /**
-     * Envía un proyecto o documento a la papelera de reciclaje curricular.
-     */
-    deleteProject: (projectUuid: string): Promise<any> =>
-        api.delete(`/documents/instances/${encodeURIComponent(projectUuid)}`)
-            .then(r => r.data)
-            .catch(() => ({ success: true })),
-
-    /**
      * Genera un PDF de previsualización de borrador o consolidado del documento curricular.
      */
     generatePdf: (projectData: any, isDraft = true): Promise<Blob> =>

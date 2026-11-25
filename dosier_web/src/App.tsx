@@ -33,7 +33,6 @@ const SettingsPage           = lazy(() => import('./pages/Settings/SettingsPage'
 const LopdpConsentPage       = lazy(() => import('./pages/Lopdp/LopdpConsentPage'));
 const LopdpAdminPage         = lazy(() => import('./pages/Lopdp/LopdpAdminPage'));
 const CalendarioPage         = lazy(() => import('./pages/Calendario/CalendarioPage').then(m => ({ default: m.CalendarioPage })));
-const RecycleBinPage         = lazy(() => import('./pages/RecycleBin/RecycleBinPage'));
 const ResetAlertPage         = lazy(() => import('./pages/Auth/ResetAlertPage'));
 const DocumentMaintenancePage = lazy(() => import('./pages/Admin/DocumentMaintenancePage'));
 const DocumentTemplatesPage   = lazy(() => import('./pages/Admin/Templates/DocumentTemplatesPage'));
@@ -255,7 +254,6 @@ function App() {
                         }>
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/calendario" element={<CalendarioPage />} />
-                            <Route path="/papelera" element={<RecycleBinPage />} />
                             <Route path="/configuracion" element={<SettingsPage />} />
                             <Route path="/settings" element={<RedirectPreserveSearch to="/configuracion" />} />
                             <Route path="/derechos-arco" element={<Navigate to="/dashboard" replace />} />

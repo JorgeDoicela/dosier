@@ -1,12 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../api/AuthContext';
 import Sidebar from './Sidebar';
 import { CommandPalette } from '../Common/CommandPalette';
-import { Menu, HelpCircle, MessageSquarePlus, Sun, Moon, Settings, Trash2, LogOut, ChevronDown, Shield, Check } from 'lucide-react';
+import { Menu, HelpCircle, MessageSquarePlus, Sun, Moon, Settings, LogOut, ChevronDown, Shield, Check } from 'lucide-react';
 import NotificationBell from '../Notifications/NotificationBell';
-import { HelpModal } from './Help/HelpModal';
+import { HELP_OPEN_EVENT, type HelpModalMode, type OpenHelpDetail } from './Help/helpEvents';
 import { WelcomeModal } from './WelcomeModal/WelcomeModal';
+
+const HelpModal = lazy(() =>
+    import('./Help/HelpModal').then((m) => ({ default: m.HelpModal }))
+);
 import { notificacionesService } from '../../services/notificacionesService';
 import { StickyNotesFloatingButton } from '../Common/StickyNotesFloatingButton';
 import { getStickyNotes } from '../../services/calendarioService';
@@ -83,6 +87,8 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
     const isTemplateEditor = (location.pathname === '/plantillas' || location.pathname === '/admin/plantillas') && (isAdmin || isCoordAcad || isVicerrector);
     const isFullHeightPage = isWorkspace || isTemplateEditor;
     const [isHelpOpen, setIsHelpOpen] = useState(false);
+    const [helpInitialMode, setHelpInitialMode] = useState<HelpModalMode>('guide');
+    const [helpContextKey, setHelpContextKey] = useState<string | undefined>(undefined);
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
     const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -129,11 +135,21 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
         return () => clearTimeout(timer);
     }, [user, isAuthenticated, isLoading, isWorkspace]);
 
-    // ── Listener para apertura global de reporte de incidencias ─────────────
+    // ── Listener para apertura global de reporte de incidencias y guía contextual ──
     useEffect(() => {
         const handleOpenFeedback = () => setIsFeedbackOpen(true);
+        const handleOpenHelp = (event: Event) => {
+            const detail = (event as CustomEvent<OpenHelpDetail>).detail;
+            setHelpInitialMode(detail?.mode || 'guide');
+            setHelpContextKey(detail?.contextKey);
+            setIsHelpOpen(true);
+        };
         window.addEventListener('dosier-open-feedback', handleOpenFeedback);
-        return () => window.removeEventListener('dosier-open-feedback', handleOpenFeedback);
+        window.addEventListener(HELP_OPEN_EVENT, handleOpenHelp);
+        return () => {
+            window.removeEventListener('dosier-open-feedback', handleOpenFeedback);
+            window.removeEventListener(HELP_OPEN_EVENT, handleOpenHelp);
+        };
     }, []);
 
     // ── Contador de notas rápidas sin planificar (badge del botón flotante) ─────
@@ -235,8 +251,8 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                 {/* Desktop TopBar */}
                 {!isWorkspace && (
                     <header className={`hidden lg:flex items-center justify-between bg-surface border-b border-border sticky top-0 z-[40] transition-[max-height,opacity] duration-150 ease-out ${topBarCollapsed
-                            ? 'max-h-0 opacity-0 overflow-hidden border-b-0 pointer-events-none'
-                            : 'max-h-14 h-14 opacity-100'
+                        ? 'max-h-0 opacity-0 overflow-hidden border-b-0 pointer-events-none'
+                        : 'max-h-14 h-14 opacity-100'
                         }`}>
                         <div className="max-w-[1600px] mx-auto w-full px-4 md:px-10 flex items-center justify-between">
                             <div className="flex items-center gap-3 min-w-0">
@@ -275,11 +291,10 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                                 {/* User Identity & Institutional Role */}
                                 <div className="relative">
                                     <div
-                                        className={`flex items-center gap-2 px-2.5 py-1 rounded-md transition-colors ${
-                                            hasMultipleRoles
-                                                ? 'cursor-pointer hover:bg-surface-hover'
-                                                : ''
-                                        }`}
+                                        className={`flex items-center gap-2 px-2.5 py-1 rounded-md transition-colors ${hasMultipleRoles
+                                            ? 'cursor-pointer hover:bg-surface-hover'
+                                            : ''
+                                            }`}
                                         onClick={hasMultipleRoles ? () => setIsUserMenuOpen(!isUserMenuOpen) : undefined}
                                         title={hasMultipleRoles ? 'Cambiar rol institucional' : undefined}
                                     >
@@ -312,11 +327,10 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                                                                     if (setActiveRole) setActiveRole(r.code);
                                                                     setIsUserMenuOpen(false);
                                                                 }}
-                                                                className={`flex items-center justify-between px-2.5 py-1.5 text-xs rounded-md cursor-pointer transition-colors ${
-                                                                    activeRole === r.code
-                                                                        ? 'bg-blue-50/80 dark:bg-blue-950/40 text-[#0070f3] dark:text-blue-400 font-semibold border border-blue-200/60 dark:border-blue-900/50'
-                                                                        : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-50 dark:hover:bg-zinc-900'
-                                                                }`}
+                                                                className={`flex items-center justify-between px-2.5 py-1.5 text-xs rounded-md cursor-pointer transition-colors ${activeRole === r.code
+                                                                    ? 'bg-blue-50/80 dark:bg-blue-950/40 text-[#0070f3] dark:text-blue-400 font-semibold border border-blue-200/60 dark:border-blue-900/50'
+                                                                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-50 dark:hover:bg-zinc-900'
+                                                                    }`}
                                                             >
                                                                 <div className="flex items-center gap-2 min-w-0">
                                                                     <Shield size={13} className={activeRole === r.code ? 'text-[#0070f3] dark:text-blue-400 shrink-0' : 'text-slate-400 dark:text-zinc-500 shrink-0'} />
@@ -363,17 +377,6 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                                     {theme === 'dark' ? <Sun size={18} strokeWidth={1.75} className="text-text-main" /> : <Moon size={18} strokeWidth={1.75} className="text-text-main" />}
                                 </button>
 
-                                {(isAdmin || user?.roles?.includes('DOSIER_DOCENTE')) && (
-                                    <Link
-                                        to="/papelera"
-                                        className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center no-underline"
-                                        title="Papelera"
-                                        aria-label="Ir a Papelera"
-                                    >
-                                        <Trash2 size={18} strokeWidth={1.75} className="text-text-main" />
-                                    </Link>
-                                )}
-
                                 <Link
                                     to="/configuracion"
                                     className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center no-underline"
@@ -401,8 +404,8 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                 {/* Mobile Header */}
                 {!isWorkspace && (
                     <header className={`lg:hidden flex items-center justify-between px-6 bg-surface border-b border-border z-50 transition-all duration-300 ease-in-out ${showHeader && !topBarCollapsed
-                            ? 'max-h-20 py-4 opacity-100'
-                            : 'max-h-0 py-0 opacity-0 overflow-hidden border-b-0 pointer-events-none'
+                        ? 'max-h-20 py-4 opacity-100'
+                        : 'max-h-0 py-0 opacity-0 overflow-hidden border-b-0 pointer-events-none'
                         }`}>
                         <button
                             onClick={() => setIsSidebarOpen(true)}
@@ -443,15 +446,6 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                             >
                                 {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                             </button>
-                            {(isAdmin || user?.roles?.includes('DOSIER_DOCENTE')) && (
-                                <Link
-                                    to="/papelera"
-                                    className="p-2 text-text-main hover:bg-surface-hover rounded-md transition-colors cursor-pointer flex items-center justify-center no-underline"
-                                    title="Papelera"
-                                >
-                                    <Trash2 size={20} />
-                                </Link>
-                            )}
                             <Link
                                 to="/configuracion"
                                 className="p-2 text-text-main hover:bg-surface-hover rounded-md transition-colors cursor-pointer flex items-center justify-center no-underline"
@@ -480,11 +474,22 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                 </div>
             </div>
 
-            <HelpModal
-                isOpen={isHelpOpen}
-                onClose={() => setIsHelpOpen(false)}
-                pathname={location.pathname}
-            />
+            {isHelpOpen && (
+                <Suspense fallback={null}>
+                    <HelpModal
+                        isOpen={isHelpOpen}
+                        onClose={() => {
+                            setIsHelpOpen(false);
+                            setHelpInitialMode('guide');
+                            setHelpContextKey(undefined);
+                        }}
+                        pathname={location.pathname}
+                        search={location.search}
+                        contextKey={helpContextKey}
+                        initialMode={helpInitialMode}
+                    />
+                </Suspense>
+            )}
 
             <WelcomeModal
                 isOpen={isWelcomeOpen}
